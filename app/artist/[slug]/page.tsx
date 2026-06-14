@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { artists, getArtistBySlug } from "@/data/artists";
+import type { Artist, Gig } from "@/data/artists";
 import type { Metadata } from "next";
 
 interface Props {
@@ -16,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const artist = getArtistBySlug(slug);
   if (!artist) return { title: "Artist Not Found" };
   return {
-    title: `${artist.name} — AAA Events`,
+    title: `${artist.name} — AAA Artists`,
     description: artist.bio.slice(0, 160),
   };
 }
@@ -65,6 +67,121 @@ function formatDate(dateStr: string) {
   });
 }
 
+/** Convert a public Spotify URL into its embed equivalent. */
+function spotifyEmbedSrc(url: string): string | null {
+  const m = url.match(/open\.spotify\.com\/(artist|album|track|playlist|episode|show)\/([A-Za-z0-9]+)/);
+  if (!m) return null;
+  return `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator&theme=0`;
+}
+
+/** Convert a YouTube video or playlist URL into its embed equivalent. */
+function youtubeEmbedSrc(url: string): string | null {
+  const playlist = url.match(/[?&]list=([A-Za-z0-9_-]+)/);
+  if (playlist) return `https://www.youtube.com/embed/videoseries?list=${playlist[1]}`;
+  const video =
+    url.match(/[?&]v=([A-Za-z0-9_-]{11})/) ?? url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
+  if (video) return `https://www.youtube.com/embed/${video[1]}`;
+  return null;
+}
+
+/** A bordered box wrapping an embedded player. */
+function MediaBox({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="overflow-hidden border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
+      <div className="border-b px-4 py-3" style={{ borderColor: "var(--border)" }}>
+        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-40)" }}>
+          {label}
+        </p>
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+/** A clickable card for platforms that only have a profile link (no embed). */
+function MediaLinkCard({ platform, label, href }: { platform: string; label: string; href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-center justify-between gap-4 border px-5 py-4 transition-all"
+      style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--text-60)" }}
+    >
+      <span className="flex items-center gap-3">
+        <SocialIcon platform={platform} />
+        <span className="text-sm font-semibold uppercase tracking-widest">{label}</span>
+      </span>
+      <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+      </svg>
+    </a>
+  );
+}
+
+/** A flyer-style box for an upcoming event. Uses artwork when provided,
+ *  otherwise renders a generated poster from the gig details. */
+function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
+  const month = new Date(gig.date).toLocaleDateString("en-GB", { month: "short" }).toUpperCase();
+  const day = new Date(gig.date).toLocaleDateString("en-GB", { day: "numeric" });
+
+  return (
+    <div className="group flex flex-col border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
+      <div className="relative aspect-[3/4] overflow-hidden" style={{ backgroundColor: "var(--surface-2)" }}>
+        {gig.flyer ? (
+          <Image
+            src={gig.flyer}
+            alt={`${artist.name} at ${gig.venue}`}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        ) : (
+          /* Generated poster — clean text flyer when no artwork is supplied */
+          <div
+            className="absolute inset-0 flex flex-col justify-between p-5 text-white"
+            style={{ background: "linear-gradient(155deg, #1a1a1a 0%, #0a0a0a 55%, #000 100%)" }}
+          >
+            <div className="flex items-start justify-between">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">AAA Artists</span>
+              <div className="text-right leading-none">
+                <p className="text-2xl font-bold">{day}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">{month}</p>
+              </div>
+            </div>
+            <div>
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">Live</p>
+              <p className="text-xl font-bold leading-tight">{artist.name}</p>
+              <div className="my-3 h-px w-10 bg-white/30" />
+              <p className="text-sm font-semibold leading-tight text-white/90">{gig.venue}</p>
+              <p className="text-xs text-white/50">{gig.city}, {gig.country}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
+        <div>
+          <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
+          <p className="text-xs" style={{ color: "var(--text-40)" }}>{gig.city}, {gig.country}</p>
+          <p className="mt-1 text-xs font-medium" style={{ color: "var(--text-60)" }}>{formatDate(gig.date)}</p>
+        </div>
+        {gig.ticketLink && (
+          <a
+            href={gig.ticketLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block w-full py-2 text-center text-xs font-semibold uppercase tracking-widest transition-all"
+            style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+          >
+            Get Tickets
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default async function ArtistPage({ params }: Props) {
   const { slug } = await params;
   const artist = getArtistBySlug(slug);
@@ -74,20 +191,31 @@ export default async function ArtistPage({ params }: Props) {
   const pastGigs = artist.pastGigs.filter((g) => g.date < now);
   const upcomingGigs = artist.upcomingGigs.filter((g) => g.date >= now);
 
+  // Resolve media embeds (live players) and link-only platforms (cards).
+  const spotifySrc = artist.spotifyEmbed ? spotifyEmbedSrc(artist.spotifyEmbed) : null;
+  const youtubeSrc = artist.youtubeEmbed ? youtubeEmbedSrc(artist.youtubeEmbed) : null;
+  const linkCards = [
+    !spotifySrc && artist.socials.spotify ? { platform: "spotify", label: "Spotify", href: artist.socials.spotify } : null,
+    !youtubeSrc && artist.socials.youtube ? { platform: "youtube", label: "YouTube", href: artist.socials.youtube } : null,
+  ].filter((c): c is { platform: string; label: string; href: string } => c !== null);
+
+  const hasMedia =
+    Boolean(artist.socials.soundcloud) || Boolean(spotifySrc) || Boolean(youtubeSrc) || linkCards.length > 0;
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       {/* Artist hero */}
       <div className="relative border-b px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
           <Link
-            href="/our-djs"
+            href="/artists"
             className="mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-widest transition-colors"
             style={{ color: "var(--text-30)" }}
           >
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            All DJs
+            All Artists
           </Link>
 
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-[300px_1fr]">
@@ -143,104 +271,121 @@ export default async function ArtistPage({ params }: Props) {
         </div>
       </div>
 
-      {/* SoundCloud track list */}
-      {artist.socials.soundcloud && (
-        <div className="border-t px-6 py-12" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
+      {/* Media — Listen & Watch */}
+      {hasMedia && (
+        <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
           <div className="mx-auto max-w-7xl">
-            <p className="mb-6 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen</p>
-            <iframe
-              width="100%"
-              height="400"
-              scrolling="no"
-              frameBorder="no"
-              allow="autoplay"
-              src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`}
-              className="w-full"
-            />
+            <p className="mb-8 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen &amp; Watch</p>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* SoundCloud */}
+              {artist.socials.soundcloud && (
+                <MediaBox label="SoundCloud">
+                  <iframe
+                    width="100%"
+                    height="320"
+                    scrolling="no"
+                    frameBorder="no"
+                    allow="autoplay"
+                    title={`${artist.name} on SoundCloud`}
+                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`}
+                    className="block w-full"
+                  />
+                </MediaBox>
+              )}
+
+              {/* Spotify */}
+              {spotifySrc && (
+                <MediaBox label="Spotify">
+                  <iframe
+                    src={spotifySrc}
+                    width="100%"
+                    height="320"
+                    frameBorder="0"
+                    loading="lazy"
+                    title={`${artist.name} on Spotify`}
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    className="block w-full"
+                  />
+                </MediaBox>
+              )}
+
+              {/* YouTube */}
+              {youtubeSrc && (
+                <MediaBox label="YouTube">
+                  <div className="aspect-video w-full">
+                    <iframe
+                      src={youtubeSrc}
+                      title={`${artist.name} on YouTube`}
+                      frameBorder="0"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="h-full w-full"
+                    />
+                  </div>
+                </MediaBox>
+              )}
+            </div>
+
+            {/* Link-only platforms */}
+            {linkCards.length > 0 && (
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {linkCards.map((c) => (
+                  <MediaLinkCard key={c.platform} platform={c.platform} label={c.label} href={c.href} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Gigs */}
-      <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+      {/* Upcoming events — flyer boxes */}
+      <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 gap-16 lg:grid-cols-2">
-            {/* Upcoming */}
-            <div>
-              <h2 className="mb-8 flex items-center gap-3 text-xl font-bold uppercase tracking-widest">
-                <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
-                <span style={{ color: "var(--text)" }}>Upcoming</span>
-                <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
-              </h2>
-              {upcomingGigs.length === 0 ? (
-                <p className="text-sm" style={{ color: "var(--text-30)" }}>No upcoming dates announced yet. Check back soon.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {upcomingGigs.map((gig, i) => (
-                    <li key={i} className="flex flex-col gap-1 border p-5" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
-                          <p className="text-xs" style={{ color: "var(--text-40)" }}>
-                            {gig.city}, {gig.country}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs font-medium" style={{ color: "var(--text-60)" }}>{formatDate(gig.date)}</p>
-                          {gig.ticketLink && (
-                            <a
-                              href={gig.ticketLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-1 inline-block text-xs underline underline-offset-2 transition-colors"
-                              style={{ color: "var(--text-30)" }}
-                            >
-                              Tickets
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          <p className="mb-8 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</p>
+          {upcomingGigs.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--text-30)" }}>No upcoming dates announced yet.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+              {upcomingGigs.map((gig, i) => (
+                <FlyerCard key={i} artist={artist} gig={gig} />
+              ))}
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Past gigs */}
-            <div>
-              <h2 className="mb-8 flex items-center gap-3 text-xl font-bold uppercase tracking-widest">
-                <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
-                <span style={{ color: "var(--text-30)" }}>Past Dates</span>
-                <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
-              </h2>
-              {pastGigs.length === 0 ? (
-                <p className="text-sm" style={{ color: "var(--text-30)" }}>No past dates on record.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {[...pastGigs].reverse().map((gig, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start justify-between gap-4 border p-5 opacity-50"
-                      style={{ borderColor: "var(--border)" }}
-                    >
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
-                        <p className="text-xs" style={{ color: "var(--text-40)" }}>
-                          {gig.city}, {gig.country}
-                        </p>
-                      </div>
-                      <p className="text-xs" style={{ color: "var(--text-40)" }}>{formatDate(gig.date)}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
+      {/* Past dates */}
+      <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
+        <div className="mx-auto max-w-7xl">
+          <p className="mb-8 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Past Dates</p>
+          {pastGigs.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--text-30)" }}>No past dates on record.</p>
+          ) : (
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {[...pastGigs].reverse().map((gig, i) => (
+                <li
+                  key={i}
+                  className="flex items-start justify-between gap-4 border p-5 opacity-60"
+                  style={{ borderColor: "var(--border)" }}
+                >
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
+                    <p className="text-xs" style={{ color: "var(--text-40)" }}>
+                      {gig.city}, {gig.country}
+                    </p>
+                  </div>
+                  <p className="text-xs" style={{ color: "var(--text-40)" }}>{formatDate(gig.date)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
       {/* Other artists */}
-      <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
+      <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
           <p className="mb-8 text-center text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-20)" }}>
             Also on the Roster

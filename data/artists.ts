@@ -4,6 +4,9 @@ export interface Gig {
   city: string;
   country: string;
   ticketLink?: string;
+  /** Optional flyer artwork for the event — e.g. "/flyers/xijaro-utrecht.jpg".
+   *  When omitted, a generated poster card is shown from the gig details. */
+  flyer?: string;
 }
 
 export interface Artist {
@@ -21,6 +24,11 @@ export interface Artist {
     youtube?: string;
     beatport?: string;
   };
+  /** Optional live-player embeds shown as media boxes on the artist page.
+   *  spotifyEmbed: a Spotify artist/album/track/playlist URL.
+   *  youtubeEmbed: a single YouTube video or playlist URL. */
+  spotifyEmbed?: string;
+  youtubeEmbed?: string;
   pastGigs: Gig[];
   upcomingGigs: Gig[];
 }
@@ -30,8 +38,8 @@ export const artists: Artist[] = [
     name: "Xijaro & Pitch",
     slug: "xijaro-pitch",
     genre: "Trance / Progressive",
-    tagline: "Masters of melodic trance architecture",
-    bio: "Xijaro & Pitch are one of the most exciting duos in the trance scene, known for their emotionally charged productions and high-energy live performances. Their unique sound bridges melodic storytelling with driving progressive builds, earning them slots at the world's biggest festivals and residencies across Europe and beyond.",
+    tagline: "Melodic trance, built for big rooms",
+    bio: "Xijaro & Pitch are a trance duo known for big, melodic productions and high-energy sets. Their tracks pair emotional melodies with driving progressive builds, and they've played major festivals and club residencies across Europe.",
     image: "/artists/xijaro-pitch.jpg",
     socials: {
       instagram: "https://instagram.com/xijaroandpitch",
@@ -55,8 +63,8 @@ export const artists: Artist[] = [
     name: "C-Systems",
     slug: "c-systems",
     genre: "Progressive Trance",
-    tagline: "Driving progressive sounds from the heart of Russia",
-    bio: "C-Systems has carved a powerful reputation in the progressive trance world with a signature sound that is at once cinematic and relentless. His productions have graced the catalogues of the scene's most respected labels, and his DJ sets take crowds on a journey from atmospheric depths to explosive peaks.",
+    tagline: "Cinematic, driving progressive trance",
+    bio: "C-Systems is a progressive trance producer with a cinematic, driving sound. His music has come out on several of the genre's respected labels, and his sets build from atmospheric openings into big peak-time moments.",
     image: "/artists/c-systems.jpg",
     socials: {
       instagram: "https://instagram.com/csystemsofficial",
@@ -77,8 +85,8 @@ export const artists: Artist[] = [
     name: "Krevix",
     slug: "krevix",
     genre: "Techno / Dark Trance",
-    tagline: "Raw energy meets dark industrial soundscapes",
-    bio: "Krevix stands apart in the electronic music landscape with a sound that merges the raw intensity of techno with the emotional weight of dark trance. His sets are not for the faint-hearted — they are immersive, relentless experiences that leave audiences breathless and wanting more.",
+    tagline: "Techno intensity with a dark trance edge",
+    bio: "Krevix blends the intensity of techno with the darker, emotional side of trance. His sets are loud and relentless, made for late nights and big rooms rather than easy listening.",
     image: "/artists/krevix.jpg",
     socials: {
       instagram: "https://instagram.com/krevix",
@@ -99,7 +107,7 @@ export const artists: Artist[] = [
     slug: "frogr",
     genre: "Melodic Techno / House",
     tagline: "Organic textures, hypnotic grooves",
-    bio: "FROGR blends organic percussion, hypnotic basslines and lush atmospheric pads into a sound that is wholly his own. Rooted in the melodic techno and house tradition but always pushing boundaries, his performances are known for their meditative depth and powerful, emotive climaxes.",
+    bio: "FROGR works in melodic techno and house, building tracks around organic percussion, hypnotic basslines and warm, atmospheric pads. His sets tend to start deep and patient before opening up into bigger, emotional moments.",
     image: "/artists/frogr.jpg",
     socials: {
       instagram: "https://instagram.com/frogr_music",
@@ -120,8 +128,8 @@ export const artists: Artist[] = [
     name: "SAGO",
     slug: "sago",
     genre: "Progressive House / Trance",
-    tagline: "Building bridges between genres and dancefloors",
-    bio: "SAGO is a versatile artist who seamlessly navigates the space between progressive house and uplifting trance. With a deep understanding of crowd dynamics and an impeccable ear for music, SAGO crafts DJ sets that feel like a cohesive journey — building tension, releasing energy, and always leaving the crowd wanting the next chapter.",
+    tagline: "Progressive house meets uplifting trance",
+    bio: "SAGO moves between progressive house and uplifting trance, often inside the same set. He reads a room well and knows when to build tension and when to let it go, which keeps a dancefloor moving.",
     image: "/artists/sago.jpg",
     socials: {
       instagram: "https://instagram.com/sagomusic",
@@ -141,8 +149,8 @@ export const artists: Artist[] = [
     name: "Thiago Genez",
     slug: "thiago",
     genre: "Progressive Trance / Melodic Techno / Hard Techno",
-    tagline: "Brazil-born, London-forged — where trance meets techno",
-    bio: "Thiago Genez is a Brazil-born, London-based DJ and London Sound Academy alumni who began his journey in electronic music in 2018. What started as a passion project quickly evolved into a recognised presence across London's premier venues. His sound moves fluidly between the euphoria of progressive and uplifting trance and the raw intensity of melodic and hard techno — sets that take crowds on a journey through emotion, tension and release. He has performed at Ministry of Sound, EGG LDN and Peckham Audio, and submitted a contest mix for Tomorrowland 2025.",
+    tagline: "Brazil-born, London-based: trance meets techno",
+    bio: "Thiago Genez is a Brazil-born, London-based DJ and London Sound Academy graduate who started in electronic music in 2018. What began as a side project turned into regular slots across London venues. His sets move between progressive and uplifting trance and the harder edge of melodic and hard techno. He has played Ministry of Sound, EGG LDN and Peckham Audio, and submitted a contest mix for Tomorrowland 2025.",
     image: "/artists/thiago.jpg",
     socials: {
       soundcloud: "https://soundcloud.com/thiagogenez",
@@ -161,7 +169,7 @@ export const artists: Artist[] = [
     slug: "mr-b",
     genre: "Hard Trance / Hardstyle",
     tagline: "The hardest sounds, the biggest rooms",
-    bio: "Mr B is a powerhouse of hard trance and hardstyle, with a reputation built on explosive festival performances and an uncompromising commitment to the harder end of the electronic spectrum. His sound is loud, his kicks are punishing, and his crowds are some of the most devoted in the scene.",
+    bio: "Mr B plays hard trance and hardstyle, with a reputation for big festival sets and a no-compromise approach to the heavier stuff. The sound is loud, the kicks hit hard, and the crowd usually shows up ready for it.",
     image: "/artists/mr-b.jpg",
     socials: {
       instagram: "https://instagram.com/mrbofficial",
