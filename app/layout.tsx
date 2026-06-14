@@ -5,9 +5,9 @@ import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "AAA Events — Artist Management & Bookings",
+  title: "AAA Artists — Artist Management & Bookings",
   description:
-    "AAA Events represents world-class electronic music artists. Trance, techno, progressive and more. Book our artists for your event.",
+    "AAA Artists represents world-class electronic music artists. Trance, techno, progressive and more. Book our artists for your event.",
   icons: { icon: "/favicon.svg" },
 };
 

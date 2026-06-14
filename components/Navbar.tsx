@@ -8,9 +8,7 @@ import { useTheme } from "@/components/ThemeProvider";
 
 const links = [
   { href: "/", label: "Home" },
-  { href: "/our-djs", label: "Our DJs" },
-  { href: "/events", label: "Events" },
-  { href: "/connect", label: "Connect" },
+  { href: "/artists", label: "Artists" },
   { href: "/about", label: "About" },
 ];
 
@@ -44,10 +42,10 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center">
           <Image
-            src="/logo.jpg"
-            alt="AAA Events"
+            src="/logo.png"
+            alt="AAA Artists"
             width={80}
-            height={40}
+            height={70}
             className="h-10 w-auto"
             style={{ filter: "var(--logo-filter)" }}
           />

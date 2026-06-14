@@ -75,11 +75,11 @@ function ArtistCard({ artist }: { artist: Artist }) {
           style={{ borderColor: "var(--border)" }}
         >
           <Image
-            src="/logo.jpg"
-            alt="AAA Events"
+            src="/logo.png"
+            alt="AAA Artists"
             width={80}
-            height={40}
-            className="h-8 w-auto"
+            height={70}
+            className="h-9 w-auto"
             style={{ filter: "var(--logo-filter)" }}
           />
         </div>
@@ -115,20 +115,20 @@ function ArtistCard({ artist }: { artist: Artist }) {
   );
 }
 
-export default function OurDJsPage() {
+export default function ArtistsPage() {
   return (
     <div className="min-h-screen px-6 py-20" style={{ backgroundColor: "var(--bg)" }}>
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-16 text-center">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
-            AAA Events
+            AAA Artists
           </p>
           <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>
-            Our DJs
+            Our Artists
           </h1>
           <p className="mx-auto max-w-xl text-base" style={{ color: "var(--text-40)" }}>
-            Seven world-class artists, one agency. Tap any card to learn more.
+            Seven artists, one agency. Tap any card to learn more.
           </p>
         </div>
 
@@ -145,10 +145,10 @@ export default function OurDJsPage() {
             Book an artist
           </p>
           <h2 className="mb-4 text-2xl font-bold" style={{ color: "var(--text)" }}>
-            Interested in booking one of our DJs?
+            Interested in booking one of our artists?
           </h2>
           <p className="mb-8 text-sm" style={{ color: "var(--text-40)" }}>
-            Reach out with your event details — date, venue, capacity, and which artist you have in mind.
+            Reach out with your event details: date, venue, capacity, and which artist you have in mind.
           </p>
           <Link
             href="/contact"

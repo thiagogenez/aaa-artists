@@ -48,11 +48,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Image
-              src="/logo.jpg"
-              alt="AAA Events"
-              width={100}
-              height={50}
-              className="mb-4 h-12 w-auto"
+              src="/logo.png"
+              alt="AAA Artists"
+              width={120}
+              height={105}
+              className="mb-4 h-14 w-auto"
               style={{ filter: "var(--logo-filter)" }}
             />
             <p className="text-sm leading-relaxed" style={{ color: "var(--text-40)" }}>
@@ -68,10 +68,9 @@ export default function Footer() {
             <ul className="space-y-3">
               {[
                 { href: "/", label: "Home" },
-                { href: "/our-djs", label: "Our DJs" },
-                { href: "/events", label: "Past Events" },
-                { href: "/connect", label: "Connect" },
+                { href: "/artists", label: "Artists" },
                 { href: "/about", label: "About" },
+                { href: "/contact", label: "Book Now" },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link href={href} className="text-sm transition-colors" style={{ color: "var(--text-40)" }}>
@@ -126,7 +125,7 @@ export default function Footer() {
         {/* Social icon bar */}
         <div className="mt-12 flex items-center justify-between border-t pt-8" style={{ borderColor: "var(--border)" }}>
           <p className="text-xs" style={{ color: "var(--text-20)" }}>
-            © {new Date().getFullYear()} AAA Events. All rights reserved.
+            © {new Date().getFullYear()} AAA Artists. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             {socials.map(({ href, label, Icon }) => (
