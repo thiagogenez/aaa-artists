@@ -12,42 +12,50 @@ export default function HomePage() {
         className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 text-center"
         style={{ backgroundColor: "var(--bg)" }}
       >
-        {/* Background grid */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-
-        {/* Vertical line top */}
-        <div
-          className="absolute top-0 left-1/2 h-24 w-px -translate-x-1/2"
-          style={{ background: "linear-gradient(to bottom, transparent, var(--border))" }}
-        />
-
         <div className="relative z-10 max-w-4xl">
-          {/* Logo — brand mark, not the hero centrepiece */}
-          <div className="relative mx-auto mb-8 w-24 overflow-hidden md:w-32">
+          {/* Logo with a targeting cross — four rays, each fading out at the logo
+              edge and at its far end, sitting behind the text (-z-10). */}
+          <div className="relative mx-auto mb-8 w-24 md:w-32">
+            {/* Background grid — anchored to the logo and phase-shifted half a cell so a
+                grid line runs through the logo centre, aligning the crosshair to the grid */}
+            <span
+              className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[300vh] w-[300vw] -translate-x-1/2 -translate-y-1/2"
+              style={{
+                backgroundImage:
+                  "linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px)",
+                backgroundSize: "60px 60px",
+                backgroundPosition: "calc(50% + 30px) calc(50% + 30px)",
+              }}
+            />
+            {/* Ray up */}
+            <span
+              className="pointer-events-none absolute bottom-full left-1/2 -z-10 h-[14vh] w-px -translate-x-1/2"
+              style={{ background: "linear-gradient(to top, transparent, var(--border) 50%, transparent)" }}
+            />
+            {/* Ray down */}
+            <span
+              className="pointer-events-none absolute top-full left-1/2 -z-10 h-[14vh] w-px -translate-x-1/2"
+              style={{ background: "linear-gradient(to bottom, transparent, var(--border) 50%, transparent)" }}
+            />
+            {/* Ray left */}
+            <span
+              className="pointer-events-none absolute right-full top-1/2 -z-10 h-px w-[28vw] -translate-y-1/2"
+              style={{ background: "linear-gradient(to left, transparent, var(--border) 50%, transparent)" }}
+            />
+            {/* Ray right */}
+            <span
+              className="pointer-events-none absolute left-full top-1/2 -z-10 h-px w-[28vw] -translate-y-1/2"
+              style={{ background: "linear-gradient(to right, transparent, var(--border) 50%, transparent)" }}
+            />
             <Image
-              src="/logo.jpg"
-              alt="AAA Events"
+              src="/logo.png"
+              alt="AAA Artists"
               width={320}
-              height={160}
-              className="h-auto w-full"
+              height={280}
+              className="relative z-10 h-auto w-full"
               style={{ filter: "var(--logo-filter)" }}
               priority
             />
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[12%]"
-              style={{ background: "linear-gradient(to bottom, var(--bg), transparent)" }} />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[12%]"
-              style={{ background: "linear-gradient(to top, var(--bg), transparent)" }} />
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-[8%]"
-              style={{ background: "linear-gradient(to right, var(--bg), transparent)" }} />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-[8%]"
-              style={{ background: "linear-gradient(to left, var(--bg), transparent)" }} />
           </div>
 
           {/* Headline — 7 words, outcome-focused */}
@@ -59,23 +67,24 @@ export default function HomePage() {
 
           {/* Subheadline — 15 words */}
           <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed md:text-xl" style={{ color: "var(--text-60)" }}>
-            From melodic trance to hard techno — connecting world-class artists
-            with unforgettable events worldwide.
+            From melodic trance to hard techno, we connect great artists
+            with events around the world.
           </p>
 
-          {/* CTAs — booking is primary */}
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          {/* CTAs — sized to the grid: 4 cells wide, 1 cell tall, 2-cell gap, so
+              their edges sit on grid lines. Both opaque so no grid line cuts through. */}
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-[120px]">
             <Link
               href="/contact"
-              className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
+              className="inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest transition-all sm:w-[240px]"
               style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
             >
               Book an Artist
             </Link>
             <Link
-              href="/our-djs"
-              className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
-              style={{ border: "1px solid var(--border)", color: "var(--text-40)" }}
+              href="/artists"
+              className="inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest transition-all sm:w-[240px]"
+              style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg)", color: "var(--text-40)" }}
             >
               See Our Roster →
             </Link>
@@ -83,7 +92,7 @@ export default function HomePage() {
 
           {/* Social proof bar — pulled up from the About section */}
           <div className="mt-14 flex items-center justify-center gap-10 border-t pt-10" style={{ borderColor: "var(--border)" }}>
-            {[["7+", "Artists"], ["50+", "Events per year"], ["20+", "Countries"]].map(([num, label]) => (
+            {[["7+", "Artists"], ["50+", "Shows / year"], ["20+", "Countries"]].map(([num, label]) => (
               <div key={label} className="text-center">
                 <p className="text-2xl font-bold" style={{ color: "var(--text)" }}>{num}</p>
                 <p className="text-xs uppercase tracking-widest" style={{ color: "var(--text-30)" }}>{label}</p>
@@ -91,12 +100,6 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-
-        {/* Vertical line bottom */}
-        <div
-          className="absolute bottom-0 left-1/2 h-24 w-px -translate-x-1/2"
-          style={{ background: "linear-gradient(to top, transparent, var(--border))" }}
-        />
       </section>
 
       {/* About */}
@@ -108,27 +111,27 @@ export default function HomePage() {
               <h2 className="mb-6 text-4xl font-bold leading-tight tracking-tight md:text-5xl" style={{ color: "var(--text)" }}>
                 More than an agency.
                 <br />
-                <span style={{ color: "var(--text-30)" }}>A movement.</span>
+                <span style={{ color: "var(--text-30)" }}>We build careers.</span>
               </h2>
               <div className="space-y-4 text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
                 <p>
-                  AAA Events was built on a simple belief: great music deserves great representation. We work
-                  closely with our artists not just to fill bookings, but to build careers — shaping the right
-                  opportunities, at the right venues, for the right audiences.
+                  AAA Artists started from a simple idea: good music deserves good representation. We work
+                  closely with each artist to build a career over time, not just fill the next date. That
+                  means finding the right rooms and the right crowds for them.
                 </p>
                 <p>
-                  From intimate club nights to festival main stages, we have the connections, experience, and
-                  passion to make every performance count. Our roster spans trance, progressive, techno and
-                  beyond — united by a commitment to quality and authenticity.
+                  We book everything from small club nights to festival main stages, and we know the
+                  promoters and venues that suit each artist. The roster covers trance, progressive, techno
+                  and hardstyle, picked for quality rather than quantity.
                 </p>
                 <p>
-                  If you are looking to book world-class electronic music talent, or you are an artist looking
-                  for serious representation, we want to hear from you.
+                  If you want to book one of our artists, or you're an artist looking for representation,
+                  we'd like to hear from you.
                 </p>
               </div>
               <div className="mt-8">
                 <Link
-                  href="/our-djs"
+                  href="/artists"
                   className="inline-block text-sm font-semibold uppercase tracking-widest transition-colors"
                   style={{ color: "var(--text-60)" }}
                 >
@@ -176,10 +179,10 @@ export default function HomePage() {
           </h2>
           <div className="grid grid-cols-2 gap-px sm:grid-cols-4" style={{ backgroundColor: "var(--border)" }}>
             {[
-              { genre: "Trance", desc: "Melodic, uplifting, euphoric" },
-              { genre: "Progressive", desc: "Deep, cinematic, hypnotic" },
-              { genre: "Techno", desc: "Raw, industrial, driving" },
-              { genre: "Hardstyle", desc: "Powerful kicks, hard energy" },
+              { genre: "Trance", desc: "Melodic and uplifting" },
+              { genre: "Progressive", desc: "Deep and cinematic" },
+              { genre: "Techno", desc: "Raw and driving" },
+              { genre: "Hardstyle", desc: "Hard kicks, big energy" },
             ].map(({ genre, desc }) => (
               <div
                 key={genre}
@@ -211,11 +214,11 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl text-center">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Ready to book?</p>
           <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
-            Bring world-class talent to your event
+            Bring the right artist to your event
           </h2>
           <p className="mb-10 text-base" style={{ color: "var(--text-40)" }}>
-            Whether you are running a club night, a festival, or a private event, we can connect you
-            with the right artist for your audience.
+            Running a club night, a festival, or a private party? Tell us what you're planning and
+            we'll help you find the right artist for the crowd.
           </p>
           <Link
             href="/contact"

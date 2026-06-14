@@ -2,32 +2,32 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About — AAA Events",
-  description: "AAA Events is a music booking and artist management agency representing world-class electronic music talent across trance, techno, progressive and beyond.",
+  title: "About — AAA Artists",
+  description: "AAA Artists is a music booking and artist management agency representing world-class electronic music talent across trance, techno, progressive and beyond.",
 };
 
 const values = [
   {
     title: "Artist First",
-    desc: "We build long-term relationships — not just one-off bookings. Every decision is made with the artist's career in mind.",
+    desc: "We build long-term relationships, not one-off bookings. We make decisions with the artist's career in mind.",
   },
   {
     title: "Quality Over Volume",
-    desc: "We represent a focused roster. That means more attention, better deals, and the right match for every event.",
+    desc: "We keep the roster small. That means more attention per artist and better matches for each event.",
   },
   {
     title: "Global Reach",
-    desc: "With connections across Europe, North America, Asia and beyond, we place our artists on the stages that matter.",
+    desc: "We have contacts across Europe, North America and Asia, and we use them to get artists onto the right stages.",
   },
   {
     title: "Transparent Communication",
-    desc: "No surprises. Clear contracts, honest timelines, and straightforward communication with promoters and artists alike.",
+    desc: "No surprises. Clear contracts, honest timelines, and the same straight talk with promoters and artists.",
   },
 ];
 
 const stats = [
   { value: "7+", label: "Artists Represented" },
-  { value: "50+", label: "Events Per Year" },
+  { value: "50+", label: "Shows Per Year" },
   { value: "20+", label: "Countries" },
   { value: "2018", label: "Founded" },
 ];
@@ -36,18 +36,28 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       {/* Hero */}
-      <section className="border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
-        <div className="mx-auto max-w-4xl">
+      <section className="relative overflow-hidden border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+        {/* Background grid — centred, matching the home hero */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="relative z-10 mx-auto max-w-4xl">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             About Us
           </p>
           <h1 className="mb-8 text-4xl font-bold leading-tight tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>
-            We exist to put the right artists on the right stages.
+            We put the right artists on the right stages.
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed" style={{ color: "var(--text-60)" }}>
-            AAA Events is a music booking and artist management agency built by people who love electronic
-            music. We represent a handpicked roster of world-class DJs and producers — and we work
-            tirelessly to grow their careers, one great booking at a time.
+            AAA Artists is a booking and management agency run by people who love electronic
+            music. We represent a small roster of artists and producers, and we work to grow
+            their careers one good booking at a time.
           </p>
         </div>
       </section>
@@ -75,24 +85,23 @@ export default function AboutPage() {
                 Our Story
               </p>
               <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
-                Born from a passion for electronic music
+                Where we started
               </h2>
               <div className="space-y-4 text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
                 <p>
-                  AAA Events started with a simple frustration: too many great artists were being
-                  misrepresented, underbooked, or lost in the noise of a crowded market. We set out
-                  to do things differently.
+                  AAA Artists started from a simple frustration: too many good artists were badly
+                  represented, underbooked, or just lost in a crowded market. We wanted to do it
+                  differently.
                 </p>
                 <p>
-                  From our first booking to our hundredth event, the focus has never changed — put the
-                  right artist in front of the right crowd, at the right venue, for the right fee.
-                  That sounds simple, but it requires deep knowledge of the music, the market, and the
-                  people involved.
+                  The focus hasn't changed since the first booking. Put the right artist in front of
+                  the right crowd, for a fair fee. That sounds simple, but it takes real knowledge of
+                  the music and the people who run the venues.
                 </p>
                 <p>
-                  Today we represent seven of the most exciting names across trance, progressive,
-                  techno and hardstyle. Our artists have performed at some of the world's most
-                  respected venues and festivals — and we are just getting started.
+                  Today we represent seven artists across trance, progressive, techno and hardstyle.
+                  They've played respected clubs and festivals around the world, and we're still
+                  adding to the roster.
                 </p>
               </div>
             </div>
@@ -106,13 +115,12 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
                 <p>
-                  When you book through AAA Events, you get more than an artist — you get a professional
-                  agency behind every step of the process. Clear communication, solid contracts, and
-                  artists who show up prepared and ready to deliver.
+                  When you book through AAA Artists, you also get an agency that handles the details:
+                  clear communication, straightforward contracts, and artists who turn up prepared.
                 </p>
                 <p>
                   We work with clubs, festivals, and private events of all sizes. Whether you need a
-                  headline act or a support slot, we will find the right fit for your event and audience.
+                  headline act or a support slot, we'll find the right fit for your event and crowd.
                 </p>
               </div>
               <div className="mt-8">
@@ -171,8 +179,8 @@ export default function AboutPage() {
             Artists. Promoters. Festivals.
           </h2>
           <p className="mb-10 text-base leading-relaxed" style={{ color: "var(--text-40)" }}>
-            Whether you want to book one of our artists for your event, or you are an artist looking
-            for serious representation — we want to hear from you.
+            Whether you want to book one of our artists, or you're an artist looking for
+            representation, we'd like to hear from you.
           </p>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
@@ -183,11 +191,11 @@ export default function AboutPage() {
               Book an Artist
             </Link>
             <Link
-              href="/our-djs"
+              href="/artists"
               className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
               style={{ border: "1px solid var(--border)", color: "var(--text-40)" }}
             >
-              View Our DJs
+              View Artists
             </Link>
           </div>
         </div>
