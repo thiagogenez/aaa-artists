@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "adversarial-review": {
+      "source": "poteto/noodle",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/adversarial-review/SKILL.md",
+      "computedHash": "f6c911a45bf080b6c7dcf274b0e22a93d7730ec0efebf2a58934c5be0cd8ac4e"
+    },
+    "landing-page-design": {
+      "source": "inference-sh/skills",
+      "sourceType": "github",
+      "skillPath": "guides/design/landing-page-design/SKILL.md",
+      "computedHash": "19ed3be1e7ee1620ecc3b5801ddcb936add37750f7cadb437afdd7394472f34b"
+    }
+  }
+}
