@@ -40,7 +40,7 @@ export const artists: Artist[] = [
     genre: "Trance / Progressive",
     tagline: "Melodic trance, built for big rooms",
     bio: "Xijaro & Pitch are a trance duo known for big, melodic productions and high-energy sets. Their tracks pair emotional melodies with driving progressive builds, and they've played major festivals and club residencies across Europe.",
-    image: "/artists/xijaro-pitch.jpg",
+    image: "/artists/xijaro-pitch.png",
     socials: {
       instagram: "https://instagram.com/xijaroandpitch",
       soundcloud: "https://soundcloud.com/xijaroandpitch",
@@ -65,7 +65,7 @@ export const artists: Artist[] = [
     genre: "Progressive Trance",
     tagline: "Cinematic, driving progressive trance",
     bio: "C-Systems is a progressive trance producer with a cinematic, driving sound. His music has come out on several of the genre's respected labels, and his sets build from atmospheric openings into big peak-time moments.",
-    image: "/artists/c-systems.jpg",
+    image: "/artists/c-systems.png",
     socials: {
       instagram: "https://instagram.com/csystemsofficial",
       soundcloud: "https://soundcloud.com/c-systems",
@@ -87,7 +87,7 @@ export const artists: Artist[] = [
     genre: "Techno / Dark Trance",
     tagline: "Techno intensity with a dark trance edge",
     bio: "Krevix blends the intensity of techno with the darker, emotional side of trance. His sets are loud and relentless, made for late nights and big rooms rather than easy listening.",
-    image: "/artists/krevix.jpg",
+    image: "/artists/krevix.png",
     socials: {
       instagram: "https://instagram.com/krevix",
       soundcloud: "https://soundcloud.com/krevix",
@@ -108,7 +108,7 @@ export const artists: Artist[] = [
     genre: "Melodic Techno / House",
     tagline: "Organic textures, hypnotic grooves",
     bio: "FROGR works in melodic techno and house, building tracks around organic percussion, hypnotic basslines and warm, atmospheric pads. His sets tend to start deep and patient before opening up into bigger, emotional moments.",
-    image: "/artists/frogr.jpg",
+    image: "/artists/frogr.png",
     socials: {
       instagram: "https://instagram.com/frogr_music",
       soundcloud: "https://soundcloud.com/frogr",
@@ -130,7 +130,7 @@ export const artists: Artist[] = [
     genre: "Progressive House / Trance",
     tagline: "Progressive house meets uplifting trance",
     bio: "SAGO moves between progressive house and uplifting trance, often inside the same set. He reads a room well and knows when to build tension and when to let it go, which keeps a dancefloor moving.",
-    image: "/artists/sago.jpg",
+    image: "/artists/sago.png",
     socials: {
       instagram: "https://instagram.com/sagomusic",
       soundcloud: "https://soundcloud.com/sago",
@@ -151,7 +151,7 @@ export const artists: Artist[] = [
     genre: "Progressive Trance / Melodic Techno / Hard Techno",
     tagline: "Brazil-born, London-based: trance meets techno",
     bio: "Thiago Genez is a Brazil-born, London-based DJ and London Sound Academy graduate who started in electronic music in 2018. What began as a side project turned into regular slots across London venues. His sets move between progressive and uplifting trance and the harder edge of melodic and hard techno. He has played Ministry of Sound, EGG LDN and Peckham Audio, and submitted a contest mix for Tomorrowland 2025.",
-    image: "/artists/thiago.jpg",
+    image: "/artists/placeholder.jpg",
     socials: {
       soundcloud: "https://soundcloud.com/thiagogenez",
       youtube: "https://youtube.com/thiagogenez",
@@ -170,7 +170,7 @@ export const artists: Artist[] = [
     genre: "Hard Trance / Hardstyle",
     tagline: "The hardest sounds, the biggest rooms",
     bio: "Mr B plays hard trance and hardstyle, with a reputation for big festival sets and a no-compromise approach to the heavier stuff. The sound is loud, the kicks hit hard, and the crowd usually shows up ready for it.",
-    image: "/artists/mr-b.jpg",
+    image: "/artists/placeholder.jpg",
     socials: {
       instagram: "https://instagram.com/mrbofficial",
       soundcloud: "https://soundcloud.com/mrbdj",

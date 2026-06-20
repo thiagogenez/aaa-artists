@@ -5,10 +5,10 @@ import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "AAA Artists — Artist Management & Bookings",
+  title: "AAA Artists",
   description:
     "AAA Artists represents world-class electronic music artists. Trance, techno, progressive and more. Book our artists for your event.",
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: "/favicon.png" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
