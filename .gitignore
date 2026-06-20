@@ -4,5 +4,11 @@ out/
 .env*
 !.env.local.example
 *.log
+
+# Scratch/source staging — copied into public/artists, not used by the app
+img/
+
+# Next.js auto-generated (path churns between dev/build)
+next-env.d.ts
 .claude/settings.local.json
 .agents/
