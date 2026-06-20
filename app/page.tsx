@@ -3,13 +3,13 @@ import Link from "next/link";
 import { artists } from "@/data/artists";
 
 export default function HomePage() {
-  const featuredArtists = artists.slice(0, 4);
+  const featuredArtists = artists.filter((artist) => artist.image !== "/artists/placeholder.jpg").slice(0, 4);
 
   return (
     <>
       {/* Hero */}
       <section
-        className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 text-center"
+        className="relative flex min-h-[90vh] flex-col items-center justify-start overflow-hidden px-6 pt-[120px] pb-24 text-center"
         style={{ backgroundColor: "var(--bg)" }}
       >
         <div className="relative z-10 max-w-4xl">
@@ -90,8 +90,8 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Social proof bar — pulled up from the About section */}
-          <div className="mt-14 flex items-center justify-center gap-10 border-t pt-10" style={{ borderColor: "var(--border)" }}>
+          {/* Social proof bar — no manual rule; the background grid lines act as dividers */}
+          <div className="mt-16 flex items-center justify-center gap-10">
             {[["7+", "Artists"], ["50+", "Shows / year"], ["20+", "Countries"]].map(([num, label]) => (
               <div key={label} className="text-center">
                 <p className="text-2xl font-bold" style={{ color: "var(--text)" }}>{num}</p>
@@ -107,7 +107,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
             <div>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Who We Are</p>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Who We Are</p>
               <h2 className="mb-6 text-4xl font-bold leading-tight tracking-tight md:text-5xl" style={{ color: "var(--text)" }}>
                 More than an agency.
                 <br />
@@ -150,18 +150,23 @@ export default function HomePage() {
                     className="group relative aspect-square overflow-hidden border transition-all duration-300"
                     style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
                   >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
-                      <div className="mb-2 h-12 w-12 flex items-center justify-center rounded-full transition-all"
-                        style={{ backgroundColor: "var(--surface-2)" }}>
-                        <span className="text-lg font-bold transition-all" style={{ color: "var(--text-30)" }}>
-                          {artist.name.charAt(0)}
-                        </span>
-                      </div>
-                      <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{artist.name}</p>
-                      <p className="text-xs" style={{ color: "var(--text-40)" }}>{artist.genre}</p>
+                    <Image
+                      src={artist.image}
+                      alt={artist.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      style={{ filter: "var(--artist-photo-filter)" }}
+                      sizes="(max-width: 1024px) 0px, 25vw"
+                    />
+                    <div
+                      className="absolute inset-x-0 bottom-0 p-4"
+                      style={{ background: "var(--artist-photo-gradient)" }}
+                    >
+                      <p className="text-sm font-semibold text-white">{artist.name}</p>
+                      <p className="text-xs text-white/55">{artist.genre}</p>
                     </div>
                     <div className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-                      style={{ backgroundColor: "var(--text-30)" }} />
+                      style={{ backgroundColor: "var(--card-line)" }} />
                   </Link>
                 ))}
               </div>
@@ -173,7 +178,7 @@ export default function HomePage() {
       {/* Genres */}
       <section className="border-t px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
         <div className="mx-auto max-w-7xl">
-          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Genres</p>
+          <p className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Genres</p>
           <h2 className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
             Across the electronic spectrum
           </h2>
@@ -194,8 +199,8 @@ export default function HomePage() {
                   style={{ backgroundColor: "var(--surface)" }}
                 />
                 <div
-                  className="absolute inset-x-0 top-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-                  style={{ backgroundColor: "var(--text-20)" }}
+                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                  style={{ backgroundColor: "var(--card-line)" }}
                 />
                 <p className="relative text-xl font-bold transition-all duration-300 group-hover:-translate-y-0.5" style={{ color: "var(--text)" }}>
                   {genre}
@@ -212,7 +217,7 @@ export default function HomePage() {
       {/* CTA */}
       <section className="border-t px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Ready to book?</p>
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Ready to book?</p>
           <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
             Bring the right artist to your event
           </h2>

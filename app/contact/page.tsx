@@ -65,7 +65,7 @@ function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
-  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [open, setOpen] = useState<Record<string, boolean>>({ details: true });
   const toggle = (id: string) => setOpen((o) => ({ ...o, [id]: !o[id] }));
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -501,7 +501,7 @@ export default function ContactPage() {
     <div className="min-h-screen px-6 py-20" style={{ backgroundColor: "var(--bg)" }}>
       <div className="mx-auto max-w-3xl">
         <div className="mb-12">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             AAA Artists
           </p>
           <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl" style={{ color: "var(--text)" }}>

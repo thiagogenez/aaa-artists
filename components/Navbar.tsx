@@ -156,18 +156,31 @@ export default function Navbar() {
                 <Link
                   href={href}
                   onClick={() => setOpen(false)}
-                  className="text-lg font-medium tracking-widest uppercase"
+                  className="group relative inline-block text-base font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
                   style={{ color: pathname === href ? "var(--text)" : "var(--text-40)" }}
                 >
                   {label}
+                  <span
+                    className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                    style={{ backgroundColor: "var(--text-20)" }}
+                  />
                 </Link>
               </li>
             ))}
             <li>
               <Link
                 href="/contact"
-                className="inline-block px-5 py-2 text-sm uppercase tracking-widest"
+                onClick={() => setOpen(false)}
+                className="inline-block px-5 py-2 text-sm uppercase tracking-widest transition-all"
                 style={{ border: "1px solid var(--border)", color: "var(--text-40)" }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "var(--text)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--text)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--text-40)";
+                }}
               >
                 Book Now
               </Link>

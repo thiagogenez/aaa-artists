@@ -18,9 +18,9 @@ function ArtistCard({ artist }: { artist: Artist }) {
 
   return (
     <div
-      className="relative cursor-pointer select-none"
-      style={{ height: "380px" }}
+      className="group relative mx-auto aspect-square w-full max-w-md cursor-pointer select-none sm:max-w-none lg:aspect-auto lg:h-[380px]"
       onClick={() => setFlipped((f) => !f)}
+      onMouseLeave={() => setFlipped(false)}
     >
       {/* ── Front face ── */}
       <div
@@ -33,23 +33,33 @@ function ArtistCard({ artist }: { artist: Artist }) {
         }}
       >
         <Image
-          src="/artists/placeholder.jpg"
+          src={artist.image}
           alt={artist.name}
           fill
-          className="object-cover"
-          style={{ filter: "grayscale(55%) contrast(1.1) brightness(0.85)" }}
+          className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+          style={{ filter: "var(--artist-photo-filter)" }}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        />
+        {/* Hover wash — same as the home cards */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{ backgroundColor: "var(--card-wash)" }}
         />
         {/* Bottom gradient + name */}
         <div
           className="absolute inset-x-0 bottom-0 p-5"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)" }}
+          style={{ background: "var(--artist-photo-gradient)" }}
         >
           <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
             {artist.genre}
           </p>
-          <p className="text-lg font-bold text-white">{artist.name}</p>
+          <p className="text-base font-bold text-white sm:text-lg">{artist.name}</p>
         </div>
+        {/* Hover line sweep — bottom + center origin, matching the home featured tiles */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+          style={{ backgroundColor: "var(--card-line)" }}
+        />
         {/* Tap hint badge */}
         <div
           className="absolute right-3 top-3 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/60"
@@ -90,7 +100,7 @@ function ArtistCard({ artist }: { artist: Artist }) {
             <p className="mb-1 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-30)" }}>
               {artist.genre}
             </p>
-            <h2 className="mb-3 text-2xl font-bold leading-tight" style={{ color: "var(--text)" }}>
+            <h2 className="mb-3 text-xl font-bold leading-tight sm:text-2xl" style={{ color: "var(--text)" }}>
               {artist.name}
             </h2>
             <p className="line-clamp-3 text-sm leading-relaxed" style={{ color: "var(--text-60)" }}>
@@ -101,8 +111,8 @@ function ArtistCard({ artist }: { artist: Artist }) {
           <Link
             href={`/artist/${artist.slug}`}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex w-full items-center justify-center gap-2 border py-2.5 text-sm font-semibold uppercase tracking-widest transition-colors"
-            style={{ borderColor: "var(--border)", color: "var(--text)" }}
+            className="inline-flex w-full items-center justify-center gap-2 py-2.5 text-sm font-semibold uppercase tracking-widest transition-opacity hover:opacity-90"
+            style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
           >
             View Profile
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,13 +125,59 @@ function ArtistCard({ artist }: { artist: Artist }) {
   );
 }
 
+function BookingCard() {
+  return (
+    <Link
+      href="/contact"
+      className="group relative mx-auto flex aspect-square w-full max-w-md flex-col justify-between overflow-hidden border p-6 transition-all sm:max-w-none lg:aspect-auto lg:h-[380px]"
+      style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
+    >
+      {/* Hover wash — same as the artist cards */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ backgroundColor: "var(--card-wash)" }}
+      />
+
+      <div className="relative">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          Bookings
+        </p>
+        <h2 className="text-2xl font-bold leading-tight" style={{ color: "var(--text)" }}>
+          Need the right artist for your event?
+        </h2>
+      </div>
+
+      <div className="relative">
+        <p className="mb-6 text-sm leading-relaxed" style={{ color: "var(--text-40)" }}>
+          Send the date, venue, capacity, and the sound you want. We will help match the room.
+        </p>
+        <span
+          className="inline-flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold uppercase tracking-widest transition-all"
+          style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+        >
+          Enquire Now
+          <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </div>
+
+      {/* Hover line sweep — bottom + center origin, matching the artist cards */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+        style={{ backgroundColor: "var(--card-line)" }}
+      />
+    </Link>
+  );
+}
+
 export default function ArtistsPage() {
   return (
     <div className="min-h-screen px-6 py-20" style={{ backgroundColor: "var(--bg)" }}>
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-16 text-center">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             AAA Artists
           </p>
           <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>
@@ -133,30 +189,11 @@ export default function ArtistsPage() {
         </div>
 
         {/* Artist grid */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {artists.map((artist) => (
             <ArtistCard key={artist.slug} artist={artist} />
           ))}
-        </div>
-
-        {/* Booking CTA */}
-        <div className="mt-20 border p-8 text-center md:p-10" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
-            Book an artist
-          </p>
-          <h2 className="mb-4 text-2xl font-bold" style={{ color: "var(--text)" }}>
-            Interested in booking one of our artists?
-          </h2>
-          <p className="mb-8 text-sm" style={{ color: "var(--text-40)" }}>
-            Reach out with your event details: date, venue, capacity, and which artist you have in mind.
-          </p>
-          <Link
-            href="/contact"
-            className="inline-block px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
-            style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
-          >
-            Send a Booking Enquiry
-          </Link>
+          <BookingCard />
         </div>
       </div>
     </div>

@@ -219,12 +219,18 @@ export default async function ArtistPage({ params }: Props) {
           </Link>
 
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-[300px_1fr]">
-            {/* Photo placeholder */}
-            <div className="flex flex-col gap-4">
+            {/* Artist photo */}
+            <div className="mx-auto flex w-full max-w-[320px] flex-col gap-4 lg:mx-0 lg:max-w-none">
               <div className="relative aspect-square overflow-hidden border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-8xl font-bold" style={{ color: "var(--text-20)" }}>{artist.name.charAt(0)}</span>
-                </div>
+                <Image
+                  src={artist.image}
+                  alt={artist.name}
+                  fill
+                  className="object-cover"
+                  style={{ filter: "var(--artist-photo-filter)" }}
+                  sizes="(max-width: 1024px) 320px, 300px"
+                  priority
+                />
               </div>
 
               {/* Socials */}
@@ -260,7 +266,7 @@ export default async function ArtistPage({ params }: Props) {
 
             {/* Info */}
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
                 {artist.genre}
               </p>
               <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>{artist.name}</h1>
@@ -275,7 +281,7 @@ export default async function ArtistPage({ params }: Props) {
       {hasMedia && (
         <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
           <div className="mx-auto max-w-7xl">
-            <p className="mb-8 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen &amp; Watch</p>
+            <p className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen &amp; Watch</p>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* SoundCloud */}
@@ -343,7 +349,7 @@ export default async function ArtistPage({ params }: Props) {
       {/* Upcoming events — flyer boxes */}
       <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
-          <p className="mb-8 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</p>
+          <p className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</p>
           {upcomingGigs.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--text-30)" }}>No upcoming dates announced yet.</p>
           ) : (
@@ -359,7 +365,7 @@ export default async function ArtistPage({ params }: Props) {
       {/* Past dates */}
       <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
         <div className="mx-auto max-w-7xl">
-          <p className="mb-8 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Past Dates</p>
+          <p className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Past Dates</p>
           {pastGigs.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--text-30)" }}>No past dates on record.</p>
           ) : (
@@ -387,7 +393,7 @@ export default async function ArtistPage({ params }: Props) {
       {/* Other artists */}
       <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
-          <p className="mb-8 text-center text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-20)" }}>
+          <p className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-20)" }}>
             Also on the Roster
           </p>
           <div className="flex flex-wrap justify-center gap-4">

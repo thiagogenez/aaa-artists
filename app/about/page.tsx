@@ -48,7 +48,7 @@ export default function AboutPage() {
           }}
         />
         <div className="relative z-10 mx-auto max-w-4xl">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             About Us
           </p>
           <h1 className="mb-8 text-4xl font-bold leading-tight tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>
@@ -67,9 +67,21 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-2 gap-px sm:grid-cols-4" style={{ backgroundColor: "var(--border)" }}>
             {stats.map(({ value, label }) => (
-              <div key={label} className="px-8 py-10 text-center" style={{ backgroundColor: "var(--bg)" }}>
-                <p className="text-4xl font-bold" style={{ color: "var(--text)" }}>{value}</p>
-                <p className="mt-1 text-sm" style={{ color: "var(--text-40)" }}>{label}</p>
+              <div
+                key={label}
+                className="group relative overflow-hidden px-8 py-10 text-center transition-all duration-300"
+                style={{ backgroundColor: "var(--bg)" }}
+              >
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{ backgroundColor: "var(--surface)" }}
+                />
+                <div
+                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                  style={{ backgroundColor: "var(--card-line)" }}
+                />
+                <p className="relative text-4xl font-bold transition-all duration-300 group-hover:-translate-y-0.5" style={{ color: "var(--text)" }}>{value}</p>
+                <p className="relative mt-1 text-sm transition-all duration-300" style={{ color: "var(--text-40)" }}>{label}</p>
               </div>
             ))}
           </div>
@@ -81,7 +93,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-start">
             <div>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
                 Our Story
               </p>
               <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
@@ -107,7 +119,7 @@ export default function AboutPage() {
             </div>
 
             <div>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
                 For Promoters
               </p>
               <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
@@ -140,7 +152,7 @@ export default function AboutPage() {
       {/* Values */}
       <section className="border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
         <div className="mx-auto max-w-7xl">
-          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             How We Work
           </p>
           <h2 className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
@@ -158,8 +170,8 @@ export default function AboutPage() {
                   style={{ backgroundColor: "var(--surface)" }}
                 />
                 <div
-                  className="absolute inset-x-0 top-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-                  style={{ backgroundColor: "var(--text-20)" }}
+                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                  style={{ backgroundColor: "var(--card-line)" }}
                 />
                 <h3 className="relative mb-3 text-base font-bold transition-all duration-300 group-hover:-translate-y-0.5" style={{ color: "var(--text)" }}>{title}</h3>
                 <p className="relative text-sm leading-relaxed transition-all duration-300" style={{ color: "var(--text-40)" }}>{desc}</p>
@@ -172,7 +184,7 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="px-6 py-24" style={{ backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             Work With Us
           </p>
           <h2 className="mb-6 text-3xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
