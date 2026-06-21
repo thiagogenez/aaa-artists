@@ -154,7 +154,7 @@ export default function HomePage() {
                       src={artist.image}
                       alt={artist.name}
                       fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                       style={{ filter: "var(--artist-photo-filter)" }}
                       sizes="(max-width: 1024px) 0px, 25vw"
                     />

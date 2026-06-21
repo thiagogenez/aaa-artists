@@ -141,7 +141,7 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
             src={gig.flyer}
             alt={`${artist.name} at ${gig.venue}`}
             fill
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         ) : (
@@ -306,7 +306,7 @@ export default async function ArtistPage({ params }: Props) {
       {hasMedia && (
         <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
           <div className="mx-auto max-w-7xl">
-            <p className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen &amp; Watch</p>
+            <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen &amp; Watch</h2>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* SoundCloud */}
@@ -373,7 +373,7 @@ export default async function ArtistPage({ params }: Props) {
       {/* Upcoming events — flyer boxes */}
       <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
-          <p className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</p>
+          <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</h2>
           {upcomingGigs.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--text-30)" }}>No upcoming dates announced yet.</p>
           ) : (
@@ -389,7 +389,7 @@ export default async function ArtistPage({ params }: Props) {
       {/* Past dates */}
       <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
         <div className="mx-auto max-w-7xl">
-          <p className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Past Dates</p>
+          <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Past Dates</h2>
           {pastGigs.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--text-30)" }}>No past dates on record.</p>
           ) : (
@@ -417,9 +417,9 @@ export default async function ArtistPage({ params }: Props) {
       {/* Other artists */}
       <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
-          <p className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-20)" }}>
+          <h2 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-20)" }}>
             Also on the Roster
-          </p>
+          </h2>
           <div className="flex flex-wrap justify-center gap-4">
             {artists
               .filter((a) => a.slug !== slug)
