@@ -40,7 +40,7 @@ export const artists: Artist[] = [
     genre: "Trance / Progressive",
     tagline: "Melodic trance, built for big rooms",
     bio: "Xijaro & Pitch are a trance duo known for big, melodic productions and high-energy sets. Their tracks pair emotional melodies with driving progressive builds, and they've played major festivals and club residencies across Europe.",
-    image: "/artists/xijaro-pitch.png",
+    image: "/artists/xijaro-pitch.webp",
     socials: {
       instagram: "https://instagram.com/xijaroandpitch",
       soundcloud: "https://soundcloud.com/xijaroandpitch",
@@ -65,7 +65,7 @@ export const artists: Artist[] = [
     genre: "Progressive Trance",
     tagline: "Cinematic, driving progressive trance",
     bio: "C-Systems is a progressive trance producer with a cinematic, driving sound. His music has come out on several of the genre's respected labels, and his sets build from atmospheric openings into big peak-time moments.",
-    image: "/artists/c-systems.png",
+    image: "/artists/c-systems.webp",
     socials: {
       instagram: "https://instagram.com/csystemsofficial",
       soundcloud: "https://soundcloud.com/c-systems",
@@ -87,7 +87,7 @@ export const artists: Artist[] = [
     genre: "Techno / Dark Trance",
     tagline: "Techno intensity with a dark trance edge",
     bio: "Krevix blends the intensity of techno with the darker, emotional side of trance. His sets are loud and relentless, made for late nights and big rooms rather than easy listening.",
-    image: "/artists/krevix.png",
+    image: "/artists/krevix.webp",
     socials: {
       instagram: "https://instagram.com/krevix",
       soundcloud: "https://soundcloud.com/krevix",
@@ -108,7 +108,7 @@ export const artists: Artist[] = [
     genre: "Melodic Techno / House",
     tagline: "Organic textures, hypnotic grooves",
     bio: "FROGR works in melodic techno and house, building tracks around organic percussion, hypnotic basslines and warm, atmospheric pads. His sets tend to start deep and patient before opening up into bigger, emotional moments.",
-    image: "/artists/frogr.png",
+    image: "/artists/frogr.webp",
     socials: {
       instagram: "https://instagram.com/frogr_music",
       soundcloud: "https://soundcloud.com/frogr",
@@ -130,7 +130,7 @@ export const artists: Artist[] = [
     genre: "Progressive House / Trance",
     tagline: "Progressive house meets uplifting trance",
     bio: "SAGO moves between progressive house and uplifting trance, often inside the same set. He reads a room well and knows when to build tension and when to let it go, which keeps a dancefloor moving.",
-    image: "/artists/sago.png",
+    image: "/artists/sago.webp",
     socials: {
       instagram: "https://instagram.com/sagomusic",
       soundcloud: "https://soundcloud.com/sago",
