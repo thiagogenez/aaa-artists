@@ -24,8 +24,9 @@ pastGigs:
     city: Amsterdam
     country: Netherlands
 upcomingGigs:
-  - date: '2026-09-12'
+  # Ticket link but no flyer → "Get Tickets" button + an auto-generated poster
+  - date: "2026-09-12"
     venue: Elrow
     city: Barcelona
     country: Spain
-    ticketLink: '#'
+    ticketLink: https://elrow.com/

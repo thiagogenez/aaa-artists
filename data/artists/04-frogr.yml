@@ -25,13 +25,16 @@ pastGigs:
     city: London
     country: UK
 upcomingGigs:
-  - date: '2026-07-18'
+  # Full example: ticket link + flyer artwork
+  - date: "2026-07-18"
     venue: Melt Festival
     city: Gräfenhainichen
     country: Germany
-    ticketLink: '#'
-  - date: '2026-08-30'
+    ticketLink: https://www.meltfestival.de/
+    flyer: /flyers/frogr-melt.webp
+  # Ticket link only → "Get Tickets" + auto-generated poster
+  - date: "2026-08-30"
     venue: Dekmantel
     city: Amsterdam
     country: Netherlands
-    ticketLink: '#'
+    ticketLink: https://www.dekmantelfestival.com/

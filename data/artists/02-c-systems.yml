@@ -26,8 +26,10 @@ pastGigs:
     city: Cluj-Napoca
     country: Romania
 upcomingGigs:
-  - date: '2026-06-27'
+  # Full example: real ticket link + flyer artwork (poster file in public/flyers/)
+  - date: "2026-06-27"
     venue: Luminosity Beach Festival
     city: Bloemendaal
     country: Netherlands
-    ticketLink: '#'
+    ticketLink: https://www.luminosity-events.nl/
+    flyer: /flyers/csystems-luminosity.webp

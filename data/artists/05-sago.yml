@@ -24,8 +24,9 @@ pastGigs:
     city: Singapore
     country: Singapore
 upcomingGigs:
-  - date: '2026-06-20'
+  # Minimal example: no ticketLink/flyer yet → "Tickets soon" chip + auto-generated poster.
+  # Add `ticketLink:` and `flyer:` when you have them (see the other artist files).
+  - date: "2026-06-20"
     venue: Sensation
     city: Amsterdam
     country: Netherlands
-    ticketLink: '#'

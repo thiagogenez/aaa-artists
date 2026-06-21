@@ -26,13 +26,13 @@ pastGigs:
     city: Arnhem
     country: Netherlands
 upcomingGigs:
-  - date: '2026-06-13'
+  - date: "2026-06-13"
     venue: Defqon.1
     city: Almere
     country: Netherlands
-    ticketLink: '#'
-  - date: '2026-09-05'
+    ticketLink: https://www.defqon1.com/
+  - date: "2026-09-05"
     venue: Qlimax
     city: Arnhem
     country: Netherlands
-    ticketLink: '#'
+    ticketLink: https://www.q-dance.com/
