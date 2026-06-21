@@ -24,6 +24,20 @@ const TICKETING = ["Ticketed", "Free entry", "Private / guestlist"];
 
 const HEAR_ABOUT = ["Instagram", "SoundCloud / YouTube", "Google search", "Personal referral", "Booked with us before", "Other"];
 
+const EMAIL_DOMAINS = ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "icloud.com", "proton.me"];
+
+// Build "local@domain" suggestions from what the user has typed so far.
+function emailSuggestions(value: string): string[] {
+  if (!value || /\s/.test(value)) return [];
+  const [local, domainPart = ""] = value.split("@");
+  if (!local) return [];
+  if (value.includes("@")) {
+    return EMAIL_DOMAINS.filter((d) => d.startsWith(domainPart.toLowerCase()) && d !== domainPart.toLowerCase())
+      .map((d) => `${local}@${d}`);
+  }
+  return EMAIL_DOMAINS.map((d) => `${local}@${d}`);
+}
+
 // Formspree delivers booking enquiries straight to your inbox + dashboard with no
 // backend. Create a free form at https://formspree.io, then set the form ID via the
 // NEXT_PUBLIC_FORMSPREE_ID environment variable (e.g. "xnqkergb"). Until it is set,
@@ -68,14 +82,32 @@ function ContactForm() {
   const [open, setOpen] = useState<Record<string, boolean>>({ details: true });
   const toggle = (id: string) => setOpen((o) => ({ ...o, [id]: !o[id] }));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // Only the essentials are required; the rest help us quote but stay optional.
+  const REQUIRED_FIELDS: { key: keyof typeof form; label: string; section: string }[] = [
+    { key: "name", label: "Name", section: "details" },
+    { key: "email", label: "Email", section: "details" },
+    { key: "artist", label: "Artist", section: "booking" },
+    { key: "date", label: "Event date", section: "booking" },
+  ];
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = "Name is required";
-    if (!form.email.trim()) e.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email address";
-    if (!form.message.trim()) e.message = "Please include a message";
+    for (const { key, label } of REQUIRED_FIELDS) {
+      if (!String(form[key] ?? "").trim()) e[key] = `${label} is required`;
+    }
+    if (form.email.trim() && !EMAIL_RE.test(form.email)) e.email = "Invalid email address";
     return e;
+  }
+
+  function fieldError(name: string, value: string): string {
+    const def = REQUIRED_FIELDS.find((f) => f.key === name);
+    if (!def) return "";
+    if (!value.trim()) return `${def.label} is required`;
+    if (name === "email" && !EMAIL_RE.test(value)) return "Invalid email address";
+    return "";
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
@@ -83,17 +115,32 @@ function ContactForm() {
     setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   }
 
+  // Validate a field when the user leaves it (only flags real problems, never premature).
+  function handleBlur(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const msg = fieldError(e.target.name, e.target.value);
+    if (msg) setErrors((prev) => ({ ...prev, [e.target.name]: msg }));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitAttempted(true);
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
-      // Open any collapsed section that contains an error so it is visible.
-      setOpen((o) => ({
-        ...o,
-        details: o.details || Boolean(errs.name || errs.email),
-        message: o.message || Boolean(errs.message),
-      }));
+      // Open every collapsed section that contains an error so it is visible.
+      const sectionsWithErrors = REQUIRED_FIELDS.filter((f) => errs[f.key]).map((f) => f.section);
+      setOpen((o) => {
+        const next = { ...o };
+        for (const s of sectionsWithErrors) next[s] = true;
+        return next;
+      });
+      // Move focus to the first invalid field (after collapsed sections expand).
+      const firstInvalid = REQUIRED_FIELDS.map((f) => f.key).find((k) => errs[k]);
+      if (firstInvalid) {
+        requestAnimationFrame(() => {
+          (document.querySelector(`[name="${firstInvalid}"]`) as HTMLElement | null)?.focus();
+        });
+      }
       return;
     }
 
@@ -212,28 +259,46 @@ function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-8">
+      {submitAttempted && Object.values(errors).some(Boolean) && (
+        <div
+          role="alert"
+          className="border px-4 py-3 text-sm"
+          style={{ borderColor: "var(--error)", color: "var(--error)", backgroundColor: "var(--surface)" }}
+        >
+          Please fix the following: {Object.values(errors).filter(Boolean).join(". ")}.
+        </div>
+      )}
       <div className="space-y-3">
-      <Collapsible step="01" title="Your details" open={open.details} onToggle={() => toggle("details")} error={Boolean(errors.name || errors.email)}>
+      <Collapsible step="01" title="Your details" open={open.details} onToggle={() => toggle("details")} error={Boolean(errors.name || errors.company || errors.email || errors.phone)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Your Name" required error={errors.name}>
-            <Input name="name" placeholder="Jane Smith" value={form.name} onChange={handleChange} error={errors.name} />
+            <Input name="name" placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
           </Field>
           <Field label="Company / Promoter">
-            <Input name="company" placeholder="Your venue, brand or agency" value={form.company} onChange={handleChange} />
+            <Input name="company" placeholder="Your venue, brand or agency" value={form.company} onChange={handleChange} onBlur={handleBlur} error={errors.company} />
           </Field>
           <Field label="Email Address" required error={errors.email}>
-            <Input name="email" type="email" placeholder="jane@example.com" value={form.email} onChange={handleChange} error={errors.email} />
+            <EmailField
+              value={form.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              onSelect={(val) => {
+                setForm((f) => ({ ...f, email: val }));
+                setErrors((p) => ({ ...p, email: "" }));
+              }}
+              error={errors.email}
+            />
           </Field>
           <Field label="Phone Number">
-            <Input name="phone" type="tel" placeholder="+44 7700 000000" value={form.phone} onChange={handleChange} />
+            <Input name="phone" type="tel" placeholder="+44 7700 000000" value={form.phone} onChange={handleChange} onBlur={handleBlur} error={errors.phone} />
           </Field>
         </div>
       </Collapsible>
 
-      <Collapsible step="02" title="The booking" open={open.booking} onToggle={() => toggle("booking")}>
+      <Collapsible step="02" title="The booking" open={open.booking} onToggle={() => toggle("booking")} error={Boolean(errors.artist || errors.eventName || errors.eventType || errors.date || errors.setTime || errors.setLength)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <Field label="Artist You Want to Book">
-            <Select name="artist" value={form.artist} onChange={handleChange}>
+          <Field label="Artist You Want to Book" required error={errors.artist}>
+            <Select name="artist" value={form.artist} onChange={handleChange} error={errors.artist}>
               <option value="">Select an artist…</option>
               {artists.map((a) => (
                 <option key={a.slug} value={a.name}>{a.name}</option>
@@ -242,22 +307,22 @@ function ContactForm() {
             </Select>
           </Field>
           <Field label="Event Name">
-            <Input name="eventName" placeholder="e.g. Saturday Sessions" value={form.eventName} onChange={handleChange} />
+            <Input name="eventName" placeholder="e.g. Saturday Sessions" value={form.eventName} onChange={handleChange} onBlur={handleBlur} error={errors.eventName} />
           </Field>
           <Field label="Event Type">
-            <Select name="eventType" value={form.eventType} onChange={handleChange}>
+            <Select name="eventType" value={form.eventType} onChange={handleChange} error={errors.eventType}>
               <option value="">Select type…</option>
               {EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
           </Field>
-          <Field label="Event Date">
-            <Input name="date" type="date" value={form.date} onChange={handleChange} />
+          <Field label="Event Date" required error={errors.date}>
+            <Input name="date" type="date" value={form.date} onChange={handleChange} onBlur={handleBlur} error={errors.date} />
           </Field>
           <Field label="Set Time">
-            <Input name="setTime" placeholder="e.g. 23:00 – 01:00" value={form.setTime} onChange={handleChange} />
+            <Input name="setTime" placeholder="e.g. 23:00 – 01:00" value={form.setTime} onChange={handleChange} onBlur={handleBlur} error={errors.setTime} />
           </Field>
           <Field label="Set Length">
-            <Select name="setLength" value={form.setLength} onChange={handleChange}>
+            <Select name="setLength" value={form.setLength} onChange={handleChange} error={errors.setLength}>
               <option value="">Select length…</option>
               {SET_LENGTHS.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
@@ -265,16 +330,16 @@ function ContactForm() {
         </div>
       </Collapsible>
 
-      <Collapsible step="03" title="Venue & audience" open={open.venue} onToggle={() => toggle("venue")}>
+      <Collapsible step="03" title="Venue & audience" open={open.venue} onToggle={() => toggle("venue")} error={Boolean(errors.venue || errors.city || errors.country || errors.capacity || errors.ticketing)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Venue / Location Name">
-            <Input name="venue" placeholder="e.g. Fabric" value={form.venue} onChange={handleChange} />
+            <Input name="venue" placeholder="e.g. Fabric" value={form.venue} onChange={handleChange} onBlur={handleBlur} error={errors.venue} />
           </Field>
           <Field label="City">
-            <Input name="city" placeholder="e.g. London" value={form.city} onChange={handleChange} />
+            <Input name="city" placeholder="e.g. London" value={form.city} onChange={handleChange} onBlur={handleBlur} error={errors.city} />
           </Field>
           <Field label="Country">
-            <Select name="country" value={form.country} onChange={handleChange}>
+            <Select name="country" value={form.country} onChange={handleChange} error={errors.country}>
               <option value="">Select country…</option>
               <option value={COUNTRIES[0]}>{COUNTRIES[0]}</option>
               <option disabled>──────────</option>
@@ -282,13 +347,13 @@ function ContactForm() {
             </Select>
           </Field>
           <Field label="Expected Capacity">
-            <Select name="capacity" value={form.capacity} onChange={handleChange}>
+            <Select name="capacity" value={form.capacity} onChange={handleChange} error={errors.capacity}>
               <option value="">Select capacity…</option>
               {CAPACITY_RANGES.map((c) => <option key={c} value={c}>{c}</option>)}
             </Select>
           </Field>
           <Field label="Ticketing">
-            <Select name="ticketing" value={form.ticketing} onChange={handleChange}>
+            <Select name="ticketing" value={form.ticketing} onChange={handleChange} error={errors.ticketing}>
               <option value="">Select…</option>
               {TICKETING.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
@@ -296,10 +361,10 @@ function ContactForm() {
         </div>
       </Collapsible>
 
-      <Collapsible step="04" title="Budget & extras" open={open.budget} onToggle={() => toggle("budget")}>
+      <Collapsible step="04" title="Budget & extras" open={open.budget} onToggle={() => toggle("budget")} error={Boolean(errors.budgetRange || errors.lineup || errors.hearAbout)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Budget / Fee Offer" hint="A rough range helps us reply faster">
-            <Select name="budgetRange" value={form.budgetRange} onChange={handleChange}>
+            <Select name="budgetRange" value={form.budgetRange} onChange={handleChange} error={errors.budgetRange}>
               <option value="">Select a range…</option>
               {BUDGET_RANGES.map((b) => <option key={b} value={b}>{b}</option>)}
             </Select>
@@ -310,19 +375,19 @@ function ContactForm() {
             </Select>
           </Field>
           <Field label="How Did You Hear About Us?">
-            <Select name="hearAbout" value={form.hearAbout} onChange={handleChange}>
+            <Select name="hearAbout" value={form.hearAbout} onChange={handleChange} error={errors.hearAbout}>
               <option value="">Select…</option>
               {HEAR_ABOUT.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
           </Field>
           <Field label="Other Artists on the Bill">
-            <Input name="lineup" placeholder="Anyone else playing alongside?" value={form.lineup} onChange={handleChange} />
+            <Input name="lineup" placeholder="Anyone else playing alongside?" value={form.lineup} onChange={handleChange} onBlur={handleBlur} error={errors.lineup} />
           </Field>
         </div>
       </Collapsible>
 
-      <Collapsible step="05" title="Anything else" open={open.message} onToggle={() => toggle("message")} error={Boolean(errors.message)}>
-        <Field label="Message" required error={errors.message}>
+      <Collapsible step="05" title="Anything else (optional)" open={open.message} onToggle={() => toggle("message")}>
+        <Field label="Message">
           <textarea
             name="message"
             rows={5}
@@ -331,7 +396,7 @@ function ContactForm() {
             onChange={handleChange}
             className="w-full resize-none border px-4 py-3 text-sm outline-none"
             style={{
-              borderColor: errors.message ? "#e55" : "var(--border)",
+              borderColor: "var(--border)",
               backgroundColor: "var(--surface)",
               color: "var(--text)",
             }}
@@ -355,7 +420,7 @@ function ContactForm() {
           {sending ? "Sending…" : "Send Enquiry"}
         </button>
         {sendError && (
-          <p className="mt-4 text-xs" style={{ color: "#e55" }}>{sendError}</p>
+          <p className="mt-4 text-xs" style={{ color: "var(--error)" }}>{sendError}</p>
         )}
         <p className="mt-4 text-xs" style={{ color: "var(--text-30)" }}>
           {FORMSPREE_ENDPOINT
@@ -383,7 +448,7 @@ function Collapsible({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border" style={{ borderColor: error ? "#e55" : "var(--border)" }}>
+    <div className="border" style={{ borderColor: error ? "var(--error)" : "var(--border)" }}>
       <button
         type="button"
         onClick={onToggle}
@@ -395,7 +460,7 @@ function Collapsible({
           {step && <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--text-30)" }}>{step}</span>}
           <span className="text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--text-60)" }}>{title}</span>
           {error && (
-            <span className="text-xs font-normal normal-case tracking-normal" style={{ color: "#e55" }}>Needs attention</span>
+            <span className="text-xs font-normal normal-case tracking-normal" style={{ color: "var(--error)" }}>Needs attention</span>
           )}
         </span>
         <svg
@@ -419,6 +484,7 @@ function Input({
   name,
   value,
   onChange,
+  onBlur,
   placeholder,
   type = "text",
   error,
@@ -426,6 +492,7 @@ function Input({
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   placeholder?: string;
   type?: string;
   error?: string;
@@ -437,9 +504,10 @@ function Input({
       placeholder={placeholder}
       value={value}
       onChange={onChange}
+      onBlur={onBlur}
       className="w-full border px-4 py-3 text-sm outline-none transition-all"
       style={{
-        borderColor: error ? "#e55" : "var(--border)",
+        borderColor: error ? "var(--error)" : "var(--border)",
         backgroundColor: "var(--surface)",
         color: "var(--text)",
       }}
@@ -447,15 +515,84 @@ function Input({
   );
 }
 
+function EmailField({
+  value,
+  onChange,
+  onBlur,
+  onSelect,
+  error,
+}: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onSelect: (val: string) => void;
+  error?: string;
+}) {
+  const [focused, setFocused] = useState(false);
+  const suggestions = focused ? emailSuggestions(value) : [];
+  return (
+    <div className="relative">
+      <input
+        name="email"
+        type="email"
+        inputMode="email"
+        autoComplete="email"
+        placeholder="jane@example.com"
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={(e) => {
+          onBlur(e);
+          // delay so a suggestion click can register before the list hides
+          setTimeout(() => setFocused(false), 120);
+        }}
+        className="w-full border px-4 py-3 text-sm outline-none transition-all"
+        style={{
+          borderColor: error ? "var(--error)" : "var(--border)",
+          backgroundColor: "var(--surface)",
+          color: "var(--text)",
+        }}
+      />
+      {suggestions.length > 0 && (
+        <ul
+          className="absolute left-0 right-0 z-20 mt-1 border"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          {suggestions.map((s) => (
+            <li key={s}>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault(); // keep focus so blur doesn't fire first
+                  onSelect(s);
+                  setFocused(false);
+                }}
+                className="block w-full px-4 py-2 text-left text-sm transition-colors hover:[background-color:var(--surface-2)]"
+                style={{ color: "var(--text-60)" }}
+              >
+                {s}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function Select({
   name,
   value,
   onChange,
+  onBlur,
+  error,
   children,
 }: {
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLSelectElement>) => void;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -463,8 +600,9 @@ function Select({
       name={name}
       value={value}
       onChange={onChange}
+      onBlur={onBlur}
       className="w-full border px-4 py-3 text-sm outline-none"
-      style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--text)" }}
+      style={{ borderColor: error ? "var(--error)" : "var(--border)", backgroundColor: "var(--surface)", color: "var(--text)" }}
     >
       {children}
     </select>
@@ -492,7 +630,7 @@ function Field({
       </span>
       {children}
       {hint && !error && <span className="text-xs" style={{ color: "var(--text-40)" }}>{hint}</span>}
-      {error && <span className="text-xs" role="alert" style={{ color: "#e55" }}>{error}</span>}
+      {error && <span className="text-xs" role="alert" style={{ color: "var(--error)" }}>{error}</span>}
     </label>
   );
 }
