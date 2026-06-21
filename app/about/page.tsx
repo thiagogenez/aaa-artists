@@ -139,8 +139,7 @@ export default function AboutPage() {
               <div className="mt-8">
                 <Link
                   href="/contact"
-                  className="inline-block px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
-                  style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+                  className="btn-cta inline-block px-8 py-3.5 text-sm font-semibold uppercase tracking-widest"
                 >
                   Make a Booking Enquiry
                 </Link>
@@ -198,15 +197,13 @@ export default function AboutPage() {
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/contact"
-              className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
-              style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+              className="btn-cta px-8 py-3.5 text-sm font-semibold uppercase tracking-widest"
             >
               Book an Artist
             </Link>
             <Link
               href="/artists"
-              className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
-              style={{ border: "1px solid var(--border)", color: "var(--text-40)" }}
+              className="btn-outline px-8 py-3.5 text-sm font-semibold uppercase tracking-widest"
             >
               View Artists
             </Link>

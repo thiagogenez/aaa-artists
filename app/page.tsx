@@ -76,15 +76,14 @@ export default function HomePage() {
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-[120px]">
             <Link
               href="/contact"
-              className="inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest transition-all sm:w-[240px]"
-              style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+              className="btn-cta inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
             >
               Book an Artist
             </Link>
             <Link
               href="/artists"
-              className="inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest transition-all sm:w-[240px]"
-              style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg)", color: "var(--text-40)" }}
+              className="btn-outline inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
+              style={{ backgroundColor: "var(--bg)" }}
             >
               See Our Roster →
             </Link>
@@ -227,8 +226,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/contact"
-            className="inline-block px-10 py-4 text-sm font-semibold uppercase tracking-widest transition-all"
-            style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+            className="btn-cta inline-block px-10 py-4 text-sm font-semibold uppercase tracking-widest"
           >
             Send a Booking Enquiry
           </Link>
