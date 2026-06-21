@@ -11,9 +11,9 @@ html.light {
   --grid: rgba(0, 0, 0, 0.025);
 
   --text: #0a0a0a;
-  --text-60: rgba(10, 10, 10, 0.6);
-  --text-40: rgba(10, 10, 10, 0.4);
-  --text-30: rgba(10, 10, 10, 0.3);
+  --text-60: rgba(10, 10, 10, 0.72);
+  --text-40: rgba(10, 10, 10, 0.52);
+  --text-30: rgba(10, 10, 10, 0.42);
   --text-20: rgba(10, 10, 10, 0.2);
 
   --cta-bg: #0a0a0a;
@@ -42,9 +42,9 @@ html.dark {
   --grid: rgba(255, 255, 255, 0.02);
 
   --text: #ebebeb;
-  --text-60: rgba(235, 235, 235, 0.6);
-  --text-40: rgba(235, 235, 235, 0.4);
-  --text-30: rgba(235, 235, 235, 0.3);
+  --text-60: rgba(235, 235, 235, 0.72);
+  --text-40: rgba(235, 235, 235, 0.52);
+  --text-30: rgba(235, 235, 235, 0.42);
   --text-20: rgba(235, 235, 235, 0.2);
 
   --cta-bg: #ebebeb;
@@ -74,4 +74,22 @@ body {
 
 ::selection {
   background-color: rgba(128, 128, 128, 0.2);
+}
+
+/* Visible keyboard focus ring (mouse clicks don't trigger :focus-visible) */
+:focus-visible {
+  outline: 2px solid var(--text-60);
+  outline-offset: 2px;
+}
+
+/* Respect users who prefer reduced motion — kill animations, transitions and the card flip */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

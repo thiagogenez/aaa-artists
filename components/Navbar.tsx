@@ -80,7 +80,7 @@ export default function Navbar() {
             <button
               onClick={toggle}
               aria-label="Toggle theme"
-              className="flex h-8 w-8 items-center justify-center border transition-all"
+              className="flex h-10 w-10 items-center justify-center border transition-all"
               style={{
                 borderColor: "var(--border)",
                 color: "var(--text-40)",
@@ -119,14 +119,16 @@ export default function Navbar() {
           <button
             onClick={toggle}
             aria-label="Toggle theme"
+            className="-mr-2 flex h-11 w-11 items-center justify-center"
             style={{ color: "var(--text-40)" }}
           >
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
           <button
-            className="flex flex-col gap-1.5"
+            className="-mr-2 flex h-11 w-11 flex-col items-center justify-center gap-1.5"
             onClick={() => setOpen(!open)}
             aria-label="Toggle menu"
+            aria-expanded={open}
           >
             <span
               className="h-px w-6 transition-all"
