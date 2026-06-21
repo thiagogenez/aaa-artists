@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import SpotifyPlayer from "@/components/SpotifyPlayer";
 import { artists, getArtistBySlug } from "@/data/artists";
 import type { Artist, Gig } from "@/data/artists";
 import type { Metadata } from "next";
@@ -60,7 +61,7 @@ function SocialIcon({ platform }: { platform: string }) {
     ),
     beatport: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm.35 5.4c2.483 0 4.5 2.017 4.5 4.5a4.48 4.48 0 0 1-1.317 3.183l1.783 1.784a6.77 6.77 0 0 0 1.984-4.967C19.3 6.614 16.186 3.5 12.35 3.5c-1.9 0-3.617.755-4.867 1.983l1.784 1.784A4.48 4.48 0 0 1 12.35 5.4zm0 2.7c.994 0 1.8.806 1.8 1.8a1.79 1.79 0 0 1-.527 1.273l1.786 1.785a4.19 4.19 0 0 0 .741-2.358 3.8 3.8 0 0 0-3.8-3.8 3.793 3.793 0 0 0-2.358.74l1.785 1.786A1.79 1.79 0 0 1 12.35 8.1zm-3.666 4.23l1.785 1.787A1.79 1.79 0 0 1 12.35 13.5c-.994 0-1.8-.806-1.8-1.8 0-.47.187-.897.49-1.211L9.255 8.703a3.793 3.793 0 0 0-.905 2.497 3.8 3.8 0 0 0 3.8 3.8c.918 0 1.76-.328 2.41-.869l1.785 1.786A6.482 6.482 0 0 1 12.35 17.4c-3.59 0-6.5-2.91-6.5-6.5a6.48 6.48 0 0 1 2.834-5.367z" />
+        <path d="M21.429 17.055a7.114 7.114 0 0 1-.794 3.246 6.917 6.917 0 0 1-2.181 2.492 6.698 6.698 0 0 1-3.063 1.163 6.653 6.653 0 0 1-3.239-.434 6.796 6.796 0 0 1-2.668-1.932 7.03 7.03 0 0 1-1.481-2.983 7.124 7.124 0 0 1 .049-3.345 7.015 7.015 0 0 1 1.566-2.937l-4.626 4.73-2.421-2.479 5.201-5.265a3.791 3.791 0 0 0 1.066-2.675V0h3.41v6.613a7.172 7.172 0 0 1-.519 2.794 7.02 7.02 0 0 1-1.559 2.353l-.153.156a6.768 6.768 0 0 1 3.49-1.725 6.687 6.687 0 0 1 3.845.5 6.873 6.873 0 0 1 2.959 2.564 7.118 7.118 0 0 1 1.118 3.8Zm-3.089 0a3.89 3.89 0 0 0-.611-2.133 3.752 3.752 0 0 0-1.666-1.424 3.65 3.65 0 0 0-2.158-.233 3.704 3.704 0 0 0-1.92 1.037 3.852 3.852 0 0 0-1.031 1.955 3.908 3.908 0 0 0 .205 2.213c.282.7.76 1.299 1.374 1.721a3.672 3.672 0 0 0 2.076.647 3.637 3.637 0 0 0 2.635-1.096c.347-.351.622-.77.81-1.231.188-.461.285-.956.286-1.456Z" />
       </svg>
     ),
   };
@@ -79,7 +80,8 @@ function formatDate(dateStr: string) {
 function spotifyEmbedSrc(url: string): string | null {
   const m = url.match(/open\.spotify\.com\/(artist|album|track|playlist|episode|show)\/([A-Za-z0-9]+)/);
   if (!m) return null;
-  return `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator&theme=0`;
+  // Theme (theme=0 dark / theme=1 light) is appended client-side in <SpotifyPlayer>.
+  return `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator`;
 }
 
 /** Convert a YouTube video or playlist URL into its embed equivalent. */
@@ -207,7 +209,14 @@ export default async function ArtistPage({ params }: Props) {
   const upcomingGigs = artist.upcomingGigs.filter((g) => g.date >= now);
 
   // Resolve media embeds (live players) and link-only platforms (cards).
-  const spotifySrc = artist.spotifyEmbed ? spotifyEmbedSrc(artist.spotifyEmbed) : null;
+  // Spotify: prefer an explicit spotifyEmbed, otherwise build a player from the
+  // artist's Spotify profile URL (socials.spotify) so any artist with an account
+  // gets a live player next to SoundCloud.
+  const spotifySrc = artist.spotifyEmbed
+    ? spotifyEmbedSrc(artist.spotifyEmbed)
+    : artist.socials.spotify
+      ? spotifyEmbedSrc(artist.socials.spotify)
+      : null;
   const youtubeSrc = artist.youtubeEmbed ? youtubeEmbedSrc(artist.youtubeEmbed) : null;
   const linkCards = [
     !spotifySrc && artist.socials.spotify ? { platform: "spotify", label: "Spotify", href: artist.socials.spotify } : null,
@@ -216,6 +225,8 @@ export default async function ArtistPage({ params }: Props) {
 
   const hasMedia =
     Boolean(artist.socials.soundcloud) || Boolean(spotifySrc) || Boolean(youtubeSrc) || linkCards.length > 0;
+  // "Watch" only applies when there's an actual video player.
+  const mediaHeading = youtubeSrc ? "Listen & Watch" : "Listen";
 
   // Per-artist structured data for richer search results.
   const artistLd = {
@@ -313,15 +324,19 @@ export default async function ArtistPage({ params }: Props) {
       {hasMedia && (
         <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
           <div className="mx-auto max-w-7xl">
-            <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen &amp; Watch</h2>
+            <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>{mediaHeading}</h2>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* SoundCloud */}
               {artist.socials.soundcloud && (
                 <MediaBox label="SoundCloud">
+                  {/* visual=true uses the track artwork as a (usually dark) full-bleed
+                      background — SoundCloud's own dark-looking player, with artwork shown
+                      correctly. It renders dark once a real track/profile URL is set; with
+                      placeholder URLs it falls back to the light "can't load" state. */}
                   <iframe
                     width="100%"
-                    height="320"
+                    height="352"
                     allow="autoplay"
                     title={`${artist.name} on SoundCloud`}
                     src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`}
@@ -331,19 +346,10 @@ export default async function ArtistPage({ params }: Props) {
                 </MediaBox>
               )}
 
-              {/* Spotify */}
+              {/* Spotify — player follows the site theme (light/dark) */}
               {spotifySrc && (
                 <MediaBox label="Spotify">
-                  <iframe
-                    src={spotifySrc}
-                    width="100%"
-                    height="320"
-                    loading="lazy"
-                    title={`${artist.name} on Spotify`}
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    className="block w-full"
-                    style={{ border: 0 }}
-                  />
+                  <SpotifyPlayer src={spotifySrc} title={`${artist.name} on Spotify`} />
                 </MediaBox>
               )}
 

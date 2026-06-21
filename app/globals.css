@@ -97,6 +97,21 @@ body {
   color: var(--text);
 }
 
+/* Theme-visibility helpers — show an element only on the matching theme (no JS).
+   Used for the dual Spotify players so switching theme is instant (no reload). */
+.theme-light-only {
+  display: none;
+}
+.theme-dark-only {
+  display: none;
+}
+html.light .theme-light-only {
+  display: block;
+}
+html.dark .theme-dark-only {
+  display: block;
+}
+
 /* Primary CTA — solid fill that shifts on hover (no JS; uses the --cta-hover token) */
 .btn-cta {
   background-color: var(--cta-bg);
