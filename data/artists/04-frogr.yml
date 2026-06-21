@@ -10,7 +10,8 @@ image: /artists/frogr.webp
 socials:
   instagram: https://instagram.com/frogr_music
   soundcloud: https://soundcloud.com/frogr
-  spotify: https://open.spotify.com/artist/frogr
+  # Add FROGR's real Spotify URL here to show a live player, e.g.
+  # spotify: https://open.spotify.com/artist/REAL_ID
 pastGigs:
   - date: '2025-09-06'
     venue: Melt Festival
