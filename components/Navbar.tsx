@@ -62,13 +62,13 @@ export default function Navbar() {
                 <Link
                   href={href}
                   className="group relative inline-block text-sm font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
-                  style={{ color: isActive ? "var(--text)" : "var(--text-40)" }}
+                  style={{ color: isActive ? "var(--text)" : "var(--text-60)" }}
                 >
                   {label}
-                  {/* Bottom sweep line — mirrors the genre card top-border effect */}
+                  {/* Bottom sweep — persistent for the active page, hover-reveal otherwise */}
                   <span
-                    className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-                    style={{ backgroundColor: "var(--text-20)" }}
+                    className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ${isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
+                    style={{ backgroundColor: isActive ? "var(--text)" : "var(--text-20)" }}
                   />
                 </Link>
               </li>
@@ -98,7 +98,7 @@ export default function Navbar() {
               className="px-5 py-2 text-sm font-medium uppercase tracking-widest transition-all"
               style={{
                 border: "1px solid var(--border)",
-                color: "var(--text-40)",
+                color: "var(--text-60)",
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.borderColor = "var(--text)";
@@ -106,7 +106,7 @@ export default function Navbar() {
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-                (e.currentTarget as HTMLElement).style.color = "var(--text-40)";
+                (e.currentTarget as HTMLElement).style.color = "var(--text-60)";
               }}
             >
               Book Now
@@ -152,20 +152,22 @@ export default function Navbar() {
           className="border-t px-6 py-6 md:hidden"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
         >
-          <ul className="flex flex-col gap-6">
+          <ul className="flex flex-col gap-2">
             {links.map(({ href, label }) => (
               <li key={href}>
                 <Link
                   href={href}
                   onClick={() => setOpen(false)}
-                  className="group relative inline-block text-base font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
-                  style={{ color: pathname === href ? "var(--text)" : "var(--text-40)" }}
+                  className="group flex min-h-[44px] items-center text-base font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
+                  style={{ color: pathname === href ? "var(--text)" : "var(--text-60)" }}
                 >
-                  {label}
-                  <span
-                    className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-                    style={{ backgroundColor: "var(--text-20)" }}
-                  />
+                  <span className="relative inline-block">
+                    {label}
+                    <span
+                      className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ${pathname === href ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
+                      style={{ backgroundColor: pathname === href ? "var(--text)" : "var(--text-20)" }}
+                    />
+                  </span>
                 </Link>
               </li>
             ))}
@@ -173,15 +175,15 @@ export default function Navbar() {
               <Link
                 href="/contact"
                 onClick={() => setOpen(false)}
-                className="inline-block px-5 py-2 text-sm uppercase tracking-widest transition-all"
-                style={{ border: "1px solid var(--border)", color: "var(--text-40)" }}
+                className="mt-2 inline-flex min-h-[44px] items-center px-5 text-sm uppercase tracking-widest transition-all"
+                style={{ border: "1px solid var(--border)", color: "var(--text-60)" }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = "var(--text)";
                   (e.currentTarget as HTMLElement).style.color = "var(--text)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-                  (e.currentTarget as HTMLElement).style.color = "var(--text-40)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--text-60)";
                 }}
               >
                 Book Now

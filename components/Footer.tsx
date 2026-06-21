@@ -55,7 +55,7 @@ export default function Footer() {
               className="mb-4 h-14 w-auto"
               style={{ filter: "var(--logo-filter)" }}
             />
-            <p className="text-sm leading-relaxed" style={{ color: "var(--text-40)" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--text-60)" }}>
               Representing world-class electronic music artists. Bookings, promotion, and management.
             </p>
           </div>
@@ -73,7 +73,7 @@ export default function Footer() {
                 { href: "/contact", label: "Book Now" },
               ].map(({ href, label }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm transition-colors" style={{ color: "var(--text-40)" }}>
+                  <Link href={href} className="footer-link text-sm">
                     {label}
                   </Link>
                 </li>
@@ -86,14 +86,10 @@ export default function Footer() {
             <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-30)" }}>
               Bookings
             </h3>
-            <p className="text-sm" style={{ color: "var(--text-40)" }}>
+            <p className="text-sm" style={{ color: "var(--text-60)" }}>
               For booking enquiries, please contact us directly.
             </p>
-            <Link
-              href="/contact"
-              className="mt-4 inline-block text-sm transition-colors"
-              style={{ color: "var(--text-60)" }}
-            >
+            <Link href="/contact" className="footer-link mt-4 inline-block text-sm">
               Send a booking enquiry →
             </Link>
           </div>
@@ -110,8 +106,7 @@ export default function Footer() {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 text-sm transition-colors"
-                    style={{ color: "var(--text-40)" }}
+                    className="footer-link flex items-center gap-3 text-sm"
                   >
                     <Icon />
                     <span>{label}</span>

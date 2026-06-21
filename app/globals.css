@@ -11,9 +11,9 @@ html.light {
   --grid: rgba(0, 0, 0, 0.025);
 
   --text: #0a0a0a;
-  --text-60: rgba(10, 10, 10, 0.72);
-  --text-40: rgba(10, 10, 10, 0.52);
-  --text-30: rgba(10, 10, 10, 0.42);
+  --text-60: rgba(10, 10, 10, 0.78);
+  --text-40: rgba(10, 10, 10, 0.6);
+  --text-30: rgba(10, 10, 10, 0.5);
   --text-20: rgba(10, 10, 10, 0.2);
 
   --cta-bg: #0a0a0a;
@@ -22,6 +22,7 @@ html.light {
   --card-wash: rgba(0, 0, 0, 0.06);
   /* Hover highlight line — neutral grey so it reads on photos and on light/dark surfaces */
   --card-line: rgba(128, 128, 128, 0.7);
+  --error: #c0341d;
 
   --logo-filter: none;
   --artist-photo-filter: grayscale(1) contrast(1.04) brightness(1.05);
@@ -42,9 +43,9 @@ html.dark {
   --grid: rgba(255, 255, 255, 0.02);
 
   --text: #ebebeb;
-  --text-60: rgba(235, 235, 235, 0.72);
-  --text-40: rgba(235, 235, 235, 0.52);
-  --text-30: rgba(235, 235, 235, 0.42);
+  --text-60: rgba(235, 235, 235, 0.78);
+  --text-40: rgba(235, 235, 235, 0.6);
+  --text-30: rgba(235, 235, 235, 0.5);
   --text-20: rgba(235, 235, 235, 0.2);
 
   --cta-bg: #ebebeb;
@@ -52,6 +53,7 @@ html.dark {
   --cta-hover: #d4d4d4;
   --card-wash: rgba(255, 255, 255, 0.06);
   --card-line: rgba(128, 128, 128, 0.7);
+  --error: #f87171;
 
   --logo-filter: invert(1) brightness(0.92);
   --artist-photo-filter: grayscale(1) contrast(1.12) brightness(0.86);
@@ -80,6 +82,15 @@ body {
 :focus-visible {
   outline: 2px solid var(--text-60);
   outline-offset: 2px;
+}
+
+/* Footer links — readable at rest, brighten on hover (no JS needed) */
+.footer-link {
+  color: var(--text-60);
+  transition: color 0.2s ease;
+}
+.footer-link:hover {
+  color: var(--text);
 }
 
 /* Respect users who prefer reduced motion — kill animations, transitions and the card flip */
