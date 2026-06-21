@@ -1,0 +1,29 @@
+name: Thiago Genez
+slug: thiago
+genre: Progressive Trance / Melodic Techno / Hard Techno
+tagline: 'Brazil-born, London-based: trance meets techno'
+bio: >-
+  Thiago Genez is a Brazil-born, London-based DJ and London Sound Academy graduate who started in
+  electronic music in 2018. What began as a side project turned into regular slots across London
+  venues. His sets move between progressive and uplifting trance and the harder edge of melodic and
+  hard techno. He has played Ministry of Sound, EGG LDN and Peckham Audio, and submitted a contest
+  mix for Tomorrowland 2025.
+image: /artists/placeholder.jpg
+socials:
+  soundcloud: https://soundcloud.com/thiagogenez
+  youtube: https://youtube.com/thiagogenez
+  instagram: https://instagram.com/thiagogenez
+pastGigs:
+  - date: '2025-03-01'
+    venue: Ministry of Sound
+    city: London
+    country: UK
+  - date: '2024-11-15'
+    venue: EGG LDN
+    city: London
+    country: UK
+  - date: '2024-08-20'
+    venue: Peckham Audio
+    city: London
+    country: UK
+upcomingGigs: []

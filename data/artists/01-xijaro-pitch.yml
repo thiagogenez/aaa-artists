@@ -1,0 +1,43 @@
+name: Xijaro & Pitch
+slug: xijaro-pitch
+genre: Trance / Progressive
+tagline: Melodic trance, built for big rooms
+bio: >-
+  Xijaro & Pitch are a trance duo known for big, melodic productions and high-energy sets. Their
+  tracks pair emotional melodies with driving progressive builds, and they've played major festivals
+  and club residencies across Europe.
+image: /artists/xijaro-pitch.webp
+socials:
+  instagram: https://instagram.com/xijaroandpitch
+  soundcloud: https://soundcloud.com/xijaroandpitch
+  facebook: https://facebook.com/xijaroandpitch
+  spotify: https://open.spotify.com/artist/xijaroandpitch
+  beatport: https://www.beatport.com/artist/xijaro-pitch/
+pastGigs:
+  - date: '2025-10-18'
+    venue: Privilege
+    city: Ibiza
+    country: Spain
+  - date: '2025-08-02'
+    venue: Awakenings
+    city: Amsterdam
+    country: Netherlands
+  - date: '2025-06-14'
+    venue: Fabric
+    city: London
+    country: UK
+  - date: '2025-03-22'
+    venue: Exchange
+    city: Los Angeles
+    country: USA
+upcomingGigs:
+  - date: '2026-07-04'
+    venue: A State of Trance Festival
+    city: Utrecht
+    country: Netherlands
+    ticketLink: https://www.astateoftrance.com/
+    flyer: /flyers/xijaro-asot.webp
+  - date: '2026-08-15'
+    venue: Creamfields
+    city: Daresbury
+    country: UK

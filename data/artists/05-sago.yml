@@ -1,0 +1,31 @@
+name: SAGO
+slug: sago
+genre: Progressive House / Trance
+tagline: Progressive house meets uplifting trance
+bio: >-
+  SAGO moves between progressive house and uplifting trance, often inside the same set. He reads a
+  room well and knows when to build tension and when to let it go, which keeps a dancefloor moving.
+image: /artists/sago.webp
+socials:
+  instagram: https://instagram.com/sagomusic
+  soundcloud: https://soundcloud.com/sago
+  facebook: https://facebook.com/sagoofficial
+pastGigs:
+  - date: '2025-11-08'
+    venue: Ministry of Sound
+    city: London
+    country: UK
+  - date: '2025-08-14'
+    venue: Pacha
+    city: Ibiza
+    country: Spain
+  - date: '2025-06-21'
+    venue: Zouk Club
+    city: Singapore
+    country: Singapore
+upcomingGigs:
+  - date: '2026-06-20'
+    venue: Sensation
+    city: Amsterdam
+    country: Netherlands
+    ticketLink: '#'

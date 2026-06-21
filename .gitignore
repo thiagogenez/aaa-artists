@@ -12,3 +12,6 @@ img/
 next-env.d.ts
 .claude/settings.local.json
 .agents/
+
+# Generated from data/artists/*.yml by scripts/gen-artists.mjs
+/data/artists.data.json

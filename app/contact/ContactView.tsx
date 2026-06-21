@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { artists } from "@/data/artists";
 import { CAPACITY_RANGES, CURRENCIES, BUDGET_RANGES, COUNTRIES } from "@/data/formOptions";
@@ -265,7 +266,11 @@ function ContactForm() {
           className="border px-4 py-3 text-sm"
           style={{ borderColor: "var(--error)", color: "var(--error)", backgroundColor: "var(--surface)" }}
         >
-          Please fix the following: {Object.values(errors).filter(Boolean).join(". ")}.
+          <span className="font-semibold">Please check the highlighted fields:</span>{" "}
+          {Object.keys(errors)
+            .filter((k) => errors[k])
+            .map((k) => REQUIRED_FIELDS.find((f) => f.key === k)?.label ?? k)
+            .join(", ")}
         </div>
       )}
       <div className="space-y-3">
@@ -409,10 +414,8 @@ function ContactForm() {
         <button
           type="submit"
           disabled={sending}
-          className="w-full py-4 text-sm font-semibold uppercase tracking-widest transition-all sm:w-auto sm:px-12"
+          className="btn-cta w-full py-4 text-sm font-semibold uppercase tracking-widest sm:w-auto sm:px-12"
           style={{
-            backgroundColor: "var(--cta-bg)",
-            color: "var(--cta-text)",
             opacity: sending ? 0.6 : 1,
             cursor: sending ? "wait" : "pointer",
           }}
@@ -635,10 +638,34 @@ function Field({
   );
 }
 
+/** Contextual back link — returns to the artist's profile when arriving from a
+ *  "Book {artist}" action, otherwise to the full roster. */
+function BackLink() {
+  const name = useSearchParams().get("artist") ?? "";
+  const artist = name ? artists.find((a) => a.name === name) : undefined;
+  const href = artist ? `/artist/${artist.slug}` : "/artists";
+  const label = artist ? `Back to ${artist.name}` : "All Artists";
+  return (
+    <Link
+      href={href}
+      className="mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-widest transition-colors"
+      style={{ color: "var(--text-30)" }}
+    >
+      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+      {label}
+    </Link>
+  );
+}
+
 export default function ContactPage() {
   return (
     <div className="min-h-screen px-6 py-20" style={{ backgroundColor: "var(--bg)" }}>
       <div className="mx-auto max-w-3xl">
+        <Suspense>
+          <BackLink />
+        </Suspense>
         <div className="mb-12">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             AAA Artists

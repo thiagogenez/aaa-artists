@@ -4,7 +4,7 @@ import next from "eslint-config-next";
 const eslintConfig = [
   ...next,
   {
-    ignores: [".next/**", "out/**", "node_modules/**", "next-env.d.ts"],
+    ignores: [".next/**", "out/**", "node_modules/**", "next-env.d.ts", "scripts/**"],
   },
   {
     rules: {

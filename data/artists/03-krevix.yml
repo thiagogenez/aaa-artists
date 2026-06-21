@@ -1,0 +1,31 @@
+name: Krevix
+slug: krevix
+genre: Techno / Dark Trance
+tagline: Techno intensity with a dark trance edge
+bio: >-
+  Krevix blends the intensity of techno with the darker, emotional side of trance. His sets are loud
+  and relentless, made for late nights and big rooms rather than easy listening.
+image: /artists/krevix.webp
+socials:
+  instagram: https://instagram.com/krevix
+  soundcloud: https://soundcloud.com/krevix
+  beatport: https://www.beatport.com/artist/krevix/
+pastGigs:
+  - date: '2025-10-31'
+    venue: Berghain
+    city: Berlin
+    country: Germany
+  - date: '2025-08-23'
+    venue: Time Warp
+    city: Mannheim
+    country: Germany
+  - date: '2025-05-17'
+    venue: De School
+    city: Amsterdam
+    country: Netherlands
+upcomingGigs:
+  - date: '2026-09-12'
+    venue: Elrow
+    city: Barcelona
+    country: Spain
+    ticketLink: '#'

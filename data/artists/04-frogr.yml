@@ -1,0 +1,37 @@
+name: FROGR
+slug: frogr
+genre: Melodic Techno / House
+tagline: Organic textures, hypnotic grooves
+bio: >-
+  FROGR works in melodic techno and house, building tracks around organic percussion, hypnotic
+  basslines and warm, atmospheric pads. His sets tend to start deep and patient before opening up
+  into bigger, emotional moments.
+image: /artists/frogr.webp
+socials:
+  instagram: https://instagram.com/frogr_music
+  soundcloud: https://soundcloud.com/frogr
+  spotify: https://open.spotify.com/artist/frogr
+pastGigs:
+  - date: '2025-09-06'
+    venue: Melt Festival
+    city: Gräfenhainichen
+    country: Germany
+  - date: '2025-07-19'
+    venue: Sonar
+    city: Barcelona
+    country: Spain
+  - date: '2025-04-11'
+    venue: fabric
+    city: London
+    country: UK
+upcomingGigs:
+  - date: '2026-07-18'
+    venue: Melt Festival
+    city: Gräfenhainichen
+    country: Germany
+    ticketLink: '#'
+  - date: '2026-08-30'
+    venue: Dekmantel
+    city: Amsterdam
+    country: Netherlands
+    ticketLink: '#'

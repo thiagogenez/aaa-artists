@@ -174,7 +174,7 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
           <p className="text-xs" style={{ color: "var(--text-40)" }}>{gig.city}, {gig.country}</p>
           <p className="mt-1 text-xs font-medium" style={{ color: "var(--text-60)" }}>{formatDate(gig.date)}</p>
         </div>
-        {gig.ticketLink && (
+        {gig.ticketLink && gig.ticketLink !== "#" ? (
           <a
             href={gig.ticketLink}
             target="_blank"
@@ -184,6 +184,13 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
           >
             Get Tickets
           </a>
+        ) : (
+          <span
+            className="inline-block w-full py-2 text-center text-xs font-semibold uppercase tracking-widest"
+            style={{ border: "1px solid var(--border)", color: "var(--text-30)" }}
+          >
+            Tickets soon
+          </span>
         )}
       </div>
     </div>
@@ -259,7 +266,7 @@ export default async function ArtistPage({ params }: Props) {
 
               {/* Socials */}
               {Object.keys(artist.socials).length > 0 && (
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap justify-center gap-3">
                   {Object.entries(artist.socials).map(([platform, url]) =>
                     url ? (
                       <a
@@ -317,7 +324,7 @@ export default async function ArtistPage({ params }: Props) {
                     height="320"
                     allow="autoplay"
                     title={`${artist.name} on SoundCloud`}
-                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`}
+                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`}
                     className="block w-full"
                     style={{ border: 0 }}
                   />

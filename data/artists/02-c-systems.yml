@@ -1,0 +1,33 @@
+name: C-Systems
+slug: c-systems
+genre: Progressive Trance
+tagline: Cinematic, driving progressive trance
+bio: >-
+  C-Systems is a progressive trance producer with a cinematic, driving sound. His music has come out
+  on several of the genre's respected labels, and his sets build from atmospheric openings into big
+  peak-time moments.
+image: /artists/c-systems.webp
+socials:
+  instagram: https://instagram.com/csystemsofficial
+  soundcloud: https://soundcloud.com/c-systems
+  facebook: https://facebook.com/csystems
+  beatport: https://www.beatport.com/artist/c-systems/
+pastGigs:
+  - date: '2025-11-01'
+    venue: Trance Around The World
+    city: Moscow
+    country: Russia
+  - date: '2025-09-20'
+    venue: Club Voltage
+    city: Tokyo
+    country: Japan
+  - date: '2025-07-05'
+    venue: Untold Festival
+    city: Cluj-Napoca
+    country: Romania
+upcomingGigs:
+  - date: '2026-06-27'
+    venue: Luminosity Beach Festival
+    city: Bloemendaal
+    country: Netherlands
+    ticketLink: '#'

@@ -25,11 +25,13 @@ html.light {
   --error: #c0341d;
 
   --logo-filter: none;
-  --artist-photo-filter: grayscale(1) contrast(1.04) brightness(1.05);
+  --artist-photo-filter: grayscale(1) contrast(1.02) brightness(1.14);
   --artist-photo-gradient: linear-gradient(to top,
       rgba(0, 0, 0, 0.78) 0%,
       rgba(0, 0, 0, 0.2) 66%,
       transparent 100%);
+  /* Flip reveal: drop the front's grayscale so the photo shows in full colour, lifted for the light card */
+  --artist-card-back-photo-filter: contrast(1.06) brightness(1.05) saturate(1.1);
 }
 
 /* ─── Dark theme ─────────────────────────────────────────── */
@@ -61,6 +63,8 @@ html.dark {
       rgba(0, 0, 0, 0.9) 0%,
       rgba(0, 0, 0, 0.35) 68%,
       transparent 100%);
+  /* Flip reveal: full colour, slightly brighter than the resting (front) tile */
+  --artist-card-back-photo-filter: contrast(1.08) brightness(0.96) saturate(1.1);
 }
 
 html {
@@ -90,6 +94,27 @@ body {
   transition: color 0.2s ease;
 }
 .footer-link:hover {
+  color: var(--text);
+}
+
+/* Primary CTA — solid fill that shifts on hover (no JS; uses the --cta-hover token) */
+.btn-cta {
+  background-color: var(--cta-bg);
+  color: var(--cta-text);
+  transition: background-color 0.2s ease;
+}
+.btn-cta:hover {
+  background-color: var(--cta-hover);
+}
+
+/* Secondary / outline CTA — readable at rest, border + text brighten on hover */
+.btn-outline {
+  border: 1px solid var(--border);
+  color: var(--text-60);
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.btn-outline:hover {
+  border-color: var(--text);
   color: var(--text);
 }
 
