@@ -2,8 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About — AAA Artists",
+  title: "About",
   description: "AAA Artists is a music booking and artist management agency representing world-class electronic music talent across trance, techno, progressive and beyond.",
+  alternates: { canonical: "/about" },
 };
 
 const values = [

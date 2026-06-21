@@ -4,6 +4,7 @@ import Link from "next/link";
 import { artists, getArtistBySlug } from "@/data/artists";
 import type { Artist, Gig } from "@/data/artists";
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -17,9 +18,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const artist = getArtistBySlug(slug);
   if (!artist) return { title: "Artist Not Found" };
+  const description = artist.bio.slice(0, 160);
   return {
-    title: `${artist.name} — AAA Artists`,
-    description: artist.bio.slice(0, 160),
+    title: artist.name,
+    description,
+    alternates: { canonical: `/artist/${artist.slug}` },
+    openGraph: {
+      title: `${artist.name} — AAA Artists`,
+      description,
+      url: `/artist/${artist.slug}`,
+    },
   };
 }
 
@@ -202,8 +210,24 @@ export default async function ArtistPage({ params }: Props) {
   const hasMedia =
     Boolean(artist.socials.soundcloud) || Boolean(spotifySrc) || Boolean(youtubeSrc) || linkCards.length > 0;
 
+  // Per-artist structured data for richer search results.
+  const artistLd = {
+    "@context": "https://schema.org",
+    "@type": "MusicGroup",
+    name: artist.name,
+    genre: artist.genre,
+    description: artist.bio,
+    url: `${SITE_URL}/artist/${artist.slug}`,
+    image: `${SITE_URL}${artist.image}`,
+    sameAs: Object.values(artist.socials).filter(Boolean),
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(artistLd) }}
+      />
       {/* Artist hero */}
       <div className="relative border-b px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
@@ -243,9 +267,10 @@ export default async function ArtistPage({ params }: Props) {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`${artist.name} on ${platform}`}
                         title={platform}
-                        className="flex h-10 w-10 items-center justify-center border transition-all"
-                        style={{ borderColor: "var(--border)", color: "var(--text-30)" }}
+                        className="flex h-11 w-11 items-center justify-center border transition-all"
+                        style={{ borderColor: "var(--border)", color: "var(--text-40)" }}
                       >
                         <SocialIcon platform={platform} />
                       </a>
@@ -290,12 +315,11 @@ export default async function ArtistPage({ params }: Props) {
                   <iframe
                     width="100%"
                     height="320"
-                    scrolling="no"
-                    frameBorder="no"
                     allow="autoplay"
                     title={`${artist.name} on SoundCloud`}
                     src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`}
                     className="block w-full"
+                    style={{ border: 0 }}
                   />
                 </MediaBox>
               )}
@@ -307,11 +331,11 @@ export default async function ArtistPage({ params }: Props) {
                     src={spotifySrc}
                     width="100%"
                     height="320"
-                    frameBorder="0"
                     loading="lazy"
                     title={`${artist.name} on Spotify`}
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                     className="block w-full"
+                    style={{ border: 0 }}
                   />
                 </MediaBox>
               )}
@@ -323,11 +347,11 @@ export default async function ArtistPage({ params }: Props) {
                     <iframe
                       src={youtubeSrc}
                       title={`${artist.name} on YouTube`}
-                      frameBorder="0"
                       loading="lazy"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       className="h-full w-full"
+                      style={{ border: 0 }}
                     />
                   </div>
                 </MediaBox>
