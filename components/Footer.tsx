@@ -119,7 +119,7 @@ export default function Footer() {
 
         {/* Social icon bar */}
         <div className="mt-12 flex items-center justify-between border-t pt-8" style={{ borderColor: "var(--border)" }}>
-          <p className="text-xs" style={{ color: "var(--text-20)" }}>
+          <p className="text-xs" style={{ color: "var(--text-40)" }}>
             © {new Date().getFullYear()} AAA Artists. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
@@ -130,8 +130,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={label}
-                className="transition-opacity hover:opacity-100"
-                style={{ color: "var(--text-20)", opacity: 0.5 }}
+                className="footer-link"
               >
                 <Icon />
               </a>

@@ -16,7 +16,7 @@ function ArtistCard({ artist, priority = false }: { artist: Artist; priority?: b
 
   return (
     <div
-      className="group relative mx-auto aspect-square w-full max-w-md select-none overflow-hidden border sm:max-w-none lg:aspect-auto lg:h-[380px]"
+      className="group relative mx-auto aspect-square w-full max-w-md touch-manipulation select-none overflow-hidden border sm:max-w-none lg:aspect-auto lg:h-[380px]"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}
       onMouseEnter={() => { if (canHover()) setOpen(true); }}
       onMouseLeave={() => { if (canHover()) setOpen(false); }}

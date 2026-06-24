@@ -181,14 +181,14 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
             href={gig.ticketLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block w-full py-2 text-center text-xs font-semibold uppercase tracking-widest transition-all"
+            className="inline-flex min-h-[44px] w-full items-center justify-center py-3 text-center text-xs font-semibold uppercase tracking-widest transition-all"
             style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
           >
             Get Tickets
           </a>
         ) : (
           <span
-            className="inline-block w-full py-2 text-center text-xs font-semibold uppercase tracking-widest"
+            className="inline-flex min-h-[44px] w-full items-center justify-center py-3 text-center text-xs font-semibold uppercase tracking-widest"
             style={{ border: "1px solid var(--border)", color: "var(--text-30)" }}
           >
             Tickets soon
@@ -383,67 +383,117 @@ export default async function ArtistPage({ params }: Props) {
         </div>
       )}
 
-      {/* Upcoming events — flyer boxes */}
+      {/* Events — Upcoming & Past side by side so neither side looks empty */}
       <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</h2>
-          {upcomingGigs.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--text-30)" }}>No upcoming dates announced yet.</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-              {upcomingGigs.map((gig, i) => (
-                <FlyerCard key={i} artist={artist} gig={gig} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Past dates */}
-      <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
-        <div className="mx-auto max-w-7xl">
-          <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Past Dates</h2>
-          {pastGigs.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--text-30)" }}>No past dates on record.</p>
-          ) : (
-            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {[...pastGigs].reverse().map((gig, i) => (
-                <li
-                  key={i}
-                  className="flex items-start justify-between gap-4 border p-5 opacity-60"
-                  style={{ borderColor: "var(--border)" }}
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-12">
+            {/* Upcoming */}
+            <div className="flex flex-col">
+              <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</h2>
+              {upcomingGigs.length === 0 ? (
+                <div
+                  className="flex flex-1 flex-col items-center justify-center gap-5 border border-dashed px-6 py-14 text-center"
+                  style={{ borderColor: "var(--border)", minHeight: "220px" }}
                 >
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
-                    <p className="text-xs" style={{ color: "var(--text-40)" }}>
-                      {gig.city}, {gig.country}
-                    </p>
-                  </div>
-                  <p className="text-xs" style={{ color: "var(--text-40)" }}>{formatDate(gig.date)}</p>
-                </li>
-              ))}
-            </ul>
-          )}
+                  <p className="max-w-xs text-sm leading-relaxed" style={{ color: "var(--text-40)" }}>
+                    No dates announced right now. {artist.name} is available for bookings.
+                  </p>
+                  <a
+                    href={`/contact?artist=${encodeURIComponent(artist.name)}`}
+                    className="inline-flex min-h-[44px] items-center justify-center px-6 py-3 text-xs font-semibold uppercase tracking-widest transition-all"
+                    style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+                  >
+                    Book {artist.name}
+                  </a>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-5">
+                  {upcomingGigs.map((gig, i) => (
+                    <FlyerCard key={i} artist={artist} gig={gig} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Past */}
+            <div className="flex flex-col lg:border-l lg:pl-12" style={{ borderColor: "var(--border)" }}>
+              <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Past Dates</h2>
+              {pastGigs.length === 0 ? (
+                <div
+                  className="flex flex-1 items-center justify-center border border-dashed px-6 py-14 text-center"
+                  style={{ borderColor: "var(--border)", minHeight: "220px" }}
+                >
+                  <p className="text-sm" style={{ color: "var(--text-40)" }}>No past dates on record yet.</p>
+                </div>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {[...pastGigs].reverse().map((gig, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start justify-between gap-4 border p-5 opacity-60"
+                      style={{ borderColor: "var(--border)" }}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
+                        <p className="text-xs" style={{ color: "var(--text-40)" }}>
+                          {gig.city}, {gig.country}
+                        </p>
+                      </div>
+                      <p className="text-xs" style={{ color: "var(--text-40)" }}>{formatDate(gig.date)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Other artists */}
-      <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+      <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-20)" }}>
+          <h2 className="mb-10 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             Also on the Roster
           </h2>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {artists
               .filter((a) => a.slug !== slug)
               .map((a) => (
                 <Link
                   key={a.slug}
                   href={`/artist/${a.slug}`}
-                  className="border px-5 py-2.5 text-sm transition-all"
-                  style={{ borderColor: "var(--border)", color: "var(--text-40)" }}
+                  aria-label={`View ${a.name}`}
+                  className="group relative aspect-square overflow-hidden border"
+                  style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}
                 >
-                  {a.name}
+                  <Image
+                    src={a.image}
+                    alt={a.name}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.05]"
+                    style={{ filter: "var(--artist-photo-filter)" }}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                  />
+                  {/* Hover wash */}
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{ backgroundColor: "var(--card-wash)" }}
+                  />
+                  {/* Label */}
+                  <div
+                    className="pointer-events-none absolute inset-x-0 bottom-0 p-3"
+                    style={{ background: "var(--artist-photo-gradient)" }}
+                  >
+                    <p className="truncate text-[10px] font-semibold uppercase tracking-widest text-white/60">
+                      {a.genre}
+                    </p>
+                    <p className="truncate text-sm font-bold text-white">{a.name}</p>
+                  </div>
+                  {/* Hover line sweep */}
+                  <div
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                    style={{ backgroundColor: "var(--card-line)" }}
+                  />
                 </Link>
               ))}
           </div>
