@@ -17,14 +17,20 @@ export default function HomePage() {
               edge and at its far end, sitting behind the text (-z-10). */}
           <div className="relative mx-auto mb-8 w-24 md:w-32">
             {/* Background grid — anchored to the logo and phase-shifted half a cell so a
-                grid line runs through the logo centre, aligning the crosshair to the grid */}
+                grid line runs through the logo centre, aligning the crosshair to the grid.
+                Hidden below md (elements are fluid there, so grid alignment can't hold) and
+                radially faded toward the edges so nothing misaligned ever reaches the eye. */}
             <span
-              className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[300vh] w-[300vw] -translate-x-1/2 -translate-y-1/2"
+              className="pointer-events-none absolute left-1/2 top-1/2 -z-10 hidden h-[300vh] w-[300vw] -translate-x-1/2 -translate-y-1/2 md:block"
               style={{
                 backgroundImage:
                   "linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px)",
                 backgroundSize: "60px 60px",
                 backgroundPosition: "calc(50% + 30px) calc(50% + 30px)",
+                WebkitMaskImage:
+                  "radial-gradient(ellipse 70vw 150vh at center, black 40%, transparent 85%)",
+                maskImage:
+                  "radial-gradient(ellipse 70vw 150vh at center, black 40%, transparent 85%)",
               }}
             />
             {/* Ray up */}
@@ -67,13 +73,14 @@ export default function HomePage() {
 
           {/* Subheadline — 15 words */}
           <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed md:text-xl" style={{ color: "var(--text-60)" }}>
-            From melodic trance to hard techno, we connect great artists
-            with events around the world.
+            From uplifting trance to hard techno, we connect great artists
+            with the right events.
           </p>
 
-          {/* CTAs — sized to the grid: 4 cells wide, 1 cell tall, 2-cell gap, so
-              their edges sit on grid lines. Both opaque so no grid line cuts through. */}
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-[120px]">
+          {/* CTAs — from md up, sized to the grid: 4 cells wide, 1 cell tall, 2-cell gap,
+              so their edges sit on grid lines (fluid below md, where the grid-locked
+              widths would overflow the viewport). Both opaque so no grid line cuts through. */}
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6 md:gap-[120px]">
             <Link
               href="/contact"
               className="btn-cta inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
@@ -82,21 +89,44 @@ export default function HomePage() {
             </Link>
             <Link
               href="/artists"
-              className="btn-outline inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
+              className="btn-outline group inline-flex h-[60px] w-full items-center justify-center gap-2 text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
               style={{ backgroundColor: "var(--bg)" }}
             >
-              See Our Roster →
+              See Our Roster
+              <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </Link>
           </div>
 
-          {/* Social proof bar — no manual rule; the background grid lines act as dividers */}
-          <div className="mt-16 flex items-center justify-center gap-10">
-            {[["7+", "Artists"], ["50+", "Shows / year"], ["20+", "Countries"]].map(([num, label]) => (
-              <div key={label} className="text-center">
-                <p className="text-2xl font-bold" style={{ color: "var(--text)" }}>{num}</p>
-                <p className="text-xs uppercase tracking-widest" style={{ color: "var(--text-30)" }}>{label}</p>
-              </div>
-            ))}
+          {/* Stats — About-style cells; from md up each is grid-sized (180×120px = 3×2 cells)
+              so their edges sit on grid lines and the background grid acts as the dividers.
+              Below md the cells are fluid — fixed widths would clip inside overflow-hidden. */}
+          <div className="mt-16 flex justify-center">
+            <div className="grid w-full grid-cols-2 sm:grid-cols-4 md:w-auto">
+              {[
+                [String(artists.length), "Artists Represented"],
+                ["2023", "Founded"],
+                ["3", "Years Running Events"],
+                ["7+", "World-Renowned Headliners Hosted"],
+              ].map(([num, label]) => (
+                <div
+                  key={label}
+                  className="group relative flex h-[120px] w-full flex-col items-center justify-center gap-1 overflow-hidden px-3 text-center transition-all duration-300 md:w-[180px]"
+                >
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{ backgroundColor: "var(--surface)" }}
+                  />
+                  <div
+                    className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                    style={{ backgroundColor: "var(--card-line)" }}
+                  />
+                  <p className="relative text-2xl font-bold transition-all duration-300 group-hover:-translate-y-0.5" style={{ color: "var(--text)" }}>{num}</p>
+                  <p className="relative text-xs uppercase tracking-widest" style={{ color: "var(--text-30)" }}>{label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -114,14 +144,15 @@ export default function HomePage() {
               </h2>
               <div className="space-y-4 text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
                 <p>
-                  AAA Artists started from a simple idea: good music deserves good representation. We work
-                  closely with each artist to build a career over time, not just fill the next date. That
-                  means finding the right rooms and the right crowds for them.
+                  AAA Artists is the next chapter of AAA Events. We started in 2023 as a group of trance
+                  fans organising our first event in London, and grew into AAA pres. Fusion: trance
+                  nights in London and at ADE with some of the scene&apos;s biggest names on the bill.
                 </p>
                 <p>
-                  We book everything from small club nights to festival main stages, and we know the
-                  promoters and venues that suit each artist. The roster covers trance, progressive, techno
-                  and hardstyle, picked for quality rather than quantity.
+                  Now we&apos;re putting that promoter experience to work for our own roster. We work closely
+                  with each artist to build a career over time, not just fill the next date. Trance comes
+                  first, and the roster stretches into techno, melodic techno, progressive and hard
+                  techno. We pick for quality rather than quantity.
                 </p>
                 <p>
                   If you want to book one of our artists, or you're an artist looking for representation,
@@ -131,10 +162,12 @@ export default function HomePage() {
               <div className="mt-8">
                 <Link
                   href="/artists"
-                  className="inline-block text-sm font-semibold uppercase tracking-widest transition-colors"
-                  style={{ color: "var(--text-60)" }}
+                  className="link-quiet group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest"
                 >
-                  Meet the roster →
+                  Meet the roster
+                  <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
               </div>
             </div>
@@ -162,7 +195,7 @@ export default function HomePage() {
                       style={{ background: "var(--artist-photo-gradient)" }}
                     >
                       <p className="text-sm font-semibold text-white">{artist.name}</p>
-                      <p className="text-xs text-white/55">{artist.genre}</p>
+                      <p className="text-xs text-white/75">{artist.genre}</p>
                     </div>
                     <div className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
                       style={{ backgroundColor: "var(--card-line)" }} />
@@ -183,10 +216,10 @@ export default function HomePage() {
           </h2>
           <div className="grid grid-cols-2 gap-px sm:grid-cols-4" style={{ backgroundColor: "var(--border)" }}>
             {[
-              { genre: "Trance", desc: "Melodic and uplifting" },
+              { genre: "Trance", desc: "Uplifting and melodic" },
               { genre: "Progressive", desc: "Deep and cinematic" },
-              { genre: "Techno", desc: "Raw and driving" },
-              { genre: "Hardstyle", desc: "Hard kicks, big energy" },
+              { genre: "Techno", desc: "From melodic to raw and driving" },
+              { genre: "Hard Techno", desc: "Hard kicks, big energy" },
             ].map(({ genre, desc }) => (
               <div
                 key={genre}
@@ -220,7 +253,7 @@ export default function HomePage() {
           <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
             Bring the right artist to your event
           </h2>
-          <p className="mb-10 text-base" style={{ color: "var(--text-40)" }}>
+          <p className="mb-10 text-base leading-relaxed" style={{ color: "var(--text-40)" }}>
             Running a club night, a festival, or a private party? Tell us what you're planning and
             we'll help you find the right artist for the crowd.
           </p>
