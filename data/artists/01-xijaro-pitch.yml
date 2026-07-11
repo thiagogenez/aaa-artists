@@ -1,4 +1,5 @@
 name: Xijaro & Pitch
+disabled: true                # set to false to show this artist on the site
 slug: xijaro-pitch
 genre: Trance / Progressive
 tagline: Melodic trance, built for big rooms
@@ -36,7 +37,7 @@ upcomingGigs:
     city: Utrecht
     country: Netherlands
     ticketLink: https://www.astateoftrance.com/
-    flyer: /flyers/xijaro-asot.webp
+    flyer: /artists/xijaro-pitch.webp # placeholder — reuses the artist photo; swap for real poster art in /flyers
   - date: '2026-08-15'
     venue: Creamfields
     city: Daresbury

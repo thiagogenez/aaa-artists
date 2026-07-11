@@ -39,6 +39,7 @@ const files = readdirSync(DIR).filter((f) => /\.ya?ml$/i.test(f)).sort();
 if (files.length === 0) errors.push(`No artist files found in ${DIR}/`);
 
 const artists = [];
+const skipped = [];
 for (const file of files) {
   let doc;
   try {
@@ -49,6 +50,10 @@ for (const file of files) {
   }
   if (!doc || typeof doc !== "object") {
     errors.push(`${file}: file is empty or not formatted correctly`);
+    continue;
+  }
+  if (doc.disabled === true) {
+    skipped.push(doc.name ?? file);
     continue;
   }
 
@@ -75,10 +80,13 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
+const skippedNote =
+  skipped.length > 0 ? ` (${skipped.length} disabled: ${skipped.join(", ")})` : "";
+
 if (process.argv.includes("--check")) {
-  console.log(`✓ All ${artists.length} artist files look good.`);
+  console.log(`✓ All ${artists.length} artist files look good.${skippedNote}`);
   process.exit(0);
 }
 
 writeFileSync(OUT, JSON.stringify(artists, null, 2) + "\n");
-console.log(`✓ Built ${OUT} from ${artists.length} artist files.`);
+console.log(`✓ Built ${OUT} from ${artists.length} artist files.${skippedNote}`);

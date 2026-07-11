@@ -1,4 +1,5 @@
 name: SAGO
+disabled: false               # set to true to hide this artist from the site
 slug: sago
 genre: Progressive House / Trance
 tagline: Progressive house meets uplifting trance

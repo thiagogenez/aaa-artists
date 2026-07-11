@@ -1,4 +1,5 @@
 name: C-Systems
+disabled: false               # set to true to hide this artist from the site
 slug: c-systems
 genre: Progressive Trance
 tagline: Cinematic, driving progressive trance
@@ -33,4 +34,4 @@ upcomingGigs:
     city: Bloemendaal
     country: Netherlands
     ticketLink: https://www.luminosity-events.nl/
-    flyer: /flyers/csystems-luminosity.webp
+    flyer: /artists/c-systems.webp # placeholder — reuses the artist photo; swap for real poster art in /flyers

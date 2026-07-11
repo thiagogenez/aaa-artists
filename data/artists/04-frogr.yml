@@ -1,4 +1,5 @@
 name: FROGR
+disabled: false               # set to true to hide this artist from the site
 slug: frogr
 genre: Melodic Techno / House
 tagline: Organic textures, hypnotic grooves
@@ -32,7 +33,7 @@ upcomingGigs:
     city: Gräfenhainichen
     country: Germany
     ticketLink: https://www.meltfestival.de/
-    flyer: /flyers/frogr-melt.webp
+    flyer: /artists/frogr.webp # placeholder — reuses the artist photo; swap for real poster art in /flyers
   # Ticket link only → "Get Tickets" + auto-generated poster
   - date: "2026-08-30"
     venue: Dekmantel

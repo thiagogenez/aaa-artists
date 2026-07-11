@@ -66,6 +66,7 @@ can leave `# comments`. The number prefix sets the display order on `/artists`.
 
 ```yaml
 name: Xijaro & Pitch          # Display name
+# disabled: true              # optional — hides the artist site-wide (no page built)
 slug: xijaro-pitch            # URL slug → /artist/xijaro-pitch
 genre: Trance / Progressive   # Shown muted above the name
 tagline: Melodic trance, built for big rooms   # Short line under the name

@@ -1,4 +1,5 @@
 name: Thiago Genez
+disabled: false               # set to true to hide this artist from the site
 slug: thiago
 genre: Progressive Trance / Melodic Techno / Hard Techno
 tagline: 'Brazil-born, London-based: trance meets techno'
@@ -8,7 +9,7 @@ bio: >-
   venues. His sets move between progressive and uplifting trance and the harder edge of melodic and
   hard techno. He has played Ministry of Sound, EGG LDN and Peckham Audio, and submitted a contest
   mix for Tomorrowland 2025.
-image: /artists/placeholder.jpg
+image: /artists/placeholder.webp
 socials:
   soundcloud: https://soundcloud.com/thiagogenez
   youtube: https://youtube.com/thiagogenez

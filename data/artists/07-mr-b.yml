@@ -1,4 +1,5 @@
 name: Mr B
+disabled: false               # set to true to hide this artist from the site
 slug: mr-b
 genre: Hard Trance / Hardstyle
 tagline: The hardest sounds, the biggest rooms
@@ -6,7 +7,7 @@ bio: >-
   Mr B plays hard trance and hardstyle, with a reputation for big festival sets and a no-compromise
   approach to the heavier stuff. The sound is loud, the kicks hit hard, and the crowd usually shows
   up ready for it.
-image: /artists/placeholder.jpg
+image: /artists/placeholder.webp
 socials:
   instagram: https://instagram.com/mrbofficial
   soundcloud: https://soundcloud.com/mrbdj

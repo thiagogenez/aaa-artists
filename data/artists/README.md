@@ -19,6 +19,7 @@ The number prefix (`01-`, `02-`, …) sets the display order on the `/artists` p
 
 ```yaml
 name: Xijaro & Pitch          # Display name
+# disabled: true              # optional — hides the artist from the whole site
 slug: xijaro-pitch            # URL → /artist/xijaro-pitch
 genre: Trance / Progressive   # Shown muted above the name
 tagline: Melodic trance, built for big rooms
@@ -52,6 +53,10 @@ upcomingGigs:                 # future dates — shown as flyer cards
 
 ## Tips
 
+- **Hiding an artist:** add `disabled: true` near the top of their file and the artist
+  disappears from the roster, home page, contact dropdown, and their `/artist/<slug>`
+  page stops being built. Remove the line (or set it to `false`) to bring them back —
+  nothing else in the file is touched. The build output lists who is disabled.
 - **Spotify URL:** in the app, open the artist → Share → Copy link to artist, and paste
   the whole URL (the `?si=…` part is fine — the site extracts the ID).
 - **Photos:** drop a `.webp`/`.jpg` in `public/artists/` and point `image:` at it.
