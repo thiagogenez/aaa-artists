@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
+import SocialIcon from "@/components/SocialIcons";
 import { artists, getArtistBySlug } from "@/data/artists";
 import type { Artist, Gig } from "@/data/artists";
 import type { Metadata } from "next";
@@ -30,42 +31,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `/artist/${artist.slug}`,
     },
   };
-}
-
-function SocialIcon({ platform }: { platform: string }) {
-  const icons: Record<string, React.ReactNode> = {
-    instagram: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-      </svg>
-    ),
-    soundcloud: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M1.175 12.225c-.015 0-.023.015-.023.03l-.315 2.007.315 1.992c0 .015.008.03.023.03s.023-.015.023-.03l.353-1.992-.353-2.007c0-.015-.008-.03-.023-.03zm.956-.63c-.023 0-.038.015-.038.038l-.284 2.638.284 2.568c0 .023.015.038.038.038s.038-.015.038-.038l.322-2.568-.322-2.638c0-.023-.015-.038-.038-.038zm.957-.345c-.03 0-.053.023-.053.053l-.253 2.983.253 2.86c0 .03.023.053.053.053s.053-.023.053-.053l.284-2.86-.284-2.983c0-.03-.023-.053-.053-.053zm.957-.24c-.038 0-.068.03-.068.068l-.222 3.223.222 3.12c0 .038.03.068.068.068s.068-.03.068-.068l.253-3.12-.253-3.223c0-.038-.03-.068-.068-.068zm1.027 0c-.045 0-.083.038-.083.083l-.192 3.14.192 3.12c0 .045.038.083.083.083s.083-.038.083-.083l.222-3.12-.222-3.14c0-.045-.038-.083-.083-.083zm1.027-.48c-.053 0-.098.045-.098.098l-.162 3.62.162 3.525c0 .053.045.098.098.098s.098-.045.098-.098l.185-3.525-.185-3.62c0-.053-.045-.098-.098-.098zm1.042-.24c-.06 0-.113.053-.113.113l-.13 3.86.13 3.51c0 .06.053.113.113.113s.113-.053.113-.113l.148-3.51-.148-3.86c0-.06-.053-.113-.113-.113zm1.042.075c-.068 0-.128.06-.128.128l-.1 3.785.1 3.465c0 .068.06.128.128.128s.128-.06.128-.128l.115-3.465-.115-3.785c0-.068-.06-.128-.128-.128zm1.057-.09c-.075 0-.143.068-.143.143l-.068 3.875.068 3.42c0 .075.068.143.143.143s.143-.068.143-.143l.078-3.42-.078-3.875c0-.075-.068-.143-.143-.143zm1.072-.435c-.083 0-.158.075-.158.158l-.038 4.31.038 3.345c0 .083.075.158.158.158s.158-.075.158-.158l.045-3.345-.045-4.31c0-.083-.075-.158-.158-.158zm10.553 4.09c-.39-2.52-2.633-4.44-5.325-4.44-1.013 0-1.928.278-2.723.743V19.5c0 .083.068.143.15.143h7.898c.795 0 1.44-.645 1.44-1.44 0-.795-.645-1.44-1.44-1.44z" />
-      </svg>
-    ),
-    facebook: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-      </svg>
-    ),
-    spotify: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-      </svg>
-    ),
-    youtube: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-      </svg>
-    ),
-    beatport: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M21.429 17.055a7.114 7.114 0 0 1-.794 3.246 6.917 6.917 0 0 1-2.181 2.492 6.698 6.698 0 0 1-3.063 1.163 6.653 6.653 0 0 1-3.239-.434 6.796 6.796 0 0 1-2.668-1.932 7.03 7.03 0 0 1-1.481-2.983 7.124 7.124 0 0 1 .049-3.345 7.015 7.015 0 0 1 1.566-2.937l-4.626 4.73-2.421-2.479 5.201-5.265a3.791 3.791 0 0 0 1.066-2.675V0h3.41v6.613a7.172 7.172 0 0 1-.519 2.794 7.02 7.02 0 0 1-1.559 2.353l-.153.156a6.768 6.768 0 0 1 3.49-1.725 6.687 6.687 0 0 1 3.845.5 6.873 6.873 0 0 1 2.959 2.564 7.118 7.118 0 0 1 1.118 3.8Zm-3.089 0a3.89 3.89 0 0 0-.611-2.133 3.752 3.752 0 0 0-1.666-1.424 3.65 3.65 0 0 0-2.158-.233 3.704 3.704 0 0 0-1.92 1.037 3.852 3.852 0 0 0-1.031 1.955 3.908 3.908 0 0 0 .205 2.213c.282.7.76 1.299 1.374 1.721a3.672 3.672 0 0 0 2.076.647 3.637 3.637 0 0 0 2.635-1.096c.347-.351.622-.77.81-1.231.188-.461.285-.956.286-1.456Z" />
-      </svg>
-    ),
-  };
-  return <>{icons[platform] ?? null}</>;
 }
 
 function formatDate(dateStr: string) {
@@ -115,14 +80,14 @@ function MediaLinkCard({ platform, label, href }: { platform: string; label: str
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center justify-between gap-4 border px-5 py-4 transition-all"
-      style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--text-60)" }}
+      className="btn-outline group flex items-center justify-between gap-4 px-5 py-4"
+      style={{ backgroundColor: "var(--surface)" }}
     >
       <span className="flex items-center gap-3">
         <SocialIcon platform={platform} />
         <span className="text-sm font-semibold uppercase tracking-widest">{label}</span>
       </span>
-      <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
       </svg>
     </a>
@@ -143,7 +108,7 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
             src={gig.flyer}
             alt={`${artist.name} at ${gig.venue}`}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="object-cover"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         ) : (
@@ -181,8 +146,7 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
             href={gig.ticketLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] w-full items-center justify-center py-3 text-center text-xs font-semibold uppercase tracking-widest transition-all"
-            style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+            className="btn-cta inline-flex min-h-[44px] w-full items-center justify-center py-3 text-center text-xs font-semibold uppercase tracking-widest"
           >
             Get Tickets
           </a>
@@ -251,10 +215,9 @@ export default async function ArtistPage({ params }: Props) {
         <div className="mx-auto max-w-7xl">
           <Link
             href="/artists"
-            className="mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-widest transition-colors"
-            style={{ color: "var(--text-30)" }}
+            className="link-quiet mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-widest"
           >
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             All Artists
@@ -287,8 +250,7 @@ export default async function ArtistPage({ params }: Props) {
                         rel="noopener noreferrer"
                         aria-label={`${artist.name} on ${platform}`}
                         title={platform}
-                        className="flex h-11 w-11 items-center justify-center border transition-all"
-                        style={{ borderColor: "var(--border)", color: "var(--text-40)" }}
+                        className="btn-outline flex h-11 w-11 items-center justify-center"
                       >
                         <SocialIcon platform={platform} />
                       </a>
@@ -298,13 +260,12 @@ export default async function ArtistPage({ params }: Props) {
               )}
 
               {/* Book CTA */}
-              <a
+              <Link
                 href={`/contact?artist=${encodeURIComponent(artist.name)}`}
-                className="w-full py-3 text-center text-sm font-semibold uppercase tracking-widest transition-all"
-                style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+                className="btn-cta w-full py-3 text-center text-sm font-semibold uppercase tracking-widest"
               >
                 Book {artist.name}
-              </a>
+              </Link>
             </div>
 
             {/* Info */}
@@ -338,6 +299,7 @@ export default async function ArtistPage({ params }: Props) {
                     width="100%"
                     height="352"
                     allow="autoplay"
+                    loading="lazy"
                     title={`${artist.name} on SoundCloud`}
                     src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`}
                     className="block w-full"
@@ -398,13 +360,12 @@ export default async function ArtistPage({ params }: Props) {
                   <p className="max-w-xs text-sm leading-relaxed" style={{ color: "var(--text-40)" }}>
                     No dates announced right now. {artist.name} is available for bookings.
                   </p>
-                  <a
+                  <Link
                     href={`/contact?artist=${encodeURIComponent(artist.name)}`}
-                    className="inline-flex min-h-[44px] items-center justify-center px-6 py-3 text-xs font-semibold uppercase tracking-widest transition-all"
-                    style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
+                    className="btn-cta inline-flex min-h-[44px] items-center justify-center px-6 py-3 text-xs font-semibold uppercase tracking-widest"
                   >
                     Book {artist.name}
-                  </a>
+                  </Link>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-5">
@@ -484,7 +445,7 @@ export default async function ArtistPage({ params }: Props) {
                     className="pointer-events-none absolute inset-x-0 bottom-0 p-3"
                     style={{ background: "var(--artist-photo-gradient)" }}
                   >
-                    <p className="truncate text-[10px] font-semibold uppercase tracking-widest text-white/60">
+                    <p className="truncate text-xs font-semibold uppercase tracking-widest text-white/80">
                       {a.genre}
                     </p>
                     <p className="truncate text-sm font-bold text-white">{a.name}</p>

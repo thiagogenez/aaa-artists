@@ -27,8 +27,8 @@ html.light {
   --logo-filter: none;
   --artist-photo-filter: grayscale(1) contrast(1.02) brightness(1.14);
   --artist-photo-gradient: linear-gradient(to top,
-      rgba(0, 0, 0, 0.78) 0%,
-      rgba(0, 0, 0, 0.2) 66%,
+      rgba(0, 0, 0, 0.82) 0%,
+      rgba(0, 0, 0, 0.4) 66%,
       transparent 100%);
   /* Flip reveal: drop the front's grayscale so the photo shows in full colour, lifted for the light card */
   --artist-card-back-photo-filter: contrast(1.06) brightness(1.05) saturate(1.1);
@@ -61,10 +61,17 @@ html.dark {
   --artist-photo-filter: grayscale(1) contrast(1.12) brightness(0.86);
   --artist-photo-gradient: linear-gradient(to top,
       rgba(0, 0, 0, 0.9) 0%,
-      rgba(0, 0, 0, 0.35) 68%,
+      rgba(0, 0, 0, 0.45) 68%,
       transparent 100%);
   /* Flip reveal: full colour, slightly brighter than the resting (front) tile */
   --artist-card-back-photo-filter: contrast(1.08) brightness(0.96) saturate(1.1);
+}
+
+:root {
+  /* Fixed navbar height: py-4 (32px) + h-10 logo (40px) + 1px border.
+     Used by <main> in layout.tsx to keep content clear of the navbar —
+     update it if the navbar padding or logo size changes. */
+  --nav-h: 73px;
 }
 
 html {
@@ -88,28 +95,21 @@ body {
   outline-offset: 2px;
 }
 
-/* Footer links — readable at rest, brighten on hover (no JS needed) */
-.footer-link {
+/* Tailwind v4 preflight sets `button { cursor: default }` — restore the pointer
+   so interactive buttons (form sections, theme toggle, hamburger) read as clickable */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Quiet link — readable at rest, brightens on hover/keyboard focus (no JS needed).
+   Used in the footer, back links, and secondary "→" links. */
+.link-quiet {
   color: var(--text-60);
   transition: color 0.2s ease;
 }
-.footer-link:hover {
+.link-quiet:hover,
+.link-quiet:focus-visible {
   color: var(--text);
-}
-
-/* Theme-visibility helpers — show an element only on the matching theme (no JS).
-   Used for the dual Spotify players so switching theme is instant (no reload). */
-.theme-light-only {
-  display: none;
-}
-.theme-dark-only {
-  display: none;
-}
-html.light .theme-light-only {
-  display: block;
-}
-html.dark .theme-dark-only {
-  display: block;
 }
 
 /* Primary CTA — solid fill that shifts on hover (no JS; uses the --cta-hover token) */
@@ -128,9 +128,22 @@ html.dark .theme-dark-only {
   color: var(--text-60);
   transition: border-color 0.2s ease, color 0.2s ease;
 }
-.btn-outline:hover {
+.btn-outline:hover,
+.btn-outline:focus-visible {
   border-color: var(--text);
   color: var(--text);
+}
+
+/* Outline CTA sitting on a photo — always white, independent of the theme */
+.btn-outline-photo {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.btn-outline-photo:hover,
+.btn-outline-photo:focus-visible {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: #ffffff;
 }
 
 /* Respect users who prefer reduced motion — kill animations, transitions and the card flip */

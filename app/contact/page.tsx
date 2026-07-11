@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { artists } from "@/data/artists";
 import ContactView from "./ContactView";
 
 export const metadata: Metadata = {
@@ -14,5 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  return <ContactView />;
+  // Only names/slugs reach the client — the dropdown and back link need nothing more.
+  const artistOptions = artists.map((a) => ({ name: a.name, slug: a.slug }));
+  return <ContactView artistOptions={artistOptions} />;
 }

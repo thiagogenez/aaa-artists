@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 
 const links = [
@@ -14,7 +14,7 @@ const links = [
 
 function SunIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4" aria-hidden="true">
       <circle cx="12" cy="12" r="4" />
       <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
     </svg>
@@ -23,7 +23,7 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4" aria-hidden="true">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   );
@@ -34,13 +34,34 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { theme, toggle } = useTheme();
 
+  // Same rule for desktop and mobile: section links stay highlighted on
+  // sub-pages too (e.g. /artist/<slug> keeps "Artists" active).
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/" && pathname.startsWith(href));
+
+  const themeLabel = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+
+  // Close the mobile menu with Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <header
       className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-nav)" }}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center">
+        {/* Logo = home link; same underline-sweep affordance as the nav links */}
+        <Link
+          href="/"
+          className="group relative flex items-center transition-transform duration-300 hover:-translate-y-px"
+        >
           <Image
             src="/logo.png"
             alt="AAA Artists"
@@ -49,26 +70,29 @@ export default function Navbar() {
             className="h-10 w-auto"
             style={{ filter: "var(--logo-filter)" }}
           />
+          <span
+            className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+            style={{ backgroundColor: "var(--text-20)" }}
+          />
         </Link>
 
         {/* Desktop nav */}
         <ul className="hidden items-center gap-8 md:flex">
           {links.map(({ href, label }) => {
-            const isActive =
-              pathname === href ||
-              (href !== "/" && pathname.startsWith(href));
+            const active = isActive(href);
             return (
               <li key={href}>
                 <Link
                   href={href}
+                  aria-current={active ? "page" : undefined}
                   className="group relative inline-block text-sm font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
-                  style={{ color: isActive ? "var(--text)" : "var(--text-60)" }}
+                  style={{ color: active ? "var(--text)" : "var(--text-60)" }}
                 >
                   {label}
                   {/* Bottom sweep — persistent for the active page, hover-reveal otherwise */}
                   <span
-                    className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ${isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
-                    style={{ backgroundColor: isActive ? "var(--text)" : "var(--text-20)" }}
+                    className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
+                    style={{ backgroundColor: active ? "var(--text)" : "var(--text-20)" }}
                   />
                 </Link>
               </li>
@@ -77,16 +101,12 @@ export default function Navbar() {
 
           {/* Theme toggle */}
           <li>
+            {/* Square bordered icon button — same .btn-outline hover standard as the
+                artist-page social boxes: border and icon brighten together */}
             <button
               onClick={toggle}
-              aria-label="Toggle theme"
-              className="flex h-10 w-10 items-center justify-center border transition-all"
-              style={{
-                borderColor: "var(--border)",
-                color: "var(--text-40)",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-40)")}
+              aria-label={themeLabel}
+              className="btn-outline flex h-10 w-10 items-center justify-center"
             >
               {theme === "dark" ? <SunIcon /> : <MoonIcon />}
             </button>
@@ -95,19 +115,7 @@ export default function Navbar() {
           <li>
             <Link
               href="/contact"
-              className="px-5 py-2 text-sm font-medium uppercase tracking-widest transition-all"
-              style={{
-                border: "1px solid var(--border)",
-                color: "var(--text-60)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--text)";
-                (e.currentTarget as HTMLElement).style.color = "var(--text)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-                (e.currentTarget as HTMLElement).style.color = "var(--text-60)";
-              }}
+              className="btn-outline px-5 py-2 text-sm font-medium uppercase tracking-widest"
             >
               Book Now
             </Link>
@@ -118,17 +126,17 @@ export default function Navbar() {
         <div className="flex items-center gap-3 md:hidden">
           <button
             onClick={toggle}
-            aria-label="Toggle theme"
-            className="-mr-2 flex h-11 w-11 items-center justify-center"
-            style={{ color: "var(--text-40)" }}
+            aria-label={themeLabel}
+            className="link-quiet -mr-2 flex h-11 w-11 items-center justify-center"
           >
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
           <button
             className="-mr-2 flex h-11 w-11 flex-col items-center justify-center gap-1.5"
             onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
+            aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
+            aria-controls="mobile-menu"
           >
             <span
               className="h-px w-6 transition-all"
@@ -149,42 +157,38 @@ export default function Navbar() {
       {/* Mobile menu */}
       {open && (
         <div
+          id="mobile-menu"
           className="border-t px-6 py-6 md:hidden"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
         >
           <ul className="flex flex-col gap-2">
-            {links.map(({ href, label }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  onClick={() => setOpen(false)}
-                  className="group flex min-h-[44px] items-center text-base font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
-                  style={{ color: pathname === href ? "var(--text)" : "var(--text-60)" }}
-                >
-                  <span className="relative inline-block">
-                    {label}
-                    <span
-                      className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ${pathname === href ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
-                      style={{ backgroundColor: pathname === href ? "var(--text)" : "var(--text-20)" }}
-                    />
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {links.map(({ href, label }) => {
+              const active = isActive(href);
+              return (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className="group flex min-h-[44px] items-center text-base font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
+                    style={{ color: active ? "var(--text)" : "var(--text-60)" }}
+                  >
+                    <span className="relative inline-block">
+                      {label}
+                      <span
+                        className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
+                        style={{ backgroundColor: active ? "var(--text)" : "var(--text-20)" }}
+                      />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
             <li>
               <Link
                 href="/contact"
                 onClick={() => setOpen(false)}
-                className="mt-2 inline-flex min-h-[44px] items-center px-5 text-sm uppercase tracking-widest transition-all"
-                style={{ border: "1px solid var(--border)", color: "var(--text-60)" }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "var(--text)";
-                  (e.currentTarget as HTMLElement).style.color = "var(--text)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-                  (e.currentTarget as HTMLElement).style.color = "var(--text-60)";
-                }}
+                className="btn-outline mt-2 inline-flex min-h-[44px] items-center px-5 text-sm uppercase tracking-widest"
               >
                 Book Now
               </Link>

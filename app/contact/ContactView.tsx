@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { artists } from "@/data/artists";
 import { CAPACITY_RANGES, CURRENCIES, BUDGET_RANGES, COUNTRIES } from "@/data/formOptions";
 import { Suspense } from "react";
 
@@ -46,7 +45,11 @@ function emailSuggestions(value: string): string[] {
 const FORMSPREE_ID = process.env.NEXT_PUBLIC_FORMSPREE_ID ?? "";
 const FORMSPREE_ENDPOINT = FORMSPREE_ID ? `https://formspree.io/f/${FORMSPREE_ID}` : "";
 
-function ContactForm() {
+// Slim shape passed from the server page — keeps the full artist dataset
+// (bios, gig history) out of the client bundle.
+export type ArtistOption = { name: string; slug: string };
+
+function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const searchParams = useSearchParams();
   const preselected = searchParams.get("artist") ?? "";
 
@@ -84,6 +87,13 @@ function ContactForm() {
   const toggle = (id: string) => setOpen((o) => ({ ...o, [id]: !o[id] }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // Move focus to the confirmation heading when the form is replaced by the
+  // success screen, so screen readers announce the outcome.
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (submitted) successHeadingRef.current?.focus();
+  }, [submitted]);
 
   // Only the essentials are required; the rest help us quote but stay optional.
   const REQUIRED_FIELDS: { key: keyof typeof form; label: string; section: string }[] = [
@@ -234,18 +244,20 @@ function ContactForm() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 text-center">
+      <div role="status" className="flex flex-col items-center justify-center py-32 text-center">
         <div
           className="mb-6 flex h-16 w-16 items-center justify-center border"
           style={{ borderColor: "var(--border)" }}
         >
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: "var(--text)" }}>
+          <svg aria-hidden="true" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: "var(--text)" }}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="mb-3 text-2xl font-bold" style={{ color: "var(--text)" }}>Enquiry sent</h2>
+        <h2 ref={successHeadingRef} tabIndex={-1} className="mb-3 text-2xl font-bold outline-none" style={{ color: "var(--text)" }}>Enquiry sent</h2>
         <p className="mb-8 max-w-sm text-sm" style={{ color: "var(--text-40)" }}>
-          Your email client should have opened with your message pre-filled. We aim to respond within 48 hours.
+          {FORMSPREE_ENDPOINT
+            ? "Your enquiry has been sent. We aim to respond within 48 hours."
+            : "Your email client should have opened with your message pre-filled. We aim to respond within 48 hours."}
         </p>
         <button
           onClick={() => setSubmitted(false)}
@@ -273,39 +285,34 @@ function ContactForm() {
             .join(", ")}
         </div>
       )}
+      <p className="text-xs" style={{ color: "var(--text-40)" }}>
+        Fields marked with <span aria-hidden="true">*</span>
+        <span className="sr-only">an asterisk</span> are required.
+      </p>
       <div className="space-y-3">
-      <Collapsible step="01" title="Your details" open={open.details} onToggle={() => toggle("details")} error={Boolean(errors.name || errors.company || errors.email || errors.phone)}>
+      <Collapsible id="details" step="01" title="Your details" open={open.details} onToggle={() => toggle("details")} error={Boolean(errors.name || errors.company || errors.email || errors.phone)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Your Name" required error={errors.name}>
-            <Input name="name" placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
+            <Input name="name" autoComplete="name" placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
           </Field>
           <Field label="Company / Promoter">
-            <Input name="company" placeholder="Your venue, brand or agency" value={form.company} onChange={handleChange} onBlur={handleBlur} error={errors.company} />
+            <Input name="company" autoComplete="organization" placeholder="Your venue, brand or agency" value={form.company} onChange={handleChange} onBlur={handleBlur} error={errors.company} />
           </Field>
           <Field label="Email Address" required error={errors.email}>
-            <EmailField
-              value={form.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              onSelect={(val) => {
-                setForm((f) => ({ ...f, email: val }));
-                setErrors((p) => ({ ...p, email: "" }));
-              }}
-              error={errors.email}
-            />
+            <EmailField value={form.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} />
           </Field>
           <Field label="Phone Number">
-            <Input name="phone" type="tel" placeholder="+44 7700 000000" value={form.phone} onChange={handleChange} onBlur={handleBlur} error={errors.phone} />
+            <Input name="phone" type="tel" autoComplete="tel" placeholder="+44 7700 000000" value={form.phone} onChange={handleChange} onBlur={handleBlur} error={errors.phone} />
           </Field>
         </div>
       </Collapsible>
 
-      <Collapsible step="02" title="The booking" open={open.booking} onToggle={() => toggle("booking")} error={Boolean(errors.artist || errors.eventName || errors.eventType || errors.date || errors.setTime || errors.setLength)}>
+      <Collapsible id="booking" step="02" title="The booking" open={open.booking} onToggle={() => toggle("booking")} error={Boolean(errors.artist || errors.eventName || errors.eventType || errors.date || errors.setTime || errors.setLength)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Artist You Want to Book" required error={errors.artist}>
             <Select name="artist" value={form.artist} onChange={handleChange} error={errors.artist}>
               <option value="">Select an artist…</option>
-              {artists.map((a) => (
+              {artistOptions.map((a) => (
                 <option key={a.slug} value={a.name}>{a.name}</option>
               ))}
               <option value="Open to suggestions">Open to suggestions</option>
@@ -335,16 +342,16 @@ function ContactForm() {
         </div>
       </Collapsible>
 
-      <Collapsible step="03" title="Venue & audience" open={open.venue} onToggle={() => toggle("venue")} error={Boolean(errors.venue || errors.city || errors.country || errors.capacity || errors.ticketing)}>
+      <Collapsible id="venue" step="03" title="Venue & audience" open={open.venue} onToggle={() => toggle("venue")} error={Boolean(errors.venue || errors.city || errors.country || errors.capacity || errors.ticketing)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Venue / Location Name">
             <Input name="venue" placeholder="e.g. Fabric" value={form.venue} onChange={handleChange} onBlur={handleBlur} error={errors.venue} />
           </Field>
           <Field label="City">
-            <Input name="city" placeholder="e.g. London" value={form.city} onChange={handleChange} onBlur={handleBlur} error={errors.city} />
+            <Input name="city" autoComplete="address-level2" placeholder="e.g. London" value={form.city} onChange={handleChange} onBlur={handleBlur} error={errors.city} />
           </Field>
           <Field label="Country">
-            <Select name="country" value={form.country} onChange={handleChange} error={errors.country}>
+            <Select name="country" autoComplete="country-name" value={form.country} onChange={handleChange} error={errors.country}>
               <option value="">Select country…</option>
               <option value={COUNTRIES[0]}>{COUNTRIES[0]}</option>
               <option disabled>──────────</option>
@@ -366,7 +373,7 @@ function ContactForm() {
         </div>
       </Collapsible>
 
-      <Collapsible step="04" title="Budget & extras" open={open.budget} onToggle={() => toggle("budget")} error={Boolean(errors.budgetRange || errors.lineup || errors.hearAbout)}>
+      <Collapsible id="budget" step="04" title="Budget & extras" open={open.budget} onToggle={() => toggle("budget")} error={Boolean(errors.budgetRange || errors.lineup || errors.hearAbout)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Budget / Fee Offer" hint="A rough range helps us reply faster">
             <Select name="budgetRange" value={form.budgetRange} onChange={handleChange} error={errors.budgetRange}>
@@ -391,7 +398,7 @@ function ContactForm() {
         </div>
       </Collapsible>
 
-      <Collapsible step="05" title="Anything else (optional)" open={open.message} onToggle={() => toggle("message")}>
+      <Collapsible id="message" step="05" title="Anything else (optional)" open={open.message} onToggle={() => toggle("message")}>
         <Field label="Message">
           <textarea
             name="message"
@@ -399,7 +406,7 @@ function ContactForm() {
             placeholder="Tell us about the event, the crowd, timings, and anything else that helps us quote accurately…"
             value={form.message}
             onChange={handleChange}
-            className="w-full resize-none border px-4 py-3 text-sm outline-none"
+            className="w-full resize-none border px-4 py-3 text-base outline-none"
             style={{
               borderColor: "var(--border)",
               backgroundColor: "var(--surface)",
@@ -436,6 +443,7 @@ function ContactForm() {
 }
 
 function Collapsible({
+  id,
   step,
   title,
   open,
@@ -443,6 +451,7 @@ function Collapsible({
   error,
   children,
 }: {
+  id: string;
   step?: string;
   title: string;
   open?: boolean;
@@ -450,32 +459,39 @@ function Collapsible({
   error?: boolean;
   children: React.ReactNode;
 }) {
+  const contentId = `section-${id}`;
   return (
     <div className="border" style={{ borderColor: error ? "var(--error)" : "var(--border)" }}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-all"
-        style={{ backgroundColor: "var(--surface)" }}
-      >
-        <span className="flex items-center gap-3">
-          {step && <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--text-30)" }}>{step}</span>}
-          <span className="text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--text-60)" }}>{title}</span>
-          {error && (
-            <span className="text-xs font-normal normal-case tracking-normal" style={{ color: "var(--error)" }}>Needs attention</span>
-          )}
-        </span>
-        <svg
-          className="h-5 w-5 shrink-0 transition-transform duration-300"
-          style={{ color: "var(--text-40)", transform: open ? "rotate(45deg)" : "none" }}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor"
+      {/* h2 wrapper keeps the page's heading outline intact (h1 → h2 per section);
+          preflight resets heading font styles, so it doesn't change the look. */}
+      <h2>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={Boolean(open)}
+          aria-controls={contentId}
+          className="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left transition-all"
+          style={{ backgroundColor: "var(--surface)" }}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-        </svg>
-      </button>
+          <span className="flex items-center gap-3">
+            {step && <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--text-30)" }}>{step}</span>}
+            <span className="text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--text-60)" }}>{title}</span>
+            {error && (
+              <span className="text-xs font-normal normal-case tracking-normal" style={{ color: "var(--error)" }}>Needs attention</span>
+            )}
+          </span>
+          <svg
+            aria-hidden="true"
+            className="h-5 w-5 shrink-0 transition-transform duration-300"
+            style={{ color: "var(--text-40)", transform: open ? "rotate(45deg)" : "none" }}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </h2>
       {open && (
-        <div className="space-y-6 border-t p-5 md:p-6" style={{ borderColor: "var(--border)" }}>
+        <div id={contentId} className="space-y-6 border-t p-5 md:p-6" style={{ borderColor: "var(--border)" }}>
           {children}
         </div>
       )}
@@ -483,32 +499,17 @@ function Collapsible({
   );
 }
 
+// text-base (16px) on all controls: iOS Safari auto-zooms the page when focusing
+// any input below 16px. Extra props (autoComplete, aria-* injected by Field) are
+// spread straight onto the native element.
 function Input({
-  name,
-  value,
-  onChange,
-  onBlur,
-  placeholder,
-  type = "text",
   error,
-}: {
-  name: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-  type?: string;
-  error?: string;
-}) {
+  ...rest
+}: React.InputHTMLAttributes<HTMLInputElement> & { error?: string }) {
   return (
     <input
-      name={name}
-      type={type}
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      className="w-full border px-4 py-3 text-sm outline-none transition-all"
+      {...rest}
+      className="w-full border px-4 py-3 text-base outline-none transition-all"
       style={{
         borderColor: error ? "var(--error)" : "var(--border)",
         backgroundColor: "var(--surface)",
@@ -518,93 +519,56 @@ function Input({
   );
 }
 
+// Domain suggestions via a native <datalist>: the browser supplies the dropdown,
+// arrow-key navigation, and screen-reader announcements — no blur-timeout tricks,
+// and picking an option fires a normal change event on the input.
 function EmailField({
   value,
   onChange,
   onBlur,
-  onSelect,
   error,
-}: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
-  onSelect: (val: string) => void;
-  error?: string;
-}) {
-  const [focused, setFocused] = useState(false);
-  const suggestions = focused ? emailSuggestions(value) : [];
+  ...rest
+}: React.InputHTMLAttributes<HTMLInputElement> & { error?: string }) {
+  const listId = useId();
+  const suggestions = emailSuggestions(String(value ?? ""));
   return (
-    <div className="relative">
+    <>
       <input
+        {...rest}
         name="email"
         type="email"
         inputMode="email"
         autoComplete="email"
+        list={listId}
         placeholder="jane@example.com"
         value={value}
         onChange={onChange}
-        onFocus={() => setFocused(true)}
-        onBlur={(e) => {
-          onBlur(e);
-          // delay so a suggestion click can register before the list hides
-          setTimeout(() => setFocused(false), 120);
-        }}
-        className="w-full border px-4 py-3 text-sm outline-none transition-all"
+        onBlur={onBlur}
+        className="w-full border px-4 py-3 text-base outline-none transition-all"
         style={{
           borderColor: error ? "var(--error)" : "var(--border)",
           backgroundColor: "var(--surface)",
           color: "var(--text)",
         }}
       />
-      {suggestions.length > 0 && (
-        <ul
-          className="absolute left-0 right-0 z-20 mt-1 border"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          {suggestions.map((s) => (
-            <li key={s}>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault(); // keep focus so blur doesn't fire first
-                  onSelect(s);
-                  setFocused(false);
-                }}
-                className="block w-full px-4 py-2 text-left text-sm transition-colors hover:[background-color:var(--surface-2)]"
-                style={{ color: "var(--text-60)" }}
-              >
-                {s}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+      <datalist id={listId}>
+        {suggestions.map((s) => (
+          <option key={s} value={s} />
+        ))}
+      </datalist>
+    </>
   );
 }
 
 function Select({
-  name,
-  value,
-  onChange,
-  onBlur,
   error,
   children,
-}: {
-  name: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  onBlur?: (e: React.FocusEvent<HTMLSelectElement>) => void;
-  error?: string;
-  children: React.ReactNode;
-}) {
+  ...rest
+}: React.SelectHTMLAttributes<HTMLSelectElement> & { error?: string }) {
   return (
     <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      className="w-full border px-4 py-3 text-sm outline-none"
+      {...rest}
+      className="w-full border px-4 py-3 text-base outline-none"
       style={{ borderColor: error ? "var(--error)" : "var(--border)", backgroundColor: "var(--surface)", color: "var(--text)" }}
     >
       {children}
@@ -625,31 +589,43 @@ function Field({
   hint?: string;
   children: React.ReactNode;
 }) {
+  // Injects the field-state ARIA into the wrapped control (Input/Select/EmailField/
+  // textarea all spread unknown props onto the native element), and ties the error
+  // or hint text to it via aria-describedby.
+  const id = useId();
+  const errorId = `${id}-error`;
+  const hintId = `${id}-hint`;
+  const control = isValidElement(children)
+    ? cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+        "aria-required": required || undefined,
+        "aria-invalid": error ? true : undefined,
+        "aria-describedby": error ? errorId : hint ? hintId : undefined,
+      })
+    : children;
   return (
     // Wrapping the control in <label> implicitly associates them (no id needed).
     <label className="flex flex-col gap-1.5">
       <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-60)" }}>
-        {label}{required && <span className="ml-0.5">*</span>}
+        {label}{required && <span className="ml-0.5" aria-hidden="true">*</span>}
       </span>
-      {children}
-      {hint && !error && <span className="text-xs" style={{ color: "var(--text-40)" }}>{hint}</span>}
-      {error && <span className="text-xs" role="alert" style={{ color: "var(--error)" }}>{error}</span>}
+      {control}
+      {hint && !error && <span id={hintId} className="text-xs" style={{ color: "var(--text-40)" }}>{hint}</span>}
+      {error && <span id={errorId} className="text-xs" role="alert" style={{ color: "var(--error)" }}>{error}</span>}
     </label>
   );
 }
 
 /** Contextual back link — returns to the artist's profile when arriving from a
  *  "Book {artist}" action, otherwise to the full roster. */
-function BackLink() {
+function BackLink({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const name = useSearchParams().get("artist") ?? "";
-  const artist = name ? artists.find((a) => a.name === name) : undefined;
+  const artist = name ? artistOptions.find((a) => a.name === name) : undefined;
   const href = artist ? `/artist/${artist.slug}` : "/artists";
   const label = artist ? `Back to ${artist.name}` : "All Artists";
   return (
     <Link
       href={href}
-      className="mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-widest transition-colors"
-      style={{ color: "var(--text-30)" }}
+      className="link-quiet mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-widest"
     >
       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -659,12 +635,12 @@ function BackLink() {
   );
 }
 
-export default function ContactPage() {
+export default function ContactView({ artistOptions }: { artistOptions: ArtistOption[] }) {
   return (
-    <div className="min-h-screen px-6 py-20" style={{ backgroundColor: "var(--bg)" }}>
+    <div className="min-h-screen px-6 py-24" style={{ backgroundColor: "var(--bg)" }}>
       <div className="mx-auto max-w-3xl">
         <Suspense>
-          <BackLink />
+          <BackLink artistOptions={artistOptions} />
         </Suspense>
         <div className="mb-12">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
@@ -681,7 +657,7 @@ export default function ContactPage() {
 
         <div className="border p-8 md:p-12" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
           <Suspense>
-            <ContactForm />
+            <ContactForm artistOptions={artistOptions} />
           </Suspense>
         </div>
       </div>
