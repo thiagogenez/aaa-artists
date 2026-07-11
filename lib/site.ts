@@ -5,4 +5,4 @@ export const SITE_URL =
 
 export const SITE_NAME = "AAA Artists";
 export const SITE_DESCRIPTION =
-  "AAA Artists represents world-class electronic music artists across trance, techno, progressive and beyond. Book our artists for your event.";
+  "AAA Artists is the booking and artist management agency from the team behind AAA Events. A trance-first roster reaching into techno, melodic techno, progressive and hard techno. Book our artists for your event.";

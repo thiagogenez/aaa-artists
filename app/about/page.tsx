@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { artists } from "@/data/artists";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "AAA Artists is a music booking and artist management agency representing world-class electronic music talent across trance, techno, progressive and beyond.",
+  description: "AAA Artists is the artist agency from the team behind AAA Events and the AAA pres. Fusion trance events in London and ADE. The roster is trance first, with artists across techno, progressive and hard techno.",
   alternates: { canonical: "/about" },
 };
 
@@ -17,8 +18,8 @@ const values = [
     desc: "We keep the roster small. That means more attention per artist and better matches for each event.",
   },
   {
-    title: "Global Reach",
-    desc: "We have contacts across Europe, North America and Asia, and we use them to get artists onto the right stages.",
+    title: "Promoter Roots",
+    desc: "We ran our own events before representing artists. AAA pres. Fusion in London and at ADE taught us bookings from both sides of the table.",
   },
   {
     title: "Transparent Communication",
@@ -27,10 +28,10 @@ const values = [
 ];
 
 const stats = [
-  { value: "7+", label: "Artists Represented" },
-  { value: "50+", label: "Shows Per Year" },
-  { value: "20+", label: "Countries" },
-  { value: "2018", label: "Founded" },
+  { value: String(artists.length), label: "Artists Represented" },
+  { value: "2023", label: "Founded" },
+  { value: "3", label: "Years Running Events" },
+  { value: "7+", label: "World-Renowned Headliners Hosted" },
 ];
 
 export default function AboutPage() {
@@ -56,9 +57,9 @@ export default function AboutPage() {
             We put the right artists on the right stages.
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed" style={{ color: "var(--text-60)" }}>
-            AAA Artists is a booking and management agency run by people who love electronic
-            music. We represent a small roster of artists and producers, and we work to grow
-            their careers one good booking at a time.
+            AAA Artists is the artist agency from the team behind AAA Events. We represent a
+            small, trance-first roster of DJs and producers, and we work to grow their careers
+            one good booking at a time.
           </p>
         </div>
       </section>
@@ -107,14 +108,21 @@ export default function AboutPage() {
                   differently.
                 </p>
                 <p>
-                  The focus hasn't changed since the first booking. Put the right artist in front of
-                  the right crowd, for a fair fee. That sounds simple, but it takes real knowledge of
-                  the music and the people who run the venues.
+                  We began as AAA Events: a group of trance music fans who organised their first
+                  event in London in 2023. That night grew into AAA pres. Fusion, and the series
+                  went on to host some of the best trance nights in London and at ADE in Amsterdam.
                 </p>
                 <p>
-                  Today we represent seven artists across trance, progressive, techno and hardstyle.
-                  They've played respected clubs and festivals around the world, and we're still
-                  adding to the roster.
+                  Fusion lineups have featured world-renowned headliners: Allen Watts, Doppenberg,
+                  Artento Divini, Jorn van Deynhoven, Ruben de Ronde, C-Systems and Robbie Seed,
+                  among others. Three years on the promoter's side of the booking table taught us
+                  what makes a show work for the artist, the venue and the crowd.
+                </p>
+                <p>
+                  AAA Artists is the next chapter. Today we represent {artists.length} artists. Trance comes
+                  first, and the roster stretches into techno, melodic techno, progressive and hard
+                  techno. Our job is to grow each artist's career and make the roster stronger than
+                  the sum of its parts.
                 </p>
               </div>
             </div>
