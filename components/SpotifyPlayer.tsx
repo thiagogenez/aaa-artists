@@ -1,30 +1,42 @@
-// Renders both the light (theme=1) and dark (theme=0) Spotify players and shows
-// the one matching the active theme purely via CSS (.theme-light-only /
-// .theme-dark-only in globals.css). Both are present up front, so flipping the
-// site theme is instant — no iframe reload/flash. `src` is the embed URL without
-// a theme param (built by spotifyEmbedSrc).
+"use client";
+
+// Renders a single Spotify embed matching the active theme. Spotify bakes the
+// theme into the iframe URL, so flipping the site theme reloads the player —
+// the trade-off for not downloading two full embeds on every page view (a
+// display:none iframe still loads). Waits for mount so the visitor's stored
+// theme, not the SSR default, decides which iframe loads first.
+import { useEffect, useState } from "react";
+import { useTheme } from "@/components/ThemeProvider";
+
 export default function SpotifyPlayer({ src, title }: { src: string; title: string }) {
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div
+        className="h-[352px] w-full"
+        style={{ backgroundColor: "var(--surface)" }}
+        aria-hidden="true"
+      />
+    );
+  }
+
   const sep = src.includes("?") ? "&" : "?";
   return (
-    <>
-      <iframe
-        src={`${src}${sep}theme=1`}
-        width="100%"
-        height="352"
-        title={title}
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        className="theme-light-only w-full"
-        style={{ border: 0 }}
-      />
-      <iframe
-        src={`${src}${sep}theme=0`}
-        width="100%"
-        height="352"
-        title={title}
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        className="theme-dark-only w-full"
-        style={{ border: 0 }}
-      />
-    </>
+    <iframe
+      src={`${src}${sep}theme=${theme === "light" ? 1 : 0}`}
+      width="100%"
+      height="352"
+      title={title}
+      loading="lazy"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      className="w-full"
+      style={{ border: 0 }}
+    />
   );
 }

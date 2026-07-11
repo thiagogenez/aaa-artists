@@ -16,3 +16,6 @@ next-env.d.ts
 
 # Generated from data/artists/*.yml by scripts/gen-artists.mjs
 /data/artists.data.json
+
+# TypeScript incremental build cache
+*.tsbuildinfo

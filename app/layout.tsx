@@ -3,7 +3,6 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Analytics } from "@vercel/analytics/react";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 
 export const viewport: Viewport = {
@@ -43,9 +42,12 @@ export const metadata: Metadata = {
     "DJ booking agency",
     "electronic music artists",
     "trance",
+    "uplifting trance",
     "techno",
+    "melodic techno",
     "progressive",
-    "hardstyle",
+    "hard techno",
+    "AAA Events",
     "book a DJ",
   ],
   icons: { icon: "/favicon.png", apple: "/apple-touch-icon.png" },
@@ -86,17 +88,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <a
           href="#main"
-          className="sr-only rounded focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:uppercase focus:tracking-widest"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:uppercase focus:tracking-widest"
           style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
         >
           Skip to content
         </a>
         <ThemeProvider>
           <Navbar />
-          <main id="main" className="pt-[73px]">{children}</main>
+          {/* --nav-h (globals.css) = fixed navbar height; keeps content clear of it */}
+          <main id="main" className="pt-[var(--nav-h)]">{children}</main>
           <Footer />
         </ThemeProvider>
-        <Analytics />
       </body>
     </html>
   );
