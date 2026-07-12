@@ -416,7 +416,9 @@ export default async function ArtistPage({ params }: Props) {
           <h2 className="mb-10 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             Also on the Roster
           </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {/* Centered wrap (not a grid) so an incomplete last row — e.g. 5 tiles
+              in a 6-wide layout — stays centred instead of hanging left */}
+          <div className="flex flex-wrap justify-center gap-4">
             {artists
               .filter((a) => a.slug !== slug)
               .map((a) => (
@@ -424,7 +426,7 @@ export default async function ArtistPage({ params }: Props) {
                   key={a.slug}
                   href={`/artist/${a.slug}`}
                   aria-label={`View ${a.name}`}
-                  className="group relative aspect-square overflow-hidden border"
+                  className="group relative aspect-square w-[calc((100%-1rem)/2)] overflow-hidden border sm:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-5rem)/6)]"
                   style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}
                 >
                   <Image
