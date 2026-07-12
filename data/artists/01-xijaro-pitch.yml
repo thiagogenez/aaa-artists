@@ -14,31 +14,52 @@ socials:
   facebook: https://facebook.com/xijaroandpitch
   spotify: https://open.spotify.com/artist/0CcmU1Eun8Nwb3VlOAeJUK
   beatport: https://www.beatport.com/artist/xijaro-pitch/
+# Verified gigs only. Oldest first — the site shows newest first.
 pastGigs:
-  - date: '2025-10-18'
-    venue: Privilege
-    city: Ibiza
-    country: Spain
-  - date: '2025-08-02'
-    venue: Awakenings
-    city: Amsterdam
-    country: Netherlands
-  - date: '2025-06-14'
-    venue: Fabric
+  - date: '2025-08-24'
+    venue: Ministry of Sound Courtyard
     city: London
     country: UK
-  - date: '2025-03-22'
-    venue: Exchange
-    city: Los Angeles
-    country: USA
-upcomingGigs:
-  - date: '2026-07-04'
-    venue: A State of Trance Festival
-    city: Utrecht
+  - date: '2025-10-25' # ADE — Amsterdam Trance Event, b2b Alex M.O.R.P.H.
+    venue: Club Panama
+    city: Amsterdam
     country: Netherlands
-    ticketLink: https://www.astateoftrance.com/
-    flyer: /artists/xijaro-pitch.webp # placeholder — reuses the artist photo; swap for real poster art in /flyers
-  - date: '2026-08-15'
-    venue: Creamfields
-    city: Daresbury
+  - date: '2025-11-08'
+    venue: Club Merlijn
+    city: Hengelo
+    country: Netherlands
+  - date: '2025-11-29' # Seriously Uplifting w/ James Cottle
+    venue: The Globe
+    city: Newcastle upon Tyne
     country: UK
+  - date: '2026-03-21' # Trance Sanctuary pres. FSOE w/ Aly & Fila
+    venue: The Lower Third
+    city: London
+    country: UK
+  - date: '2026-04-05' # Trancecoda — Paul van Dyk Returns to the Emporium
+    venue: The Emporium
+    city: Coalville
+    country: UK
+  - date: '2026-05-28' # Euphoria Weekender Malta
+    venue: Gianpula Village
+    city: Rabat
+    country: Malta
+upcomingGigs:
+  # Tomorrowland Weekend 2 — The Rave Cave, Fri 24 Jul, 19:30–20:30
+  - date: '2026-07-24'
+    venue: Tomorrowland
+    city: Boom
+    country: Belgium
+    ticketLink: https://www.tomorrowland.com/
+  # ADE — Amsterdam Trance Event, b2b Alex M.O.R.P.H.; date announced as 24 Oct,
+  # reconfirm when tickets go live (source article's weekday didn't match).
+  - date: '2026-10-24'
+    venue: Club Panama
+    city: Amsterdam
+    country: Netherlands
+  - date: '2026-10-31' # Seriously Uplifting 8
+    venue: The Globe
+    city: Newcastle upon Tyne
+    country: UK
+    ticketLink: https://www.skiddle.com/whats-on/Newcastle-on-Tyne/The-Globe-Newcastle/Seriously-Uplifting-8/42497718/
+    flyer: /flyers/seriously-uplifting-8.webp

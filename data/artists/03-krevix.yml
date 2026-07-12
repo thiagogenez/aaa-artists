@@ -9,25 +9,21 @@ bio: >-
 image: /artists/krevix.webp
 socials:
   instagram: https://instagram.com/krevix
-  soundcloud: https://soundcloud.com/krevix
+  soundcloud: https://soundcloud.com/krevix_official # his real account (soundcloud.com/krevix is someone else)
   beatport: https://www.beatport.com/artist/krevix/
-pastGigs:
-  - date: '2025-10-31'
-    venue: Berghain
-    city: Berlin
-    country: Germany
-  - date: '2025-08-23'
-    venue: Time Warp
-    city: Mannheim
-    country: Germany
-  - date: '2025-05-17'
-    venue: De School
-    city: Amsterdam
-    country: Netherlands
+# No verifiable past gigs found (2024+) — leave empty rather than invent;
+# the site shows "No past dates on record yet."
+pastGigs: []
 upcomingGigs:
-  # Ticket link but no flyer → "Get Tickets" button + an auto-generated poster
-  - date: "2026-09-12"
-    venue: Elrow
-    city: Barcelona
-    country: Spain
-    ticketLink: https://elrow.com/
+  # Tomorrowland 2026 debut — Weekend 1, House of Fortune by JBL stage
+  - date: "2026-07-19"
+    venue: Tomorrowland
+    city: Boom
+    country: Belgium
+    ticketLink: https://www.tomorrowland.com/
+  - date: "2026-08-22"
+    venue: XOYO
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/e/42326656
+    flyer: /flyers/fusion-daxson-xoyo.webp

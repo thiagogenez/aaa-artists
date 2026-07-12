@@ -9,25 +9,34 @@ bio: >-
 image: /artists/sago.webp
 socials:
   instagram: https://instagram.com/sagomusic
-  soundcloud: https://soundcloud.com/sago
+  soundcloud: https://soundcloud.com/daniel-huckett # SAGO's real account (soundcloud.com/sago is someone else)
   facebook: https://facebook.com/sagoofficial
+# Verified gigs only (AAA pres. Fusion circuit). Oldest first — the site shows newest first.
 pastGigs:
-  - date: '2025-11-08'
-    venue: Ministry of Sound
+  - date: '2025-01-18'
+    venue: Basing House
     city: London
     country: UK
-  - date: '2025-08-14'
-    venue: Pacha
-    city: Ibiza
-    country: Spain
-  - date: '2025-06-21'
-    venue: Zouk Club
-    city: Singapore
-    country: Singapore
-upcomingGigs:
-  # Minimal example: no ticketLink/flyer yet → "Tickets soon" chip + auto-generated poster.
-  # Add `ticketLink:` and `flyer:` when you have them (see the other artist files).
-  - date: "2026-06-20"
-    venue: Sensation
+  - date: '2025-08-30'
+    venue: Egg London
+    city: London
+    country: UK
+  - date: '2025-10-24' # ADE — Apollo 84: Flight 2 (two days after Flight 1)
+    venue: Grand Café Eighty-Four
     city: Amsterdam
     country: Netherlands
+  - date: '2026-01-17'
+    venue: Basing House
+    city: London
+    country: UK
+  - date: '2026-04-11'
+    venue: Egg London
+    city: London
+    country: UK
+upcomingGigs:
+  - date: "2026-08-22"
+    venue: XOYO
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/e/42326656
+    flyer: /flyers/fusion-daxson-xoyo.webp

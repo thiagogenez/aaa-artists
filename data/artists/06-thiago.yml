@@ -2,29 +2,56 @@ name: Thiago Genez
 disabled: false               # set to true to hide this artist from the site
 slug: thiago
 genre: Progressive Trance / Melodic Techno / Hard Techno
-tagline: 'Brazil-born, London-based: trance meets techno'
+tagline: 'Brazil-born, based in Germany: trance meets techno'
 bio: >-
-  Thiago Genez is a Brazil-born, London-based DJ and London Sound Academy graduate who started in
-  electronic music in 2018. What began as a side project turned into regular slots across London
-  venues. His sets move between progressive and uplifting trance and the harder edge of melodic and
-  hard techno. He has played Ministry of Sound, EGG LDN and Peckham Audio, and submitted a contest
-  mix for Tomorrowland 2025.
+  Thiago Genez is a Brazil-born DJ, now based in Germany, and a London Sound Academy graduate who
+  started in electronic music in 2018. What began as a side project turned into regular slots across
+  London venues. His sets move between progressive and uplifting trance and the harder edge of
+  melodic and hard techno. He has played Ministry of Sound, EGG LDN and Peckham Audio, and submitted
+  a contest mix for Tomorrowland 2025.
 image: /artists/placeholder.webp
 socials:
   soundcloud: https://soundcloud.com/thiagogenez
   youtube: https://youtube.com/thiagogenez
   instagram: https://instagram.com/thiagogenez
+# Verified gigs only. Oldest first — the site shows newest first.
 pastGigs:
-  - date: '2025-03-01'
+  - date: '2023-08-09'
+    venue: Brixton Jamm
+    city: London
+    country: UK
+  - date: '2023-09-23'
     venue: Ministry of Sound
     city: London
     country: UK
-  - date: '2024-11-15'
-    venue: EGG LDN
+  - date: '2023-12-02'
+    venue: Holywell Studios
     city: London
     country: UK
-  - date: '2024-08-20'
-    venue: Peckham Audio
+  - date: '2025-01-18'
+    venue: Basing House
     city: London
     country: UK
-upcomingGigs: []
+  - date: '2025-08-30'
+    venue: Egg London
+    city: London
+    country: UK
+  - date: '2025-10-22'
+    venue: Grand Café Eighty-Four
+    city: Amsterdam
+    country: Netherlands
+  - date: '2026-01-17'
+    venue: Basing House
+    city: London
+    country: UK
+  - date: '2026-04-11'
+    venue: Egg London
+    city: London
+    country: UK
+upcomingGigs:
+  - date: "2026-08-22"
+    venue: XOYO
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/e/42326656
+    flyer: /flyers/fusion-daxson-xoyo.webp

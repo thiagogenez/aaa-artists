@@ -10,33 +10,35 @@ bio: >-
 image: /artists/frogr.webp
 socials:
   instagram: https://instagram.com/frogr_music
-  soundcloud: https://soundcloud.com/frogr
+  soundcloud: https://soundcloud.com/user-555399327 # FROGR's real account (soundcloud.com/frogr is someone else)
   # Add FROGR's real Spotify URL here to show a live player, e.g.
   # spotify: https://open.spotify.com/artist/REAL_ID
+# Verified gigs only (AAA pres. Fusion circuit). Oldest first — the site shows newest first.
 pastGigs:
-  - date: '2025-09-06'
-    venue: Melt Festival
-    city: Gräfenhainichen
-    country: Germany
-  - date: '2025-07-19'
-    venue: Sonar
-    city: Barcelona
-    country: Spain
-  - date: '2025-04-11'
-    venue: fabric
+  - date: '2025-01-18'
+    venue: Basing House
+    city: London
+    country: UK
+  - date: '2025-08-30'
+    venue: Egg London
+    city: London
+    country: UK
+  - date: '2025-10-24' # ADE — Apollo 84: Flight 2 (two days after Flight 1)
+    venue: Grand Café Eighty-Four
+    city: Amsterdam
+    country: Netherlands
+  - date: '2026-01-17'
+    venue: Basing House
+    city: London
+    country: UK
+  - date: '2026-04-11'
+    venue: Egg London
     city: London
     country: UK
 upcomingGigs:
-  # Full example: ticket link + flyer artwork
-  - date: "2026-07-18"
-    venue: Melt Festival
-    city: Gräfenhainichen
-    country: Germany
-    ticketLink: https://www.meltfestival.de/
-    flyer: /artists/frogr.webp # placeholder — reuses the artist photo; swap for real poster art in /flyers
-  # Ticket link only → "Get Tickets" + auto-generated poster
-  - date: "2026-08-30"
-    venue: Dekmantel
-    city: Amsterdam
-    country: Netherlands
-    ticketLink: https://www.dekmantelfestival.com/
+  - date: "2026-08-22"
+    venue: XOYO
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/e/42326656
+    flyer: /flyers/fusion-daxson-xoyo.webp

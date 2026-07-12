@@ -9,31 +9,34 @@ bio: >-
   up ready for it.
 image: /artists/placeholder.webp
 socials:
-  instagram: https://instagram.com/mrbofficial
-  soundcloud: https://soundcloud.com/mrbdj
-  facebook: https://facebook.com/mrbhardstyle
-  youtube: https://youtube.com/@mrbdj
+  soundcloud: https://soundcloud.com/mrbthedj # verified via AAA Events set recordings
+  # The links below pointed at unrelated people — restore with his real profiles:
+  # instagram: https://instagram.com/…
+  # facebook: https://facebook.com/…
+  # youtube: https://youtube.com/…
+# Verified gigs only (AAA pres. Fusion circuit). Oldest first — the site shows newest first.
 pastGigs:
-  - date: '2025-12-06'
-    venue: Defqon.1
-    city: Almere
-    country: Netherlands
-  - date: '2025-09-13'
-    venue: Qlimax
-    city: Arnhem
-    country: Netherlands
-  - date: '2025-06-07'
-    venue: Hard Bass
-    city: Arnhem
-    country: Netherlands
+  - date: '2025-01-18'
+    venue: Basing House
+    city: London
+    country: UK
+  - date: '2025-08-30'
+    venue: Egg London
+    city: London
+    country: UK
+  - date: '2026-01-17'
+    venue: Basing House
+    city: London
+    country: UK
+  - date: '2026-04-11'
+    venue: Egg London
+    city: London
+    country: UK
 upcomingGigs:
-  - date: "2026-06-13"
-    venue: Defqon.1
-    city: Almere
-    country: Netherlands
-    ticketLink: https://www.defqon1.com/
-  - date: "2026-09-05"
-    venue: Qlimax
-    city: Arnhem
-    country: Netherlands
-    ticketLink: https://www.q-dance.com/
+  # On the XOYO second-room lineup (Skiddle/aaaevents.co)
+  - date: "2026-08-22"
+    venue: XOYO
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/e/42326656
+    flyer: /flyers/fusion-daxson-xoyo.webp

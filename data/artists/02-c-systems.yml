@@ -14,24 +14,32 @@ socials:
   facebook: https://facebook.com/csystems
   spotify: https://open.spotify.com/artist/23u5Z7BfuCPFLl4JE1uacp
   beatport: https://www.beatport.com/artist/c-systems/
+# Verified gigs only. Oldest first — the site shows newest first.
 pastGigs:
-  - date: '2025-11-01'
-    venue: Trance Around The World
-    city: Moscow
-    country: Russia
-  - date: '2025-09-20'
-    venue: Club Voltage
-    city: Tokyo
-    country: Japan
-  - date: '2025-07-05'
-    venue: Untold Festival
-    city: Cluj-Napoca
-    country: Romania
+  - date: '2025-01-18'
+    venue: Basing House
+    city: London
+    country: UK
+  - date: '2025-07-13' # Trance After Dark — official ASOT London afterparty
+    venue: The Cause
+    city: London
+    country: UK
+  - date: '2025-08-30'
+    venue: Egg London
+    city: London
+    country: UK
 upcomingGigs:
-  # Full example: real ticket link + flyer artwork (poster file in public/flyers/)
-  - date: "2026-06-27"
-    venue: Luminosity Beach Festival
-    city: Bloemendaal
-    country: Netherlands
-    ticketLink: https://www.luminosity-events.nl/
-    flyer: /artists/c-systems.webp # placeholder — reuses the artist photo; swap for real poster art in /flyers
+  # Timescape runs 7–9 Aug 2026; C-Systems confirmed on the lineup, exact day
+  # TBC — update the date once the timetable is out.
+  - date: "2026-08-07"
+    venue: Timescape Festival
+    city: Huntingdon
+    country: UK
+    ticketLink: https://www.skiddle.com/whats-on/Peterborough/Abbots-Ripton-Cambridgeshire/Timescape-Festival-2026/41279107/
+    flyer: /flyers/timescape-2026.webp
+  - date: "2026-08-22"
+    venue: XOYO
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/e/42326656
+    flyer: /flyers/fusion-daxson-xoyo.webp
