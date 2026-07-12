@@ -4,9 +4,9 @@ import Link from "next/link";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import SocialIcon from "@/components/SocialIcons";
 import { artists, getArtistBySlug } from "@/data/artists";
-import type { Artist, Gig } from "@/data/artists";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
+import EventsSection from "./EventsSection";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -31,14 +31,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `/artist/${artist.slug}`,
     },
   };
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 }
 
 /** Convert a public Spotify URL into its embed equivalent. */
