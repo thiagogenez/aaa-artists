@@ -2,6 +2,8 @@
 
 import { useId, useState } from "react";
 import { COUNTRIES } from "@/data/formOptions";
+import allPhoneCountries from "intl-tel-input/data";
+import "intl-tel-input/styles";
 
 const COUNTRY_ALIASES: Record<string, string[]> = {
   "United Kingdom": ["uk", "gb", "great britain", "england", "scotland", "wales"],
@@ -11,6 +13,38 @@ const COUNTRY_ALIASES: Record<string, string[]> = {
   "South Korea": ["korea"],
   "Czech Republic": ["czechia"],
 };
+
+const COUNTRY_ISO_OVERRIDES: Record<string, string> = {
+  "Antigua and Barbuda": "ag",
+  "Bosnia and Herzegovina": "ba",
+  Congo: "cg",
+  "Czech Republic": "cz",
+  "Democratic Republic of the Congo": "cd",
+  "Ivory Coast": "ci",
+  Myanmar: "mm",
+  Palestine: "ps",
+  "Saint Kitts and Nevis": "kn",
+  "Saint Lucia": "lc",
+  "Saint Vincent and the Grenadines": "vc",
+  "Sao Tome and Principe": "st",
+  "Trinidad and Tobago": "tt",
+  Turkey: "tr",
+};
+
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const COUNTRY_ISO = new Map(allPhoneCountries.map((country) => [
+  regionNames.of(country.iso2.toUpperCase()) ?? "",
+  country.iso2,
+]));
+
+function countryIso(country: string): string {
+  return COUNTRY_ISO_OVERRIDES[country] ?? COUNTRY_ISO.get(country) ?? "";
+}
+
+function CountryFlag({ country }: { country: string }) {
+  const iso = countryIso(country);
+  return iso ? <span className={`iti__flag iti__${iso} inline-block shrink-0`} aria-hidden="true" /> : null;
+}
 
 type CountryComboboxProps = {
   value: string;
@@ -27,6 +61,7 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
   const [activeIndex, setActiveIndex] = useState(0);
 
   const normalized = query.trim().toLowerCase();
+  const selectedIso = countryIso(value);
   const matches = COUNTRIES.filter((country) => {
     if (!normalized) return true;
     return country.toLowerCase().includes(normalized)
@@ -42,6 +77,11 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
 
   return (
     <div className="relative">
+      {!open && selectedIso && (
+        <span className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2" aria-hidden="true">
+          <CountryFlag country={value} />
+        </span>
+      )}
       <input
         {...rest}
         type="text"
@@ -86,7 +126,7 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
             setQuery("");
           }
         }}
-        className="w-full border px-4 py-3 text-base outline-none transition-all"
+        className={`w-full border py-3 pr-4 text-base outline-none transition-all ${!open && selectedIso ? "pl-12" : "pl-4"}`}
         style={{
           borderColor: error ? "var(--error)" : "var(--border)",
           backgroundColor: "var(--surface)",
@@ -111,13 +151,14 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
                 event.preventDefault();
                 choose(country);
               }}
-              className="cursor-pointer px-4 py-3 text-sm"
+              className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm"
               style={{
                 backgroundColor: index === activeIndex ? "var(--surface-2)" : "transparent",
                 color: "var(--text)",
               }}
             >
-              {country}
+              <CountryFlag country={country} />
+              <span>{country}</span>
             </li>
           )) : (
             <li className="px-4 py-3 text-sm" style={{ color: "var(--text-40)" }}>
