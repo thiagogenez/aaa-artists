@@ -1,5 +1,5 @@
 name: Xijaro & Pitch
-disabled: true                # set to false to show this artist on the site
+disabled: false               # set to true to hide this artist from the site
 slug: xijaro-pitch
 # Profile based on their official bios (ADE artist page, Luminary Artists)
 genre: Uplifting Trance
