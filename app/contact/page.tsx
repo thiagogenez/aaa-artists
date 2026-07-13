@@ -3,13 +3,13 @@ import { artists } from "@/data/artists";
 import ContactView from "./ContactView";
 
 export const metadata: Metadata = {
-  title: "Book an Artist",
+  title: "Book Artists",
   description:
-    "Send a booking enquiry for an AAA Artists DJ. Share the date, venue, capacity and budget and we'll get back to you within 48 hours.",
+    "Send a booking enquiry for one or more AAA Artists DJs. Share the date, venue, capacity and budget and we'll get back to you within 48 hours.",
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "Book an Artist — AAA Artists",
-    description: "Send a booking enquiry for an AAA Artists DJ.",
+    title: "Book Artists — AAA Artists",
+    description: "Send a booking enquiry for one or more AAA Artists DJs.",
     url: "/contact",
   },
 };
