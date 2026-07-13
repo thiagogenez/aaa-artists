@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import CountryCombobox from "./CountryCombobox";
 import CityCombobox from "./CityCombobox";
 import PhoneField from "./PhoneField";
+import type { Iso2 } from "intl-tel-input";
 
 const EVENT_TYPES = [
   "Club Night",
@@ -32,6 +33,20 @@ const DURATION_MINUTES = [0, 15, 30, 45];
 const SET_DURATIONS = DURATION_HOURS.flatMap((hours) => (
   DURATION_MINUTES.map((minutes) => hours * 60 + minutes)
 ));
+
+function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      style={{ color: "#25D366" }}
+    >
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.247-.767.966-.94 1.164-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.273.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.876 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.29.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.981.999-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.99c-.003 5.45-4.437 9.884-9.886 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.144 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
+    </svg>
+  );
+}
 
 function formatDurationMinutes(value: string): string {
   const totalMinutes = Number(value);
@@ -196,6 +211,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     company: "",
     email: "",
     phone: "",
+    whatsapp: "",
     // The booking
     eventName: queryValue("event", 120),
     eventType: "",
@@ -234,6 +250,9 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [dateTbc, setDateTbc] = useState(false);
   const [phoneValid, setPhoneValid] = useState(true);
+  const [phoneCountry, setPhoneCountry] = useState<Iso2>("gb");
+  const [whatsappValid, setWhatsappValid] = useState(true);
+  const [whatsappMode, setWhatsappMode] = useState<"none" | "same" | "different">("none");
   const [currencyTouched, setCurrencyTouched] = useState(false);
   const selectedArtists = new Set(artistBookings.map((booking) => booking.artist).filter(Boolean));
   const overlapArtists = new Map<number, string[]>();
@@ -280,6 +299,10 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     }
     if (form.email.trim() && !EMAIL_RE.test(form.email)) e.email = "Invalid email address";
     if (form.phone && !phoneValid) e.phone = "Enter a valid international phone number";
+    if (whatsappMode === "different") {
+      if (!form.whatsapp) e.whatsapp = "Enter the WhatsApp number";
+      else if (!whatsappValid) e.whatsapp = "Enter a valid international WhatsApp number";
+    }
     const allowedArtists = new Set([...artistOptions.map((artist) => artist.name), "Open to suggestions"]);
     const allowedDurations = new Set(SET_DURATIONS.map(String));
     const seenArtists = new Set<string>();
@@ -336,6 +359,21 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   function handlePhoneChange(phone: string) {
     setForm((current) => ({ ...current, phone: phone.slice(0, 32) }));
     setErrors((current) => ({ ...current, phone: "" }));
+    if (!phone) setWhatsappMode((current) => current === "same" ? "none" : current);
+  }
+
+  function handleWhatsAppChange(whatsapp: string) {
+    setForm((current) => ({ ...current, whatsapp: whatsapp.slice(0, 32) }));
+    setErrors((current) => ({ ...current, whatsapp: "" }));
+  }
+
+  function handleWhatsAppMode(mode: "none" | "same" | "different") {
+    setWhatsappMode(mode);
+    if (mode !== "different") {
+      setForm((current) => ({ ...current, whatsapp: "" }));
+      setWhatsappValid(true);
+    }
+    setErrors((current) => ({ ...current, whatsapp: "" }));
   }
 
   function handleCountryChange(country: string) {
@@ -460,6 +498,9 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         ? form.budgetRange
         : `${form.budgetRange} ${form.currency}`
       : "";
+    const whatsappNumber = whatsappMode === "same"
+      ? form.phone
+      : whatsappMode === "different" ? form.whatsapp : "";
 
     // Preferred path: submit straight to Formspree (lands in inbox + dashboard).
     if (FORMSPREE_ENDPOINT) {
@@ -473,6 +514,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           Email: form.email,
           ...(form.company && { "Company / promoter": form.company }),
           ...(form.phone && { Phone: form.phone }),
+          ...(whatsappNumber && { WhatsApp: whatsappNumber }),
           "Artist schedule": artistSchedule,
           ...(form.eventName && { "Event name": form.eventName }),
           ...(form.eventType && { "Event type": form.eventType }),
@@ -507,6 +549,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       form.company ? `Company / promoter: ${form.company}` : null,
       `Email: ${form.email}`,
       form.phone ? `Phone: ${form.phone}` : null,
+      whatsappNumber ? `WhatsApp: ${whatsappNumber}` : null,
       "",
       "ARTIST SCHEDULE",
       ...artistBookings.map(formatArtistBooking),
@@ -578,7 +621,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           {Array.from(new Set(Object.keys(errors)
             .filter((key) => errors[key])
             .map((key) => REQUIRED_FIELDS.find((field) => field.key === key)?.label
-              ?? (key === "phone" ? "Phone" : key.startsWith("booking-") ? "Artist schedule" : key))))
+              ?? (key === "phone" ? "Phone" : key === "whatsapp" ? "WhatsApp" : key.startsWith("booking-") ? "Artist schedule" : key))))
             .join(", ")}
         </div>
       )}
@@ -587,7 +630,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         <span className="sr-only">an asterisk</span> are required.
       </p>
       <div className="space-y-3">
-      <Collapsible id="quick" step="01" title="Quick enquiry" open={open.quick} onToggle={() => toggle("quick")} error={Boolean(errors.name || errors.email || errors.phone || errors.date || hasBookingErrors)}>
+      <Collapsible id="quick" step="01" title="Quick enquiry" open={open.quick} onToggle={() => toggle("quick")} error={Boolean(errors.name || errors.email || errors.phone || errors.whatsapp || errors.date || hasBookingErrors)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Your Name" required error={errors.name}>
             <Input name="name" autoComplete="name" maxLength={100} placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
@@ -595,11 +638,12 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           <Field label="Email Address" required error={errors.email}>
             <EmailField maxLength={254} value={form.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} />
           </Field>
-          <Field label="Phone Number">
+          <Field label="Phone Number" error={errors.phone}>
             <PhoneField
               value={form.phone}
               error={errors.phone}
               onChange={handlePhoneChange}
+              onCountryChange={setPhoneCountry}
               onValidityChange={setPhoneValid}
               onBlur={() => {
                 setErrors((current) => ({
@@ -609,6 +653,64 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
               }}
             />
           </Field>
+          <fieldset>
+            <legend className="mb-1.5 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-60)" }}>
+              <span className="flex items-center gap-1.5">
+                <WhatsAppIcon />
+                WhatsApp <span className="font-normal normal-case tracking-normal" style={{ color: "var(--text-40)" }}>(optional)</span>
+              </span>
+            </legend>
+            <label
+              className="flex min-h-[50px] cursor-pointer items-center gap-3 border px-4 py-3 text-sm transition-colors duration-200 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60"
+              style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--text)" }}
+            >
+              <input
+                type="checkbox"
+                checked={whatsappMode === "same"}
+                disabled={!form.phone}
+                onChange={(event) => handleWhatsAppMode(event.target.checked ? "same" : "none")}
+                className="h-5 w-5 shrink-0 accent-current"
+              />
+              Same as phone number
+            </label>
+            {whatsappMode === "different" ? (
+              <div className="mt-3">
+                <Field label="WhatsApp Number" required error={errors.whatsapp}>
+                  <PhoneField
+                    name="whatsapp"
+                    initialCountry={phoneCountry}
+                    value={form.whatsapp}
+                    error={errors.whatsapp}
+                    onChange={handleWhatsAppChange}
+                    onValidityChange={setWhatsappValid}
+                    onBlur={() => {
+                      setErrors((current) => ({
+                        ...current,
+                        whatsapp: !form.whatsapp
+                          ? "Enter the WhatsApp number"
+                          : !whatsappValid ? "Enter a valid international WhatsApp number" : "",
+                      }));
+                    }}
+                  />
+                </Field>
+                <button
+                  type="button"
+                  onClick={() => handleWhatsAppMode("none")}
+                  className="link-quiet mt-1 min-h-[44px] text-xs uppercase tracking-widest"
+                >
+                  Remove WhatsApp number
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleWhatsAppMode("different")}
+                className="link-quiet mt-1 min-h-[44px] text-xs uppercase tracking-widest"
+              >
+                Add a different WhatsApp number
+              </button>
+            )}
+          </fieldset>
           <div className="sm:col-span-2">
             <Field label="Event Date" required={!dateTbc} error={errors.date}>
               <Input

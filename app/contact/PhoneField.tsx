@@ -1,12 +1,15 @@
 "use client";
 
 import IntlTelInput from "@intl-tel-input/react";
+import type { Iso2 } from "intl-tel-input";
 import "intl-tel-input/styles";
 
 type PhoneFieldProps = {
   value: string;
   error?: string;
+  initialCountry?: Iso2;
   onChange: (number: string) => void;
+  onCountryChange?: (country: Iso2) => void;
   onValidityChange: (isValid: boolean) => void;
   onBlur: () => void;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "onBlur" | "value">;
@@ -17,7 +20,9 @@ type PhoneFieldProps = {
 export default function PhoneField({
   value,
   error,
+  initialCountry = "gb",
   onChange,
+  onCountryChange,
   onValidityChange,
   onBlur,
   ...inputProps
@@ -25,19 +30,21 @@ export default function PhoneField({
   return (
     <div className="aaa-phone-field">
       <IntlTelInput
-        initialCountry="gb"
+        initialCountry={initialCountry}
         loadUtils={() => import("intl-tel-input/utils")}
         value={value}
         onChangeNumber={onChange}
+        onChangeCountry={(country) => onCountryChange?.(country as Iso2)}
         onChangeValidity={onValidityChange}
         countrySearch
         formatAsYouType
+        placeholderNumberPolicy="AGGRESSIVE"
         separateDialCode
         strictMode
         strictRejectAnimation
         inputProps={{
           ...inputProps,
-          name: "phone",
+          name: inputProps.name ?? "phone",
           autoComplete: "tel",
           inputMode: "tel",
           onBlur,
