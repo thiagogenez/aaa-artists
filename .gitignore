@@ -17,5 +17,8 @@ next-env.d.ts
 # Generated from data/artists/*.yml by scripts/gen-artists.mjs
 /data/artists.data.json
 
+# Generated country-specific city suggestions (source: all-countries-and-cities-json)
+/public/cities/
+
 # TypeScript incremental build cache
 *.tsbuildinfo

@@ -4,15 +4,19 @@
   "private": true,
   "scripts": {
     "gen:artists": "node scripts/gen-artists.mjs",
+    "gen:cities": "node scripts/gen-cities.mjs",
+    "gen:data": "node scripts/gen-data.mjs",
     "check": "node scripts/gen-artists.mjs --check",
-    "predev": "npm run gen:artists",
+    "predev": "npm run gen:data",
     "dev": "next dev",
-    "prebuild": "npm run gen:artists",
+    "prebuild": "npm run gen:data",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@intl-tel-input/react": "^29.1.2",
+    "intl-tel-input": "^29.1.2",
     "next": "^16.2.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -22,6 +26,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "all-countries-and-cities-json": "^1.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.2.7",
     "js-yaml": "^5.0.0",

@@ -146,6 +146,33 @@ button:not(:disabled) {
   border-color: #ffffff;
 }
 
+/* International phone control — retain the library's accessible country picker
+   while matching the site's surfaces in both themes. */
+.aaa-phone-field .iti {
+  width: 100%;
+  --iti-hover-color: var(--surface-2);
+  --iti-border-color: var(--border);
+  --iti-country-selector-bg: var(--surface);
+  --iti-icon-color: var(--text-60);
+}
+.aaa-phone-field .iti__selected-country {
+  min-width: 44px;
+  color: var(--text);
+}
+.aaa-phone-field .iti__country-selector {
+  color: var(--text);
+  border-radius: 0;
+}
+.aaa-phone-field .iti__search-input {
+  min-height: 44px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+.aaa-phone-field .iti__country {
+  min-height: 44px;
+}
+
 /* Respect users who prefer reduced motion — kill animations, transitions and the card flip */
 @media (prefers-reduced-motion: reduce) {
   *,
