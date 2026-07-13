@@ -3,10 +3,11 @@ disabled: false               # set to true to hide this artist from the site
 slug: c-systems
 genre: Progressive Trance
 tagline: Cinematic, driving progressive trance
+# Duo per their RA page (ra.co/dj/c-systems): Matt Allen (London) + Akki Hisham (Oslo)
 bio: >-
-  C-Systems is a progressive trance producer with a cinematic, driving sound. His music has come out
-  on several of the genre's respected labels, and his sets build from atmospheric openings into big
-  peak-time moments.
+  C-Systems is the progressive trance duo of Matt Allen in London and Akki Hisham in Oslo, with a
+  cinematic, driving sound. Their music has come out on several of the genre's respected labels, and
+  their sets build from atmospheric openings into big peak-time moments.
 image: /artists/c-systems.webp
 socials:
   instagram: https://instagram.com/csystemsofficial

@@ -1,12 +1,14 @@
 name: Xijaro & Pitch
 disabled: true                # set to false to show this artist on the site
 slug: xijaro-pitch
-genre: Trance / Progressive
+# Profile based on their official bios (ADE artist page, Luminary Artists)
+genre: Uplifting Trance
 tagline: Melodic trance, built for big rooms
 bio: >-
-  Xijaro & Pitch are a trance duo known for big, melodic productions and high-energy sets. Their
-  tracks pair emotional melodies with driving progressive builds, and they've played major festivals
-  and club residencies across Europe.
+  XiJaro & Pitch are the trance duo of Xander van Dommelen and Anthony Reyers, working together
+  since 2014. Their emotionally charged, uplifting tracks have come out on Black Hole Recordings,
+  FSOE and Who's Afraid Of 138, and they have played Tomorrowland, Transmission, A State Of Trance
+  and EDC Las Vegas. They also run Chasing Dreams, a podcast, livestream and label in one.
 image: /artists/xijaro-pitch.webp
 socials:
   instagram: https://instagram.com/xijaroandpitch
@@ -51,6 +53,7 @@ upcomingGigs:
     city: Boom
     country: Belgium
     ticketLink: https://www.tomorrowland.com/
+    flyer: /flyers/tomorrowland-2026.webp # official Consciencia lineup poster (XiJaro & Pitch listed)
   # ADE — Amsterdam Trance Event, b2b Alex M.O.R.P.H.; date announced as 24 Oct,
   # reconfirm when tickets go live (source article's weekday didn't match).
   - date: '2026-10-24'

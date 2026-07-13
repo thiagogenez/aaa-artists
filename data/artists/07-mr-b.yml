@@ -1,12 +1,13 @@
 name: Mr B
 disabled: false               # set to true to hide this artist from the site
 slug: mr-b
-genre: Hard Trance / Hardstyle
-tagline: The hardest sounds, the biggest rooms
+# No RA profile exists — written from his verified sets and AAA Fusion billings.
+genre: Trance / Progressive
+tagline: Trance and progressive, with a harder late-night edge
 bio: >-
-  Mr B plays hard trance and hardstyle, with a reputation for big festival sets and a no-compromise
-  approach to the heavier stuff. The sound is loud, the kicks hit hard, and the crowd usually shows
-  up ready for it.
+  Mr B is a London DJ and a regular on the AAA Fusion lineups at Basing House, Egg London and XOYO.
+  His sets sit in trance and progressive territory, and when the afterparty calls for it he pushes
+  into harder ground.
 image: /artists/placeholder.webp
 socials:
   soundcloud: https://soundcloud.com/mrbthedj # verified via AAA Events set recordings

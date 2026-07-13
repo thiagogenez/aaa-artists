@@ -1,11 +1,12 @@
 name: SAGO
 disabled: false               # set to true to hide this artist from the site
 slug: sago
-genre: Progressive House / Trance
-tagline: Progressive house meets uplifting trance
+# Profile based on his RA page (ra.co/dj/sago-uk)
+genre: Uplifting Trance
+tagline: Uplifting melodies, high-energy sets
 bio: >-
-  SAGO moves between progressive house and uplifting trance, often inside the same set. He reads a
-  room well and knows when to build tension and when to let it go, which keeps a dancefloor moving.
+  SAGO is an emerging trance DJ known for uplifting melodies and high-energy sets. A resident for
+  AAA Events, he has played Euphoria Weekender, Ibiza Trance Week and ADE.
 image: /artists/sago.webp
 socials:
   instagram: https://instagram.com/sagomusic

@@ -1,11 +1,14 @@
 name: Krevix
 disabled: false               # set to true to hide this artist from the site
 slug: krevix
-genre: Techno / Dark Trance
-tagline: Techno intensity with a dark trance edge
+# Profile based on his ADE artist page (amsterdam-dance-event.nl; no RA profile exists)
+genre: Trance / Experimental
+tagline: Trance with an experimental edge
 bio: >-
-  Krevix blends the intensity of techno with the darker, emotional side of trance. His sets are loud
-  and relentless, made for late nights and big rooms rather than easy listening.
+  Krevix is a Dutch DJ and producer from Groningen, known for the experimental edge he brings to
+  trance and dance music. His track Your Life stood out, he has collaborated with Ahmed Helmy and
+  B Jones, and his music has picked up support from Armin van Buuren, David Guetta, Robin Schulz,
+  Dimitri Vegas & Like Mike and Andrew Rayel. He makes his Tomorrowland debut in 2026.
 image: /artists/krevix.webp
 socials:
   instagram: https://instagram.com/krevix
@@ -21,6 +24,7 @@ upcomingGigs:
     city: Boom
     country: Belgium
     ticketLink: https://www.tomorrowland.com/
+    flyer: /flyers/tomorrowland-2026.webp # official Consciencia lineup poster (Krevix listed)
   - date: "2026-08-22"
     venue: XOYO
     city: London
