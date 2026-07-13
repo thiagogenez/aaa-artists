@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CAPACITY_RANGES, CURRENCIES, BUDGET_RANGES, COUNTRIES } from "@/data/formOptions";
 import { Suspense } from "react";
+import CountryCombobox from "./CountryCombobox";
+import CityCombobox from "./CityCombobox";
+import PhoneField from "./PhoneField";
 
 const EVENT_TYPES = [
   "Club Night",
@@ -18,13 +21,140 @@ const EVENT_TYPES = [
   "Other",
 ];
 
-const SET_LENGTHS = ["45 minutes", "60 minutes", "90 minutes", "2 hours", "2+ hours / open to close", "Not sure yet"];
-
 const TICKETING = ["Ticketed", "Free entry", "Private / guestlist"];
 
 const HEAR_ABOUT = ["Instagram", "SoundCloud / YouTube", "Google search", "Personal referral", "Booked with us before", "Other"];
 
-const EMAIL_DOMAINS = ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "icloud.com", "proton.me"];
+const DURATION_HOURS = [1, 2, 3, 4, 5, 6];
+const DURATION_MINUTES = [0, 15, 30, 45];
+// One duration source of truth: every combination exposed by the hours/minutes
+// menus: one to six hours, in quarter-hour increments.
+const SET_DURATIONS = DURATION_HOURS.flatMap((hours) => (
+  DURATION_MINUTES.map((minutes) => hours * 60 + minutes)
+));
+
+function formatDurationMinutes(value: string): string {
+  const totalMinutes = Number(value);
+  if (!Number.isInteger(totalMinutes) || totalMinutes <= 0) return "";
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return [
+    hours ? `${hours} ${hours === 1 ? "hour" : "hours"}` : "",
+    minutes ? `${minutes} ${minutes === 1 ? "minute" : "minutes"}` : "",
+  ].filter(Boolean).join(" ");
+}
+
+const EURO_COUNTRIES = new Set([
+  "Austria", "Belgium", "Croatia", "Cyprus", "Estonia", "Finland", "France", "Germany",
+  "Greece", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta",
+  "Netherlands", "Portugal", "Slovakia", "Slovenia", "Spain",
+]);
+
+function currencyForCountry(country: string): string | null {
+  if (country === "United Kingdom") return "GBP";
+  if (country === "United States") return "USD";
+  if (EURO_COUNTRIES.has(country)) return "EUR";
+  return null;
+}
+
+function calculateSetDuration(start: string, finish: string): string {
+  const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+  const startMatch = start.match(timePattern);
+  const finishMatch = finish.match(timePattern);
+  if (!startMatch || !finishMatch || start === finish) return "";
+
+  const startMinutes = Number(startMatch[1]) * 60 + Number(startMatch[2]);
+  const finishMinutes = Number(finishMatch[1]) * 60 + Number(finishMatch[2]);
+  const crossesMidnight = finishMinutes < startMinutes;
+  const durationMinutes = finishMinutes - startMinutes + (crossesMidnight ? 24 * 60 : 0);
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = durationMinutes % 60;
+  const parts = [
+    hours ? `${hours} ${hours === 1 ? "hour" : "hours"}` : "",
+    minutes ? `${minutes} ${minutes === 1 ? "minute" : "minutes"}` : "",
+  ].filter(Boolean);
+
+  return `${parts.join(" ")}${crossesMidnight ? " · finishes next day" : ""}`;
+}
+
+type ArtistBooking = {
+  id: number;
+  artist: string;
+  timingMode: "duration" | "times";
+  durationMinutes: string;
+  startTime: string;
+  finishTime: string;
+};
+
+function selectedDurationLabel(booking: ArtistBooking): string {
+  return SET_DURATIONS.includes(Number(booking.durationMinutes))
+    ? formatDurationMinutes(booking.durationMinutes)
+    : "";
+}
+
+function bookingIntervalsOverlap(first: ArtistBooking, second: ArtistBooking): boolean {
+  const toMinutes = (value: string) => {
+    const [hours, minutes] = value.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+  if (first.timingMode !== "times" || second.timingMode !== "times"
+    || !calculateSetDuration(first.startTime, first.finishTime)
+    || !calculateSetDuration(second.startTime, second.finishTime)) return false;
+
+  const firstStart = toMinutes(first.startTime);
+  const firstFinishBase = toMinutes(first.finishTime);
+  const firstFinish = firstFinishBase <= firstStart ? firstFinishBase + 24 * 60 : firstFinishBase;
+  const secondStartBase = toMinutes(second.startTime);
+  const secondFinishBase = toMinutes(second.finishTime);
+  const secondDuration = secondFinishBase <= secondStartBase
+    ? secondFinishBase + 24 * 60 - secondStartBase
+    : secondFinishBase - secondStartBase;
+
+  return [-24 * 60, 0, 24 * 60].some((offset) => {
+    const secondStart = secondStartBase + offset;
+    const secondFinish = secondStart + secondDuration;
+    return Math.max(firstStart, secondStart) < Math.min(firstFinish, secondFinish);
+  });
+}
+
+function formatArtistBooking(booking: ArtistBooking, index: number): string {
+  if (booking.timingMode === "duration") {
+    const duration = selectedDurationLabel(booking);
+    return `${index + 1}. ${booking.artist} — ${duration ? `${duration} set · times TBC` : "Timing TBC"}`;
+  }
+  const duration = calculateSetDuration(booking.startTime, booking.finishTime);
+  const schedule = booking.startTime && booking.finishTime
+    ? ` — ${booking.startTime}–${booking.finishTime}${duration ? ` — ${duration}` : ""}`
+    : " — Exact times TBC";
+  return `${index + 1}. ${booking.artist}${schedule}`;
+}
+
+// Broad domain list so the datalist helper completes as many addresses as
+// possible (ordered by popularity; UK variants included for a London agency).
+// NOTE: this is only a typing shortcut — it is NOT the browser's real autofill.
+// A <datalist> cannot show the user's saved addresses (that store is private to
+// the browser/OS); attaching one also hides Chrome's native autofill dropdown.
+// autocomplete="email" is kept so Safari/Firefox can still autofill saved emails.
+const EMAIL_DOMAINS = [
+  "gmail.com",
+  "outlook.com",
+  "hotmail.com",
+  "hotmail.co.uk",
+  "yahoo.com",
+  "yahoo.co.uk",
+  "icloud.com",
+  "me.com",
+  "live.com",
+  "live.co.uk",
+  "msn.com",
+  "aol.com",
+  "proton.me",
+  "protonmail.com",
+  "gmx.com",
+];
+// How many "local@domain" options to show before the user has typed an "@"
+// (keeps the initial dropdown short; the full list is matched once they do).
+const TOP_DOMAINS = 6;
 
 // Build "local@domain" suggestions from what the user has typed so far.
 function emailSuggestions(value: string): string[] {
@@ -35,7 +165,7 @@ function emailSuggestions(value: string): string[] {
     return EMAIL_DOMAINS.filter((d) => d.startsWith(domainPart.toLowerCase()) && d !== domainPart.toLowerCase())
       .map((d) => `${local}@${d}`);
   }
-  return EMAIL_DOMAINS.map((d) => `${local}@${d}`);
+  return EMAIL_DOMAINS.slice(0, TOP_DOMAINS).map((d) => `${local}@${d}`);
 }
 
 // Formspree delivers booking enquiries straight to your inbox + dashboard with no
@@ -51,7 +181,14 @@ export type ArtistOption = { name: string; slug: string };
 
 function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const searchParams = useSearchParams();
-  const preselected = searchParams.get("artist") ?? "";
+  const queryValue = (key: string, maxLength = 120) =>
+    (searchParams.get(key) ?? "").trim().slice(0, maxLength);
+  const requestedArtist = queryValue("artist");
+  const preselected = artistOptions.some((artist) => artist.name === requestedArtist) ? requestedArtist : "";
+  const requestedDate = queryValue("date", 10);
+  const preselectedDate = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : "";
+  const requestedCountry = queryValue("country", 80);
+  const preselectedCountry = COUNTRIES.includes(requestedCountry) ? requestedCountry : "";
 
   const [form, setForm] = useState({
     // Your details
@@ -60,33 +197,65 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     email: "",
     phone: "",
     // The booking
-    artist: preselected,
-    eventName: "",
+    eventName: queryValue("event", 120),
     eventType: "",
-    date: "",
-    setTime: "",
-    setLength: "",
+    date: preselectedDate,
     // Venue & audience
-    venue: "",
-    city: "",
-    country: "",
+    venue: queryValue("venue", 120),
+    city: queryValue("city", 80),
+    country: preselectedCountry,
     capacity: "",
     ticketing: "",
     // Budget & extras
-    currency: "GBP",
+    currency: currencyForCountry(preselectedCountry) ?? "GBP",
     budgetRange: "",
     lineup: "",
     hearAbout: "",
     // Message
     message: "",
   });
+  const [artistBookings, setArtistBookings] = useState<ArtistBooking[]>([
+    {
+      id: 0,
+      artist: preselected,
+      timingMode: "duration",
+      durationMinutes: "60",
+      startTime: "",
+      finishTime: "",
+    },
+  ]);
+  const nextBookingId = useRef(1);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
-  const [open, setOpen] = useState<Record<string, boolean>>({ details: true });
+  const [open, setOpen] = useState<Record<string, boolean>>({ quick: true });
   const toggle = (id: string) => setOpen((o) => ({ ...o, [id]: !o[id] }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [dateTbc, setDateTbc] = useState(false);
+  const [phoneValid, setPhoneValid] = useState(true);
+  const [currencyTouched, setCurrencyTouched] = useState(false);
+  const selectedArtists = new Set(artistBookings.map((booking) => booking.artist).filter(Boolean));
+  const overlapArtists = new Map<number, string[]>();
+  for (let first = 0; first < artistBookings.length; first += 1) {
+    for (let second = first + 1; second < artistBookings.length; second += 1) {
+      if (!artistBookings[first].artist || !artistBookings[second].artist) continue;
+      if (!bookingIntervalsOverlap(artistBookings[first], artistBookings[second])) continue;
+      overlapArtists.set(artistBookings[first].id, [
+        ...(overlapArtists.get(artistBookings[first].id) ?? []),
+        artistBookings[second].artist,
+      ]);
+      overlapArtists.set(artistBookings[second].id, [
+        ...(overlapArtists.get(artistBookings[second].id) ?? []),
+        artistBookings[first].artist,
+      ]);
+    }
+  }
+  const hasBookingErrors = Object.entries(errors).some(
+    ([key, value]) => key.startsWith("booking-") && Boolean(value),
+  );
+  const canAddArtist = artistBookings.length < artistOptions.length + 1
+    && artistBookings.every((booking) => booking.artist);
 
   // Move focus to the confirmation heading when the form is replaced by the
   // success screen, so screen readers announce the outcome.
@@ -97,25 +266,57 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
 
   // Only the essentials are required; the rest help us quote but stay optional.
   const REQUIRED_FIELDS: { key: keyof typeof form; label: string; section: string }[] = [
-    { key: "name", label: "Name", section: "details" },
-    { key: "email", label: "Email", section: "details" },
-    { key: "artist", label: "Artist", section: "booking" },
-    { key: "date", label: "Event date", section: "booking" },
+    { key: "name", label: "Name", section: "quick" },
+    { key: "email", label: "Email", section: "quick" },
+    { key: "date", label: "Event date", section: "quick" },
   ];
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function validate() {
     const e: Record<string, string> = {};
     for (const { key, label } of REQUIRED_FIELDS) {
+      if (key === "date" && dateTbc) continue;
       if (!String(form[key] ?? "").trim()) e[key] = `${label} is required`;
     }
     if (form.email.trim() && !EMAIL_RE.test(form.email)) e.email = "Invalid email address";
+    if (form.phone && !phoneValid) e.phone = "Enter a valid international phone number";
+    const allowedArtists = new Set([...artistOptions.map((artist) => artist.name), "Open to suggestions"]);
+    const allowedDurations = new Set(SET_DURATIONS.map(String));
+    const seenArtists = new Set<string>();
+    const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    for (const booking of artistBookings) {
+      const artistKey = `booking-${booking.id}-artist`;
+      const durationKey = `booking-${booking.id}-duration`;
+      const startKey = `booking-${booking.id}-start`;
+      const finishKey = `booking-${booking.id}-finish`;
+      if (!booking.artist) e[artistKey] = "Select an artist";
+      else if (!allowedArtists.has(booking.artist)) e[artistKey] = "Select an artist from the roster";
+      else if (seenArtists.has(booking.artist)) e[artistKey] = "This artist is already in the booking";
+      else seenArtists.add(booking.artist);
+
+      if (booking.timingMode === "duration") {
+        if (!booking.durationMinutes) {
+          e[durationKey] = "Select a set duration";
+        } else if (!allowedDurations.has(booking.durationMinutes)) {
+          e[durationKey] = "Select a valid set duration";
+        }
+      } else if (booking.timingMode === "times") {
+        if (booking.startTime && !timePattern.test(booking.startTime)) e[startKey] = "Enter a valid start time";
+        if (booking.finishTime && !timePattern.test(booking.finishTime)) e[finishKey] = "Enter a valid finish time";
+        if (booking.startTime && !booking.finishTime) e[finishKey] = "Add a finish time";
+        if (!booking.startTime && booking.finishTime) e[startKey] = "Add a start time";
+        if (booking.startTime && booking.startTime === booking.finishTime) {
+          e[finishKey] = "Finish time must be different from start time";
+        }
+      }
+    }
     return e;
   }
 
   function fieldError(name: string, value: string): string {
     const def = REQUIRED_FIELDS.find((f) => f.key === name);
     if (!def) return "";
+    if (name === "date" && dateTbc) return "";
     if (!value.trim()) return `${def.label} is required`;
     if (name === "email" && !EMAIL_RE.test(value)) return "Invalid email address";
     return "";
@@ -132,6 +333,97 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     if (msg) setErrors((prev) => ({ ...prev, [e.target.name]: msg }));
   }
 
+  function handlePhoneChange(phone: string) {
+    setForm((current) => ({ ...current, phone: phone.slice(0, 32) }));
+    setErrors((current) => ({ ...current, phone: "" }));
+  }
+
+  function handleCountryChange(country: string) {
+    if (!COUNTRIES.includes(country)) return;
+    setForm((current) => ({
+      ...current,
+      country,
+      city: current.country === country ? current.city : "",
+      currency: !currencyTouched ? currencyForCountry(country) ?? current.currency : current.currency,
+    }));
+    setErrors((current) => ({ ...current, country: "" }));
+  }
+
+  function handleCityChange(city: string) {
+    setForm((current) => ({ ...current, city: city.slice(0, 80) }));
+    setErrors((current) => ({ ...current, city: "" }));
+  }
+
+  function handleDateTbcChange(checked: boolean) {
+    setDateTbc(checked);
+    setErrors((current) => ({ ...current, date: "" }));
+  }
+
+  function updateArtistBooking(
+    id: number,
+    field: "artist" | "timingMode" | "durationMinutes" | "startTime" | "finishTime",
+    value: string,
+  ) {
+    setArtistBookings((current) => current.map((booking) => {
+      if (booking.id !== id) return booking;
+      if (field === "timingMode") {
+        return { ...booking, timingMode: value === "times" ? "times" : "duration" };
+      }
+      return { ...booking, [field]: value.slice(0, 80) };
+    }));
+    setErrors((current) => Object.fromEntries(
+      Object.entries(current).filter(([key]) => !key.startsWith(`booking-${id}-`)),
+    ));
+  }
+
+  function updateArtistDurationPart(id: number, part: "hours" | "minutes", value: string) {
+    setArtistBookings((current) => current.map((booking) => {
+      if (booking.id !== id) return booking;
+
+      const currentTotal = SET_DURATIONS.includes(Number(booking.durationMinutes))
+        ? Number(booking.durationMinutes)
+        : 60;
+      const currentHours = Math.floor(currentTotal / 60);
+      const currentMinutes = currentTotal % 60;
+
+      if (part === "hours") {
+        const hours = DURATION_HOURS.includes(Number(value)) ? Number(value) : 1;
+        return { ...booking, durationMinutes: String(hours * 60 + currentMinutes) };
+      }
+
+      const minutes = DURATION_MINUTES.includes(Number(value)) ? Number(value) : 0;
+      return { ...booking, durationMinutes: String(currentHours * 60 + minutes) };
+    }));
+    setErrors((current) => Object.fromEntries(
+      Object.entries(current).filter(([key]) => !key.startsWith(`booking-${id}-`)),
+    ));
+  }
+
+  function addArtistBooking() {
+    if (artistBookings.length >= artistOptions.length + 1) return;
+    const id = nextBookingId.current;
+    nextBookingId.current += 1;
+    setArtistBookings((current) => [
+      ...current,
+      {
+        id,
+        artist: "",
+        timingMode: "duration",
+        durationMinutes: "60",
+        startTime: "",
+        finishTime: "",
+      },
+    ]);
+  }
+
+  function removeArtistBooking(id: number) {
+    if (artistBookings.length === 1) return;
+    setArtistBookings((current) => current.filter((booking) => booking.id !== id));
+    setErrors((current) => Object.fromEntries(
+      Object.entries(current).filter(([key]) => !key.startsWith(`booking-${id}-`)),
+    ));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitAttempted(true);
@@ -140,13 +432,14 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       setErrors(errs);
       // Open every collapsed section that contains an error so it is visible.
       const sectionsWithErrors = REQUIRED_FIELDS.filter((f) => errs[f.key]).map((f) => f.section);
+      if (Object.keys(errs).some((key) => key.startsWith("booking-"))) sectionsWithErrors.push("quick");
       setOpen((o) => {
         const next = { ...o };
         for (const s of sectionsWithErrors) next[s] = true;
         return next;
       });
       // Move focus to the first invalid field (after collapsed sections expand).
-      const firstInvalid = REQUIRED_FIELDS.map((f) => f.key).find((k) => errs[k]);
+      const firstInvalid = Object.keys(errs)[0];
       if (firstInvalid) {
         requestAnimationFrame(() => {
           (document.querySelector(`[name="${firstInvalid}"]`) as HTMLElement | null)?.focus();
@@ -155,7 +448,12 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       return;
     }
 
-    const subject = `Booking Enquiry${form.artist ? `: ${form.artist}` : ""} from ${form.name}`;
+    const artistNames = artistBookings.map((booking) => booking.artist).filter(Boolean);
+    const artistSchedule = artistBookings.map(formatArtistBooking).join("\n");
+    const subjectArtists = artistNames.length > 2
+      ? `${artistNames.slice(0, 2).join(", ")} +${artistNames.length - 2}`
+      : artistNames.join(", ");
+    const subject = `Booking Enquiry${subjectArtists ? `: ${subjectArtists}` : ""} from ${form.name}`;
     const location = [form.venue, form.city, form.country].filter(Boolean).join(", ");
     const budget = form.budgetRange
       ? form.budgetRange === "Prefer to discuss"
@@ -175,12 +473,10 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           Email: form.email,
           ...(form.company && { "Company / promoter": form.company }),
           ...(form.phone && { Phone: form.phone }),
-          ...(form.artist && { Artist: form.artist }),
+          "Artist schedule": artistSchedule,
           ...(form.eventName && { "Event name": form.eventName }),
           ...(form.eventType && { "Event type": form.eventType }),
-          ...(form.date && { "Event date": form.date }),
-          ...(form.setTime && { "Set time": form.setTime }),
-          ...(form.setLength && { "Set length": form.setLength }),
+          "Event date": dateTbc ? "TBC" : form.date,
           ...(location && { Location: location }),
           ...(form.capacity && { "Expected capacity": form.capacity }),
           ...(form.ticketing && { Ticketing: form.ticketing }),
@@ -212,13 +508,13 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       `Email: ${form.email}`,
       form.phone ? `Phone: ${form.phone}` : null,
       "",
-      "THE BOOKING",
-      form.artist ? `Artist: ${form.artist}` : null,
+      "ARTIST SCHEDULE",
+      ...artistBookings.map(formatArtistBooking),
+      "",
+      "THE EVENT",
       form.eventName ? `Event name: ${form.eventName}` : null,
       form.eventType ? `Event type: ${form.eventType}` : null,
-      form.date ? `Event date: ${form.date}` : null,
-      form.setTime ? `Set time: ${form.setTime}` : null,
-      form.setLength ? `Set length: ${form.setLength}` : null,
+      `Event date: ${dateTbc ? "TBC" : form.date}`,
       "",
       "VENUE & AUDIENCE",
       location ? `Location: ${location}` : null,
@@ -279,9 +575,10 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           style={{ borderColor: "var(--error)", color: "var(--error)", backgroundColor: "var(--surface)" }}
         >
           <span className="font-semibold">Please check the highlighted fields:</span>{" "}
-          {Object.keys(errors)
-            .filter((k) => errors[k])
-            .map((k) => REQUIRED_FIELDS.find((f) => f.key === k)?.label ?? k)
+          {Array.from(new Set(Object.keys(errors)
+            .filter((key) => errors[key])
+            .map((key) => REQUIRED_FIELDS.find((field) => field.key === key)?.label
+              ?? (key === "phone" ? "Phone" : key.startsWith("booking-") ? "Artist schedule" : key))))
             .join(", ")}
         </div>
       )}
@@ -290,36 +587,262 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         <span className="sr-only">an asterisk</span> are required.
       </p>
       <div className="space-y-3">
-      <Collapsible id="details" step="01" title="Your details" open={open.details} onToggle={() => toggle("details")} error={Boolean(errors.name || errors.company || errors.email || errors.phone)}>
+      <Collapsible id="quick" step="01" title="Quick enquiry" open={open.quick} onToggle={() => toggle("quick")} error={Boolean(errors.name || errors.email || errors.phone || errors.date || hasBookingErrors)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Your Name" required error={errors.name}>
-            <Input name="name" autoComplete="name" placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
-          </Field>
-          <Field label="Company / Promoter">
-            <Input name="company" autoComplete="organization" placeholder="Your venue, brand or agency" value={form.company} onChange={handleChange} onBlur={handleBlur} error={errors.company} />
+            <Input name="name" autoComplete="name" maxLength={100} placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
           </Field>
           <Field label="Email Address" required error={errors.email}>
-            <EmailField value={form.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} />
+            <EmailField maxLength={254} value={form.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} />
           </Field>
           <Field label="Phone Number">
-            <Input name="phone" type="tel" autoComplete="tel" placeholder="+44 7700 000000" value={form.phone} onChange={handleChange} onBlur={handleBlur} error={errors.phone} />
+            <PhoneField
+              value={form.phone}
+              error={errors.phone}
+              onChange={handlePhoneChange}
+              onValidityChange={setPhoneValid}
+              onBlur={() => {
+                setErrors((current) => ({
+                  ...current,
+                  phone: form.phone && !phoneValid ? "Enter a valid international phone number" : "",
+                }));
+              }}
+            />
           </Field>
+          <div className="sm:col-span-2">
+            <Field label="Event Date" required={!dateTbc} error={errors.date}>
+              <Input
+                name="date"
+                type="date"
+                disabled={dateTbc}
+                value={form.date}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={errors.date}
+              />
+            </Field>
+            <label className="mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-3 text-sm" style={{ color: "var(--text-60)" }}>
+              <input
+                type="checkbox"
+                checked={dateTbc}
+                onChange={(event) => handleDateTbcChange(event.target.checked)}
+                className="h-5 w-5 accent-current"
+              />
+              Date not confirmed yet
+            </label>
+          </div>
+
+          <div className="space-y-4 sm:col-span-2">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-60)" }}>
+                Artist schedule <span aria-hidden="true">*</span>
+              </h3>
+              <p className="mt-1 text-xs" style={{ color: "var(--text-40)" }}>
+                Add every AAA artist for this event. Give a set duration, exact times, or leave timing as TBC.
+              </p>
+            </div>
+
+            {artistBookings.map((booking, index) => {
+              const exactDuration = booking.timingMode === "times"
+                ? calculateSetDuration(booking.startTime, booking.finishTime)
+                : "";
+              const overlaps = overlapArtists.get(booking.id) ?? [];
+              return (
+                <div
+                  key={booking.id}
+                  className="border p-4 md:p-5"
+                  style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
+                >
+                  <div className="mb-4 flex min-h-[32px] items-center justify-between gap-4">
+                    <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-40)" }}>
+                      Artist {index + 1}
+                    </p>
+                    {artistBookings.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeArtistBooking(booking.id)}
+                        className="link-quiet min-h-[44px] px-2 text-xs uppercase tracking-widest"
+                        aria-label={`Remove ${booking.artist || `artist ${index + 1}`} from booking`}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+                    <div className="sm:col-start-1 sm:row-start-1">
+                      <Field label="Artist" required error={errors[`booking-${booking.id}-artist`]}>
+                        <Select
+                          name={`booking-${booking.id}-artist`}
+                          value={booking.artist}
+                          onChange={(event) => updateArtistBooking(booking.id, "artist", event.target.value)}
+                          error={errors[`booking-${booking.id}-artist`]}
+                        >
+                          <option value="">Select an artist…</option>
+                          {artistOptions.map((artist) => (
+                            <option
+                              key={artist.slug}
+                              value={artist.name}
+                              disabled={artist.name !== booking.artist && selectedArtists.has(artist.name)}
+                            >
+                              {artist.name}
+                            </option>
+                          ))}
+                          <option
+                            value="Open to suggestions"
+                            disabled={booking.artist !== "Open to suggestions" && selectedArtists.has("Open to suggestions")}
+                          >
+                            Open to suggestions
+                          </option>
+                        </Select>
+                      </Field>
+                    </div>
+
+                    <div className="sm:col-start-2 sm:row-start-1">
+                      <fieldset aria-describedby={`booking-${booking.id}-timing-hint`}>
+                        <legend className="mb-1.5 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-60)" }}>
+                          Timing
+                        </legend>
+                        <div className="grid grid-cols-2 gap-2">
+                          {([
+                            ["duration", "Duration only"],
+                            ["times", "Exact times"],
+                          ] as const).map(([value, label]) => (
+                            <label
+                              key={value}
+                              className="flex min-h-[44px] cursor-pointer items-center gap-2 border px-3 py-2 text-sm transition-colors duration-200"
+                              style={{
+                                borderColor: booking.timingMode === value ? "var(--text)" : "var(--border)",
+                                backgroundColor: booking.timingMode === value ? "var(--surface)" : "transparent",
+                                color: "var(--text)",
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name={`booking-${booking.id}-timing-mode`}
+                                value={value}
+                                checked={booking.timingMode === value}
+                                onChange={(event) => updateArtistBooking(booking.id, "timingMode", event.target.value)}
+                                className="h-4 w-4 shrink-0 accent-current"
+                              />
+                              <span>{label}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <p id={`booking-${booking.id}-timing-hint`} className="mt-1.5 text-xs" style={{ color: "var(--text-40)" }}>
+                          Use whatever is known now. Timing can be confirmed later.
+                        </p>
+                      </fieldset>
+                    </div>
+
+                    {booking.timingMode === "duration" ? (
+                      <fieldset className="contents">
+                        <legend className="sr-only">Set duration</legend>
+                        <div className="sm:col-start-1 sm:row-start-2">
+                          <Field
+                            label="Hours"
+                            hint={`Total: ${selectedDurationLabel(booking)}`}
+                            error={errors[`booking-${booking.id}-duration`]}
+                          >
+                            <Select
+                              name={`booking-${booking.id}-duration`}
+                              value={String(Math.floor(Number(booking.durationMinutes || "60") / 60))}
+                              onChange={(event) => updateArtistDurationPart(booking.id, "hours", event.target.value)}
+                              error={errors[`booking-${booking.id}-duration`]}
+                            >
+                              {DURATION_HOURS.map((hours) => (
+                                <option key={hours} value={hours}>{hours}</option>
+                              ))}
+                            </Select>
+                          </Field>
+                        </div>
+                        <div className="sm:col-start-2 sm:row-start-2">
+                          <Field label="Minutes">
+                            <Select
+                              name={`booking-${booking.id}-duration-minutes`}
+                              value={String(Number(booking.durationMinutes || "60") % 60)}
+                              onChange={(event) => updateArtistDurationPart(booking.id, "minutes", event.target.value)}
+                            >
+                              {DURATION_MINUTES.map((minutes) => (
+                                <option key={minutes} value={minutes}>
+                                  {String(minutes).padStart(2, "0")}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                        </div>
+                      </fieldset>
+                    ) : (
+                      <>
+                        <div className="sm:col-start-1 sm:row-start-2">
+                          <Field label="Start Time" error={errors[`booking-${booking.id}-start`]}>
+                            <Input
+                              name={`booking-${booking.id}-start`}
+                              type="time"
+                              step={300}
+                              value={booking.startTime}
+                              onChange={(event) => updateArtistBooking(booking.id, "startTime", event.target.value)}
+                              error={errors[`booking-${booking.id}-start`]}
+                            />
+                          </Field>
+                        </div>
+                        <div className="sm:col-start-2 sm:row-start-2">
+                          <Field label="Finish Time" error={errors[`booking-${booking.id}-finish`]}>
+                            <Input
+                              name={`booking-${booking.id}-finish`}
+                              type="time"
+                              step={300}
+                              value={booking.finishTime}
+                              onChange={(event) => updateArtistBooking(booking.id, "finishTime", event.target.value)}
+                              error={errors[`booking-${booking.id}-finish`]}
+                            />
+                          </Field>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {exactDuration && (
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="mt-4 flex items-center justify-between gap-4 border px-4 py-3"
+                      style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-40)" }}>
+                        Duration
+                      </span>
+                      <span className="text-sm font-semibold text-right" style={{ color: "var(--text)" }}>{exactDuration}</span>
+                    </div>
+                  )}
+                  {overlaps.length > 0 && (
+                    <p className="mt-3 text-xs" role="status" style={{ color: "var(--error)" }}>
+                      Time overlaps with {overlaps.join(", ")}. You can still submit if this is intentional.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={addArtistBooking}
+              disabled={!canAddArtist}
+              className="btn-outline inline-flex min-h-[44px] w-full items-center justify-center px-5 py-3 text-xs font-semibold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Add another artist
+            </button>
+          </div>
         </div>
       </Collapsible>
 
-      <Collapsible id="booking" step="02" title="The booking" open={open.booking} onToggle={() => toggle("booking")} error={Boolean(errors.artist || errors.eventName || errors.eventType || errors.date || errors.setTime || errors.setLength)}>
+      <Collapsible id="event" step="02" title="Event details (optional)" open={open.event} onToggle={() => toggle("event")} error={Boolean(errors.company || errors.eventName || errors.eventType || errors.venue || errors.city || errors.country || errors.capacity || errors.ticketing)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <Field label="Artist You Want to Book" required error={errors.artist}>
-            <Select name="artist" value={form.artist} onChange={handleChange} error={errors.artist}>
-              <option value="">Select an artist…</option>
-              {artistOptions.map((a) => (
-                <option key={a.slug} value={a.name}>{a.name}</option>
-              ))}
-              <option value="Open to suggestions">Open to suggestions</option>
-            </Select>
+          <Field label="Company / Promoter">
+            <Input name="company" autoComplete="organization" maxLength={120} placeholder="Your venue, brand or agency" value={form.company} onChange={handleChange} onBlur={handleBlur} error={errors.company} />
           </Field>
           <Field label="Event Name">
-            <Input name="eventName" placeholder="e.g. Saturday Sessions" value={form.eventName} onChange={handleChange} onBlur={handleBlur} error={errors.eventName} />
+            <Input name="eventName" maxLength={120} placeholder="e.g. Saturday Sessions" value={form.eventName} onChange={handleChange} onBlur={handleBlur} error={errors.eventName} />
           </Field>
           <Field label="Event Type">
             <Select name="eventType" value={form.eventType} onChange={handleChange} error={errors.eventType}>
@@ -327,36 +850,22 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
               {EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
           </Field>
-          <Field label="Event Date" required error={errors.date}>
-            <Input name="date" type="date" value={form.date} onChange={handleChange} onBlur={handleBlur} error={errors.date} />
-          </Field>
-          <Field label="Set Time">
-            <Input name="setTime" placeholder="e.g. 23:00 – 01:00" value={form.setTime} onChange={handleChange} onBlur={handleBlur} error={errors.setTime} />
-          </Field>
-          <Field label="Set Length">
-            <Select name="setLength" value={form.setLength} onChange={handleChange} error={errors.setLength}>
-              <option value="">Select length…</option>
-              {SET_LENGTHS.map((t) => <option key={t} value={t}>{t}</option>)}
-            </Select>
-          </Field>
-        </div>
-      </Collapsible>
-
-      <Collapsible id="venue" step="03" title="Venue & audience" open={open.venue} onToggle={() => toggle("venue")} error={Boolean(errors.venue || errors.city || errors.country || errors.capacity || errors.ticketing)}>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Venue / Location Name">
-            <Input name="venue" placeholder="e.g. Fabric" value={form.venue} onChange={handleChange} onBlur={handleBlur} error={errors.venue} />
+            <Input name="venue" maxLength={120} placeholder="e.g. Fabric" value={form.venue} onChange={handleChange} onBlur={handleBlur} error={errors.venue} />
+          </Field>
+          <Field label="Country" hint="Choose the country first to enable city suggestions">
+            <CountryCombobox name="country" value={form.country} onChange={handleCountryChange} error={errors.country} />
           </Field>
           <Field label="City">
-            <Input name="city" autoComplete="address-level2" placeholder="e.g. London" value={form.city} onChange={handleChange} onBlur={handleBlur} error={errors.city} />
-          </Field>
-          <Field label="Country">
-            <Select name="country" autoComplete="country-name" value={form.country} onChange={handleChange} error={errors.country}>
-              <option value="">Select country…</option>
-              <option value={COUNTRIES[0]}>{COUNTRIES[0]}</option>
-              <option disabled>──────────</option>
-              {COUNTRIES.slice(1).map((c) => <option key={c} value={c}>{c}</option>)}
-            </Select>
+            <CityCombobox
+              key={form.country || "no-country"}
+              name="city"
+              country={form.country}
+              value={form.city}
+              onChange={handleCityChange}
+              maxLength={80}
+              error={errors.city}
+            />
           </Field>
           <Field label="Expected Capacity">
             <Select name="capacity" value={form.capacity} onChange={handleChange} error={errors.capacity}>
@@ -373,7 +882,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         </div>
       </Collapsible>
 
-      <Collapsible id="budget" step="04" title="Budget & extras" open={open.budget} onToggle={() => toggle("budget")} error={Boolean(errors.budgetRange || errors.lineup || errors.hearAbout)}>
+      <Collapsible id="budget" step="03" title="Budget & extras (optional)" open={open.budget} onToggle={() => toggle("budget")} error={Boolean(errors.budgetRange || errors.lineup || errors.hearAbout)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Budget / Fee Offer" hint="A rough range helps us reply faster">
             <Select name="budgetRange" value={form.budgetRange} onChange={handleChange} error={errors.budgetRange}>
@@ -382,7 +891,14 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
             </Select>
           </Field>
           <Field label="Currency">
-            <Select name="currency" value={form.currency} onChange={handleChange}>
+            <Select
+              name="currency"
+              value={form.currency}
+              onChange={(event) => {
+                setCurrencyTouched(true);
+                handleChange(event);
+              }}
+            >
               {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
             </Select>
           </Field>
@@ -392,17 +908,18 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
               {HEAR_ABOUT.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
           </Field>
-          <Field label="Other Artists on the Bill">
-            <Input name="lineup" placeholder="Anyone else playing alongside?" value={form.lineup} onChange={handleChange} onBlur={handleBlur} error={errors.lineup} />
+          <Field label="Other / External Artists on the Bill">
+            <Input name="lineup" maxLength={500} placeholder="Anyone else playing alongside?" value={form.lineup} onChange={handleChange} onBlur={handleBlur} error={errors.lineup} />
           </Field>
         </div>
       </Collapsible>
 
-      <Collapsible id="message" step="05" title="Anything else (optional)" open={open.message} onToggle={() => toggle("message")}>
+      <Collapsible id="message" step="04" title="Anything else (optional)" open={open.message} onToggle={() => toggle("message")}>
         <Field label="Message">
           <textarea
             name="message"
             rows={5}
+            maxLength={4000}
             placeholder="Tell us about the event, the crowd, timings, and anything else that helps us quote accurately…"
             value={form.message}
             onChange={handleChange}
@@ -568,7 +1085,7 @@ function Select({
   return (
     <select
       {...rest}
-      className="w-full border px-4 py-3 text-base outline-none"
+      className="min-h-[50px] w-full border px-4 py-3 text-base outline-none disabled:cursor-not-allowed disabled:opacity-60"
       style={{ borderColor: error ? "var(--error)" : "var(--border)", backgroundColor: "var(--surface)", color: "var(--text)" }}
     >
       {children}
@@ -647,11 +1164,11 @@ export default function ContactView({ artistOptions }: { artistOptions: ArtistOp
             AAA Artists
           </p>
           <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl" style={{ color: "var(--text)" }}>
-            Book an Artist
+            Book Artists
           </h1>
           <p className="max-w-xl text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
-            The more you can tell us about the event, the faster we can confirm availability and a fee.
-            Only your name, email, and a short message are required, but a fuller brief gets a quicker reply.
+            Start with your name, email, one or more artists, and the event date—or mark the date as not confirmed.
+            Everything else is optional, but a fuller brief helps us reply faster.
           </p>
         </div>
 
