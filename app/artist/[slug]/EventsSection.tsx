@@ -24,15 +24,29 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
     <div className="group flex flex-col border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
       <div className="relative aspect-[3/4] overflow-hidden" style={{ backgroundColor: "var(--surface-2)" }}>
         {gig.flyer ? (
-          /* object-contain so the whole poster is always visible — flyers that
-             aren't 3:4 get letterboxed on the surface background, not cropped */
-          <Image
-            src={gig.flyer}
-            alt={`${artist.name} at ${gig.venue}`}
-            fill
-            className="object-contain"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
+          /* Whole poster always visible (object-contain), but instead of dead
+             letterbox bars the same image is scaled up and blurred behind it, so
+             any aspect ratio extends into an ambient backdrop of its own artwork. */
+          <>
+            <Image
+              src={gig.flyer}
+              alt=""
+              aria-hidden="true"
+              fill
+              className="scale-125 object-cover blur-2xl"
+              style={{ opacity: 0.5 }}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+            {/* subtle darkening so the sharp poster stays the focal point */}
+            <div className="absolute inset-0" style={{ backgroundColor: "var(--card-wash)" }} />
+            <Image
+              src={gig.flyer}
+              alt={`${artist.name} at ${gig.venue}`}
+              fill
+              className="object-contain drop-shadow-xl"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+          </>
         ) : (
           /* Generated poster — clean text flyer when no artwork is supplied */
           <div
