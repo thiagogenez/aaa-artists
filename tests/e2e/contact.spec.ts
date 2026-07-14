@@ -70,7 +70,7 @@ test.describe("booking form regression coverage", () => {
 
     await expect(usernameInput).toHaveValue("aaa-booking");
     await expect(usernameInput.locator("xpath=..")).toContainText("@");
-    await expect(page.locator('input[name="whatsappUsernameKey"]')).toBeVisible();
+    await expect(page.locator('input[name="whatsappUsernameKey"]')).toHaveCount(0);
   });
 
   test("collapses completed artist cards and calculates exact timing", async ({ page }) => {
@@ -130,6 +130,21 @@ test.describe("booking form regression coverage", () => {
       website: "",
       bookings: [{ timingMode: "duration", durationMinutes: "60" }],
     });
+    expect(requestBody?.submissionId).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(requestBody).not.toHaveProperty("startedAt");
+    expect(requestBody).not.toHaveProperty("whatsappUsernameKey");
     expect(requestBody).not.toHaveProperty("_subject");
+  });
+
+  test("associates email errors and suggestions with the input", async ({ page }) => {
+    await page.goto("/contact");
+    const emailInput = page.locator('input[name="email"]');
+    await emailInput.fill("jane@hotmail.");
+    await emailInput.blur();
+
+    const describedBy = await emailInput.getAttribute("aria-describedby");
+    const ids = describedBy?.split(/\s+/).filter(Boolean) ?? [];
+    expect(ids).toHaveLength(2);
+    for (const id of ids) await expect(page.locator(`[id="${id}"]`)).toBeVisible();
   });
 });

@@ -3,6 +3,8 @@ node_modules/
 out/
 .env*
 !.env.local.example
+.dev.vars*
+.wrangler/
 *.log
 
 # Scratch/source staging — copied into public/artists, not used by the app

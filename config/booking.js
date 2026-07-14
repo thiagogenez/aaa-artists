@@ -7,7 +7,7 @@ export const BOOKING_LIMITS = Object.freeze({
   company: 120,
   phone: 32,
   whatsappUsername: 65,
-  whatsappUsernameKey: 64,
+  submissionId: 36,
   artist: 80,
   eventName: 120,
   eventType: 80,
@@ -28,6 +28,50 @@ export const DURATION_MINUTES = Object.freeze([0, 15, 30, 45]);
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const E164_PATTERN = /^\+[1-9]\d{6,14}$/;
+
+export const EVENT_TYPES = Object.freeze([
+  "Club Night",
+  "Festival",
+  "Private Party",
+  "Corporate / Brand",
+  "Wedding",
+  "Bar / Lounge",
+  "Livestream",
+  "Tour",
+  "Other",
+]);
+export const TICKETING_OPTIONS = Object.freeze(["Ticketed", "Free entry", "Private / guestlist"]);
+export const HEAR_ABOUT_OPTIONS = Object.freeze([
+  "Instagram",
+  "SoundCloud / YouTube",
+  "Google search",
+  "Personal referral",
+  "Booked with us before",
+  "Other",
+]);
+export const CAPACITY_RANGES = Object.freeze([
+  "Under 100",
+  "100-300",
+  "300-500",
+  "500-1,000",
+  "1,000-3,000",
+  "3,000-5,000",
+  "5,000-10,000",
+  "10,000+",
+]);
+export const CURRENCY_CODES = Object.freeze(["GBP", "EUR", "USD"]);
+export const BUDGET_RANGES = Object.freeze([
+  "Under 1,000",
+  "1,000-2,500",
+  "2,500-5,000",
+  "5,000-10,000",
+  "10,000-25,000",
+  "25,000-50,000",
+  "50,000+",
+  "Prefer to discuss",
+]);
 
 export const DURATION_VALUES = Object.freeze(
   DURATION_HOURS.flatMap((hours) => DURATION_MINUTES.map((minutes) => String(hours * 60 + minutes))),

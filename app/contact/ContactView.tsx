@@ -3,7 +3,7 @@
 import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CAPACITY_RANGES, CURRENCIES, BUDGET_RANGES, COUNTRIES } from "@/data/formOptions";
+import { CURRENCIES, COUNTRIES } from "@/data/formOptions";
 import { Suspense } from "react";
 import CountryCombobox from "./CountryCombobox";
 import CityCombobox from "./CityCombobox";
@@ -12,31 +12,20 @@ import TurnstileWidget from "./TurnstileWidget";
 import type { Iso2 } from "intl-tel-input";
 import {
   BOOKING_LIMITS,
+  BUDGET_RANGES,
+  CAPACITY_RANGES,
   DURATION_HOURS,
   DURATION_MINUTES,
   DURATION_VALUES,
   EMAIL_PATTERN,
+  EVENT_TYPES,
+  HEAR_ABOUT_OPTIONS,
   TIME_PATTERN,
+  TICKETING_OPTIONS,
   durationBetween,
   formatDuration,
 } from "@/config/booking";
 import { BOOKING_EMAIL } from "@/lib/site";
-
-const EVENT_TYPES = [
-  "Club Night",
-  "Festival",
-  "Private Party",
-  "Corporate / Brand",
-  "Wedding",
-  "Bar / Lounge",
-  "Livestream",
-  "Tour",
-  "Other",
-];
-
-const TICKETING = ["Ticketed", "Free entry", "Private / guestlist"];
-
-const HEAR_ABOUT = ["Instagram", "SoundCloud / YouTube", "Google search", "Personal referral", "Booked with us before", "Other"];
 
 const WHATSAPP_CONTACT_METHODS = [
   { value: "none", label: "None" },
@@ -367,8 +356,9 @@ function emailCompletions(value: string, region = ""): Array<{ email: string; do
     .map(({ domain }) => ({ email: `${local}@${domain}`, domain }));
 }
 
-const CONTACT_API_ENDPOINT = process.env.NEXT_PUBLIC_CONTACT_API_URL ?? "/api/enquiries";
+const CONTACT_API_ENDPOINT = "/api/enquiries";
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
 
 // Slim shape passed from the server page — keeps the full artist dataset
 // (bios, gig history) out of the client bundle.
@@ -393,7 +383,6 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     phone: "",
     whatsapp: "",
     whatsappUsername: "",
-    whatsappUsernameKey: "",
     // The booking
     eventName: queryValue("event", BOOKING_LIMITS.eventName),
     eventType: "",
@@ -424,6 +413,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const [artistBookings, setArtistBookings] = useState<ArtistBooking[]>(initialArtistBookings);
   const [expandedBookingIds, setExpandedBookingIds] = useState<Set<number>>(() => new Set([0]));
   const nextBookingId = useRef(1);
+  const [submissionId, setSubmissionId] = useState(() => crypto.randomUUID());
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
@@ -439,7 +429,6 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const [resetVersion, setResetVersion] = useState(0);
   const [currencyTouched, setCurrencyTouched] = useState(false);
   const [turnstileVersion, setTurnstileVersion] = useState(0);
-  const formStartedAt = useRef(0);
   const whatsappContactType = whatsappMode === "username"
     ? "username"
     : whatsappMode === "none" ? "none" : "number";
@@ -473,10 +462,6 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   // Move focus to the confirmation heading when the form is replaced by the
   // success screen, so screen readers announce the outcome.
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    formStartedAt.current = Date.now();
-  }, []);
-
   useEffect(() => {
     if (submitted) successHeadingRef.current?.focus();
   }, [submitted]);
@@ -577,7 +562,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   }
 
   function handleWhatsAppUsernameChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const whatsappUsername = event.target.value.replace(/^@+/, "").slice(0, BOOKING_LIMITS.whatsappUsernameKey);
+    const whatsappUsername = event.target.value.replace(/^@+/, "").slice(0, BOOKING_LIMITS.whatsappUsername - 1);
     setForm((current) => ({ ...current, whatsappUsername }));
     setErrors((current) => ({ ...current, whatsappUsername: "" }));
   }
@@ -592,14 +577,12 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       setForm((current) => ({
         ...current,
         whatsappUsername: "",
-        whatsappUsernameKey: "",
       }));
     }
     setErrors((current) => ({
       ...current,
       whatsapp: "",
       whatsappUsername: "",
-      whatsappUsernameKey: "",
     }));
   }
 
@@ -727,7 +710,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     setWhatsappMode("none");
     setCurrencyTouched(false);
     setTurnstileVersion((current) => current + 1);
-    formStartedAt.current = Date.now();
+    setSubmissionId(crypto.randomUUID());
     setResetVersion((current) => current + 1);
     requestAnimationFrame(() => {
       (document.querySelector('[name="name"]') as HTMLInputElement | null)?.focus();
@@ -768,7 +751,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       return;
     }
 
-    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+    if (TURNSTILE_SITE_KEY && TURNSTILE_SITE_KEY !== "test-site-key" && !turnstileToken) {
       setSendError("Please complete the security check, then send your enquiry again.");
       return;
     }
@@ -779,10 +762,6 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     const whatsappUsername = whatsappMode === "username"
       ? `@${form.whatsappUsername.trim()}`
       : "";
-    const whatsappUsernameKey = whatsappMode === "username"
-      ? form.whatsappUsernameKey.trim()
-      : "";
-
     setSending(true);
     setSendError("");
     try {
@@ -796,7 +775,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           phone: form.phone,
           whatsappNumber,
           whatsappUsername,
-          whatsappUsernameKey,
+          submissionId,
           bookings: artistBookings.map(({ artist, timingMode, durationMinutes, startTime, finishTime }) => ({
             artist,
             timingMode,
@@ -818,12 +797,14 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           hearAbout: form.hearAbout,
           message: form.message,
           turnstileToken,
-          startedAt: formStartedAt.current,
           website: String(browserFormData.get("website") ?? ""),
         }),
       });
-      const result = await response.json().catch(() => ({})) as { error?: string };
-      if (!response.ok) throw new Error(result.error || "Request failed");
+      const result = await response.json().catch(() => ({})) as { error?: string; requestId?: string };
+      if (!response.ok) {
+        const reference = result.requestId ? ` Reference: ${result.requestId}.` : "";
+        throw new Error(`${result.error || "Request failed"}${reference}`);
+      }
       setSubmitted(true);
     } catch (error) {
       setTurnstileVersion((current) => current + 1);
@@ -859,6 +840,21 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         >
           Send another enquiry
         </button>
+      </div>
+    );
+  }
+
+  if (IS_PRODUCTION_BUILD && !TURNSTILE_SITE_KEY) {
+    return (
+      <div
+        role="alert"
+        className="border px-5 py-6 text-sm leading-relaxed"
+        style={{ borderColor: "var(--error)", backgroundColor: "var(--surface)", color: "var(--text-60)" }}
+      >
+        <p className="font-semibold" style={{ color: "var(--text)" }}>Online enquiries are temporarily unavailable</p>
+        <p className="mt-2">
+          Please email <a className="underline underline-offset-4" href={`mailto:${BOOKING_EMAIL}`}>{BOOKING_EMAIL}</a> directly.
+        </p>
       </div>
     );
   }
@@ -905,7 +901,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         )}
       </div>
       <div className="space-y-3">
-      <Collapsible id="quick" step="01" title="Quick enquiry" open={open.quick} onToggle={() => toggle("quick")} error={Boolean(errors.name || errors.email || errors.phone || errors.whatsapp || errors.whatsappUsername || errors.whatsappUsernameKey || errors.date || hasBookingErrors)}>
+      <Collapsible id="quick" step="01" title="Quick enquiry" open={open.quick} onToggle={() => toggle("quick")} error={Boolean(errors.name || errors.email || errors.phone || errors.whatsapp || errors.whatsappUsername || errors.date || hasBookingErrors)}>
         <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
           <Field label="Your Name" required error={errors.name}>
             <Input name="name" autoComplete="name" maxLength={BOOKING_LIMITS.name} placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
@@ -1027,7 +1023,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                     autoComplete="off"
                     autoCapitalize="none"
                     spellCheck={false}
-                    maxLength={BOOKING_LIMITS.whatsappUsernameKey}
+                    maxLength={BOOKING_LIMITS.whatsappUsername - 1}
                     placeholder="username"
                     value={form.whatsappUsername}
                     onChange={handleWhatsAppUsernameChange}
@@ -1041,21 +1037,6 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                       }));
                     }}
                     error={errors.whatsappUsername}
-                  />
-                </Field>
-                <Field
-                  label="Username Key"
-                  hint="Only if enabled in WhatsApp. Never enter a verification code or two-step PIN."
-                  error={errors.whatsappUsernameKey}
-                >
-                  <Input
-                    name="whatsappUsernameKey"
-                    autoComplete="off"
-                    maxLength={BOOKING_LIMITS.whatsappUsernameKey}
-                    placeholder="Optional contact key"
-                    value={form.whatsappUsernameKey}
-                    onChange={handleChange}
-                    error={errors.whatsappUsernameKey}
                   />
                 </Field>
               </div>
@@ -1361,7 +1342,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           <Field label="Ticketing">
             <Select name="ticketing" value={form.ticketing} onChange={handleChange} error={errors.ticketing}>
               <option value="">Select…</option>
-              {TICKETING.map((t) => <option key={t} value={t}>{t}</option>)}
+              {TICKETING_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
           </Field>
         </div>
@@ -1390,7 +1371,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           <Field label="How Did You Hear About Us?">
             <Select name="hearAbout" value={form.hearAbout} onChange={handleChange} error={errors.hearAbout}>
               <option value="">Select…</option>
-              {HEAR_ABOUT.map((t) => <option key={t} value={t}>{t}</option>)}
+              {HEAR_ABOUT_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
           </Field>
           <Field label="Other / External Artists on the Bill">
@@ -1435,7 +1416,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           </button>
         </div>
         {sendError && (
-          <p className="mt-4 text-xs" style={{ color: "var(--error)" }}>{sendError}</p>
+          <p className="mt-4 text-xs" role="alert" aria-live="assertive" style={{ color: "var(--error)" }}>{sendError}</p>
         )}
         <p className="mt-4 text-xs" style={{ color: "var(--text-30)" }}>
           AAA Artists uses your details to respond to and manage this booking enquiry. Delivery is handled by Formspree. Read our{" "}
@@ -1572,6 +1553,11 @@ function EmailField({
     String(value ?? ""),
     regionHint?.toUpperCase() || localeRegion,
   );
+  const inheritedDescribedBy = rest["aria-describedby"];
+  const describedBy = [
+    inheritedDescribedBy,
+    completions.length > 0 ? suggestionsStatusId : undefined,
+  ].filter(Boolean).join(" ") || undefined;
   const visibleCompletions = showAll
     ? completions
     : completions.slice(0, VISIBLE_EMAIL_COMPLETIONS);
@@ -1587,7 +1573,7 @@ function EmailField({
         placeholder="jane@example.com"
         value={value}
         aria-controls={completions.length > 0 ? suggestionsId : undefined}
-        aria-describedby={completions.length > 0 ? suggestionsStatusId : undefined}
+        aria-describedby={describedBy}
         onChange={(event) => {
           setShowAll(false);
           onChange?.(event);
