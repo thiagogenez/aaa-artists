@@ -15,6 +15,11 @@ Confirmed by the controller on 14 July 2026:
 - Booking contracts and related records: retained for up to 6 years.
 - Individuals may request access by submitting a data subject access request under UK GDPR.
 
+Independently verified on the official registers on 14 July 2026:
+
+- Registered office and ICO address: 22 Brooker Street, Hove, England, BN3 3YX.
+- ICO registration date: 28 May 2026; renewal due 27 May 2027.
+
 Official guidance:
 
 - [ICO: controllers and processors](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/controllers-and-processors/controllers-and-processors-a-guide/)
@@ -53,6 +58,15 @@ The Worker hashes the lower-cased email address before using it as a rate-limit 
 
 ## Operational procedures
 
+### Data-protection complaint
+
+1. Provide a clear route through the privacy email with “Data protection complaint” in the subject.
+2. Record the complaint, owner, systems involved, requested outcome, and receipt date.
+3. Acknowledge receipt within 30 days.
+4. Investigate without undue delay, preserve relevant evidence, and involve processors or recipients where needed.
+5. Communicate the outcome and action taken, explain any refusal, and retain a minimal complaint record.
+6. Tell the person that they may complain to the ICO; record improvements arising from the complaint.
+
 ### Rights request
 
 1. Record the date, request, requester, affected systems, and one-month response deadline.
@@ -75,6 +89,21 @@ The Worker hashes the lower-cased email address before using it as a rate-limit 
 - Review enquiry recipients and provider administrators periodically.
 - Delete records according to the confirmed schedule across primary stores and applicable backups.
 - Do not ask for or retain passwords, authentication codes, payment-card details, or sensitive data in free-text enquiries.
+
+### Monthly retention evidence
+
+The controller-designated privacy owner must complete this check monthly. Store the evidence without copying enquiry content into the log.
+
+| Check | Evidence to record |
+| --- | --- |
+| Formspree | Oldest unsuccessful submission date, deletion/export action, account administrators |
+| Booking mailbox | Search date, oldest unsuccessful enquiry, deletion action, retention-rule exceptions |
+| WhatsApp/CRM/spreadsheets/cloud drives | Systems checked, records deleted, records converted to confirmed bookings |
+| Backups | Backup retention window and next expiry date; document why immediate deletion is not technically possible |
+| Confirmed bookings | Contract reference and six-year disposal date; do not duplicate customer details in this log |
+| Access review | Current administrators, MFA status, leavers removed, exceptions and owner |
+
+Record the review date, reviewer, result, exceptions, corrective owner, and completion date. Escalate overdue deletion or unknown data stores to the controller.
 
 ## Cookies and consent
 

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import { PRIVACY_CONFIG, PRIVACY_DETAILS_READY } from "@/config/privacy";
 import { PRIVACY_EMAIL, createPageMetadata } from "@/lib/site";
 
@@ -33,7 +32,6 @@ export default function PrivacyPage() {
 
   return (
     <div className="min-h-screen px-6 py-20" style={{ backgroundColor: "var(--bg)" }}>
-      <BreadcrumbJsonLd items={[{ name: "Home", path: "/" }, { name: "Privacy", path: "/privacy" }]} />
       <article className="mx-auto max-w-3xl">
         <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
           AAA Artists
@@ -57,8 +55,8 @@ export default function PrivacyPage() {
           >
             <p className="font-semibold" style={{ color: "var(--text)" }}>Controller details are being confirmed</p>
             <p className="mt-2">
-              The controller&apos;s legal identity, registration details, and retention periods are now confirmed. Its
-              official postal address, preferred privacy email, complete operational data flow, marketing use, and
+              The controller&apos;s legal identity, registered address, registration details, and retention periods are now confirmed. Its
+              preferred privacy email, complete operational data flow, marketing use, and
               EU/EEA scope still require confirmation. Privacy requests can already be sent to the contact below.
             </p>
           </aside>
@@ -99,6 +97,16 @@ export default function PrivacyPage() {
                     >
                       {controller.icoRegistrationNumber}
                     </a>
+                  </li>
+                )}
+                {controller.icoRegistrationExpires && (
+                  <li>
+                    ICO registration renewal due: {new Date(`${controller.icoRegistrationExpires}T00:00:00Z`).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                      timeZone: "UTC",
+                    })}
                   </li>
                 )}
               </ul>
@@ -207,9 +215,21 @@ export default function PrivacyPage() {
               withdraw consent where consent is the basis used. These rights can have legal exceptions.
             </p>
             <p className="mt-3">
-              Contact us first at{" "}
-              <a className="underline underline-offset-4" href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>. You may
-              also complain to the{" "}
+              Send a request to{" "}
+              <a className="underline underline-offset-4" href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className={sectionHeading} style={{ color: "var(--text)" }}>How to make a data-protection complaint</h2>
+            <p>
+              Email <a className="underline underline-offset-4" href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>{" "}
+              with the subject “Data protection complaint” and explain what happened and the outcome you are seeking.
+              We will acknowledge your complaint within {PRIVACY_CONFIG.complaints.acknowledgementDays} days,
+              investigate it without undue delay, and tell you the outcome and any action taken.
+            </p>
+            <p className="mt-3">
+              You may also complain to the{" "}
               <a className="underline underline-offset-4" href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener noreferrer">
                 UK Information Commissioner&apos;s Office
               </a>. If EU GDPR applies to your enquiry, you may complain to the supervisory authority where you live,

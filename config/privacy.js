@@ -7,15 +7,20 @@ export const PRIVACY_CONFIG = Object.freeze({
   controller: {
     legalName: "AAA ARTISTS AND EVENTS LTD",
     tradingName: "AAA Artists",
-    postalAddress: null,
+    postalAddress: "22 Brooker Street, Hove, England, BN3 3YX",
     establishmentCountry: "United Kingdom",
     companyNumber: "16082156",
     vatNumber: null,
     icoRegistrationNumber: "ZC159381",
+    icoRegisteredOn: "2026-05-28",
+    icoRegistrationExpires: "2027-05-27",
   },
   retention: {
     unsuccessfulEnquiries: "no longer than 3 months",
     successfulBookings: "up to 6 years",
+  },
+  complaints: {
+    acknowledgementDays: 30,
   },
   decisions: {
     // Tri-state values stay null until the controller confirms them.
