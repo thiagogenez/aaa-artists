@@ -1,4 +1,5 @@
 name: Krevix
+artistType: solo
 disabled: false               # set to true to hide this artist from the site
 slug: krevix
 # Profile based on his ADE artist page (amsterdam-dance-event.nl; no RA profile exists)

@@ -1,4 +1,5 @@
 name: FROGR
+artistType: solo
 disabled: false               # set to true to hide this artist from the site
 slug: frogr
 # Profile based on his RA page (ra.co/dj/frogr)

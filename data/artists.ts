@@ -19,6 +19,7 @@ export interface Gig {
 }
 
 export interface Artist {
+  artistType: "solo" | "group";
   name: string;
   slug: string;
   genre: string;
