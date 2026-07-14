@@ -15,7 +15,7 @@ export default function HomePage() {
         <div className="relative z-10 max-w-4xl">
           {/* Logo with a targeting cross — four rays, each fading out at the logo
               edge and at its far end, sitting behind the text (-z-10). */}
-          <div className="relative mx-auto mb-8 w-24 md:w-32">
+          <div className="relative mx-auto mb-3 w-24 md:w-32">
             {/* Background grid — anchored to the logo and phase-shifted half a cell so a
                 grid line runs through the logo centre, aligning the crosshair to the grid.
                 Hidden below md (elements are fluid there, so grid alignment can't hold) and
