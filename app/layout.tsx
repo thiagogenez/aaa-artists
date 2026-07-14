@@ -3,7 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SOCIAL_IMAGE, SOCIAL_LINKS, serializeJsonLd } from "@/lib/site";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -19,14 +19,9 @@ const organizationLd = {
   name: SITE_NAME,
   url: SITE_URL,
   logo: `${SITE_URL}/icon-512.png`,
-  image: `${SITE_URL}/og.png`,
+  image: `${SITE_URL}${SOCIAL_IMAGE}`,
   description: SITE_DESCRIPTION,
-  sameAs: [
-    "https://www.instagram.com/aaaeventsofficial/",
-    "https://www.soundcloud.com/aaaeventsofficial",
-    "https://www.facebook.com/aaaeventsofficial",
-    "https://www.youtube.com/channel/UCZFxKt8xkwG7_yPFKz3GyMw",
-  ],
+  sameAs: SOCIAL_LINKS.map(({ href }) => href),
 };
 
 export const metadata: Metadata = {
@@ -52,20 +47,19 @@ export const metadata: Metadata = {
   ],
   icons: { icon: "/favicon.png", apple: "/apple-touch-icon.png" },
   manifest: "/manifest.webmanifest",
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: SITE_NAME }],
+    images: [{ url: SOCIAL_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ["/og.png"],
+    images: [SOCIAL_IMAGE],
   },
 };
 
@@ -82,7 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Organization structured data */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationLd) }}
         />
       </head>
       <body className="antialiased">

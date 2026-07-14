@@ -1,28 +1,31 @@
 "use client";
 
-// Renders a single Spotify embed matching the active theme. Spotify bakes the
-// theme into the iframe URL, so flipping the site theme reloads the player —
-// the trade-off for not downloading two full embeds on every page view (a
-// display:none iframe still loads). Waits for mount so the visitor's stored
-// theme, not the SSR default, decides which iframe loads first.
-import { useEffect, useState } from "react";
+// Spotify is loaded only after an explicit click. This avoids a third-party
+// request, cookies and a heavy iframe for visitors who only read the profile.
+import { useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 
 export default function SpotifyPlayer({ src, title }: { src: string; title: string }) {
   const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
+  if (!loaded) {
     return (
       <div
-        className="h-[352px] w-full"
+        className="flex h-[352px] w-full flex-col items-center justify-center gap-3 px-6 text-center"
         style={{ backgroundColor: "var(--surface)" }}
-        aria-hidden="true"
-      />
+      >
+        <button
+          type="button"
+          onClick={() => setLoaded(true)}
+          className="btn-cta min-h-[44px] px-6 py-3 text-xs font-semibold uppercase tracking-widest"
+        >
+          Load Spotify player
+        </button>
+        <p className="max-w-sm text-xs" style={{ color: "var(--text-40)" }}>
+          Loads media from Spotify and shares your IP address with Spotify.
+        </p>
+      </div>
     );
   }
 

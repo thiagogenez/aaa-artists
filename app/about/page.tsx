@@ -1,12 +1,17 @@
 import Link from "next/link";
-import type { Metadata } from "next";
 import { artists } from "@/data/artists";
+import { createPageMetadata } from "@/lib/site";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 
-export const metadata: Metadata = {
-  title: "About",
-  description: "AAA Artists is the artist agency from the team behind AAA Events and the AAA pres. Fusion trance events in London and ADE. The roster is trance first, with artists across techno, progressive and hard techno.",
-  alternates: { canonical: "/about" },
-};
+const description = "AAA Artists is the artist agency from the team behind AAA Events and the AAA pres. Fusion trance events in London and ADE. The roster is trance first, with artists across techno, progressive and hard techno.";
+
+export const metadata = createPageMetadata({
+  title: "About Our Artist Booking Agency",
+  description,
+  path: "/about",
+  socialTitle: "About — AAA Artists",
+  imageAlt: "About AAA Artists",
+});
 
 const values = [
   {
@@ -37,6 +42,7 @@ const stats = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
+      <BreadcrumbJsonLd items={[{ name: "Home", path: "/" }, { name: "About", path: "/about" }]} />
       {/* Hero */}
       <section className="relative overflow-hidden border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         {/* Background grid — centred, matching the home hero */}
@@ -207,7 +213,7 @@ export default function AboutPage() {
               href="/contact"
               className="btn-cta px-8 py-3.5 text-sm font-semibold uppercase tracking-widest"
             >
-              Book an Artist
+              Book Artists
             </Link>
             <Link
               href="/artists"

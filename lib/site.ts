@@ -1,8 +1,75 @@
-// Canonical site URL, used for metadata, sitemap and robots.
-// Override per-environment with NEXT_PUBLIC_SITE_URL (e.g. in Vercel project settings).
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://aaa-artists.vercel.app";
+import type { Metadata } from "next";
+import {
+  BOOKING_EMAIL,
+  PRIVACY_EMAIL,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_ORIGIN,
+  SOCIAL_IMAGE,
+  SOCIAL_LINKS,
+} from "@/config/site";
 
-export const SITE_NAME = "AAA Artists";
-export const SITE_DESCRIPTION =
-  "AAA Artists is the booking and artist management agency from the team behind AAA Events. A trance-first roster reaching into techno, melodic techno, progressive and hard techno. Book our artists for your event.";
+export {
+  BOOKING_EMAIL,
+  PRIVACY_EMAIL,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SOCIAL_IMAGE,
+  SOCIAL_LINKS,
+};
+
+// Canonical URLs always identify the real public site, including on previews.
+export const SITE_URL = SITE_ORIGIN;
+
+export function absoluteUrl(pathname = "/"): string {
+  return new URL(pathname, `${SITE_URL}/`).toString();
+}
+
+type PageMetadataOptions = {
+  title: string;
+  description: string;
+  path: `/${string}` | "/";
+  socialTitle?: string;
+  image?: string;
+  imageAlt?: string;
+  absoluteTitle?: boolean;
+  openGraphType?: "website" | "profile";
+  robots?: Metadata["robots"];
+};
+
+export function createPageMetadata({
+  title,
+  description,
+  path,
+  socialTitle = `${title} — ${SITE_NAME}`,
+  image = SOCIAL_IMAGE,
+  imageAlt = socialTitle,
+  absoluteTitle = false,
+  openGraphType = "website",
+  robots,
+}: PageMetadataOptions): Metadata {
+  return {
+    title: absoluteTitle ? { absolute: title } : title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      title: socialTitle,
+      description,
+      url: path,
+      type: openGraphType,
+      images: [{ url: image, width: image === SOCIAL_IMAGE ? 1200 : undefined, height: image === SOCIAL_IMAGE ? 630 : undefined, alt: imageAlt }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: socialTitle,
+      description,
+      images: [image],
+    },
+    ...(robots && { robots }),
+  };
+}
+
+/** Escape characters that can prematurely close an inline JSON-LD script. */
+export function serializeJsonLd(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}

@@ -1,20 +1,19 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { artists } from "@/data/artists";
 import ArtistCard from "./ArtistCard";
+import { createPageMetadata } from "@/lib/site";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 
-export const metadata: Metadata = {
-  title: "Artists",
-  description:
-    "Browse the AAA Artists roster — DJs and producers across trance, progressive, techno, melodic techno and hard techno. View a profile or book an artist for your event.",
-  alternates: { canonical: "/artists" },
-  openGraph: {
-    title: "Artists — AAA Artists",
-    description:
-      "Browse the AAA Artists roster across trance, progressive, techno and hard techno.",
-    url: "/artists",
-  },
-};
+const description =
+  "Browse the AAA Artists roster — DJs and producers across trance, progressive, techno, melodic techno and hard techno. View a profile or book an artist for your event.";
+
+export const metadata = createPageMetadata({
+  title: "Electronic Music DJs & Producers",
+  description,
+  path: "/artists",
+  socialTitle: "Artists — AAA Artists",
+  imageAlt: "AAA Artists roster",
+});
 
 function BookingCard({ wide = false }: { wide?: boolean }) {
   return (
@@ -47,7 +46,7 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
         <span
           className="btn-cta inline-flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold uppercase tracking-widest"
         >
-          Enquire Now
+          Book Artists
           <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -66,6 +65,7 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
 export default function ArtistsPage() {
   return (
     <div className="min-h-screen overscroll-contain px-6 pb-16 pt-20 sm:py-20" style={{ backgroundColor: "var(--bg)" }}>
+      <BreadcrumbJsonLd items={[{ name: "Home", path: "/" }, { name: "Artists", path: "/artists" }]} />
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8 text-center sm:mb-16">

@@ -1,6 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { artists } from "@/data/artists";
+import { SITE_DESCRIPTION, SITE_NAME, createPageMetadata } from "@/lib/site";
+
+export const metadata = createPageMetadata({
+  title: `Electronic Music DJ Booking Agency — ${SITE_NAME}`,
+  socialTitle: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  path: "/",
+  imageAlt: SITE_NAME,
+  absoluteTitle: true,
+});
 
 export default function HomePage() {
   const featuredArtists = artists.filter((artist) => artist.image !== "/artists/placeholder.jpg").slice(0, 4);
@@ -85,7 +95,7 @@ export default function HomePage() {
               href="/contact"
               className="btn-cta inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
             >
-              Book an Artist
+              Book Artists
             </Link>
             <Link
               href="/artists"

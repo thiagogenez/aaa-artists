@@ -5,8 +5,10 @@ import SpotifyPlayer from "@/components/SpotifyPlayer";
 import SocialIcon from "@/components/SocialIcons";
 import { artists, getArtistBySlug } from "@/data/artists";
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, createPageMetadata, serializeJsonLd } from "@/lib/site";
 import EventsSection from "./EventsSection";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
+import ThirdPartyEmbed from "@/components/ThirdPartyEmbed";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -21,16 +23,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const artist = getArtistBySlug(slug);
   if (!artist) return { title: "Artist Not Found" };
   const description = artist.bio.slice(0, 160);
-  return {
+  return createPageMetadata({
     title: artist.name,
     description,
-    alternates: { canonical: `/artist/${artist.slug}` },
-    openGraph: {
-      title: `${artist.name} — AAA Artists`,
-      description,
-      url: `/artist/${artist.slug}`,
-    },
-  };
+    path: `/artist/${artist.slug}`,
+    socialTitle: `${artist.name} — AAA Artists`,
+    image: artist.image,
+    imageAlt: artist.name,
+    openGraphType: "profile",
+  });
 }
 
 /** Convert a public Spotify URL into its embed equivalent. */
@@ -44,10 +45,10 @@ function spotifyEmbedSrc(url: string): string | null {
 /** Convert a YouTube video or playlist URL into its embed equivalent. */
 function youtubeEmbedSrc(url: string): string | null {
   const playlist = url.match(/[?&]list=([A-Za-z0-9_-]+)/);
-  if (playlist) return `https://www.youtube.com/embed/videoseries?list=${playlist[1]}`;
+  if (playlist) return `https://www.youtube-nocookie.com/embed/videoseries?list=${playlist[1]}`;
   const video =
     url.match(/[?&]v=([A-Za-z0-9_-]{11})/) ?? url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
-  if (video) return `https://www.youtube.com/embed/${video[1]}`;
+  if (video) return `https://www.youtube-nocookie.com/embed/${video[1]}`;
   return null;
 }
 
@@ -118,7 +119,7 @@ export default async function ArtistPage({ params }: Props) {
   // Per-artist structured data for richer search results.
   const artistLd = {
     "@context": "https://schema.org",
-    "@type": "MusicGroup",
+    "@type": artist.artistType === "group" ? "MusicGroup" : "Person",
     name: artist.name,
     genre: artist.genre,
     description: artist.bio,
@@ -126,13 +127,55 @@ export default async function ArtistPage({ params }: Props) {
     image: `${SITE_URL}${artist.image}`,
     sameAs: Object.values(artist.socials).filter(Boolean),
   };
+  const eventLd = artist.upcomingGigs.map((gig) => ({
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    name: `${artist.name} at ${gig.venue}`,
+    startDate: gig.date,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    url: `${SITE_URL}/artist/${artist.slug}`,
+    image: `${SITE_URL}${gig.flyer ?? artist.image}`,
+    location: {
+      "@type": "Place",
+      name: gig.venue,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: gig.city,
+        addressCountry: gig.country,
+      },
+    },
+    performer: {
+      "@type": artist.artistType === "group" ? "MusicGroup" : "Person",
+      name: artist.name,
+      url: `${SITE_URL}/artist/${artist.slug}`,
+    },
+    ...(gig.ticketLink && {
+      offers: {
+        "@type": "Offer",
+        url: gig.ticketLink,
+        availability: "https://schema.org/InStock",
+      },
+    }),
+  }));
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
+      <BreadcrumbJsonLd items={[
+        { name: "Home", path: "/" },
+        { name: "Artists", path: "/artists" },
+        { name: artist.name, path: `/artist/${artist.slug}` },
+      ]} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(artistLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(artistLd) }}
       />
+      {eventLd.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(eventLd) }}
+        />
+      )}
       {/* Artist hero */}
       <div className="relative border-b px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
@@ -218,15 +261,12 @@ export default async function ArtistPage({ params }: Props) {
                       background — SoundCloud's own dark-looking player, with artwork shown
                       correctly. It renders dark once a real track/profile URL is set; with
                       placeholder URLs it falls back to the light "can't load" state. */}
-                  <iframe
-                    width="100%"
-                    height="352"
-                    allow="autoplay"
-                    loading="lazy"
+                  <ThirdPartyEmbed
+                    provider="SoundCloud"
                     title={`${artist.name} on SoundCloud`}
                     src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`}
-                    className="block w-full"
-                    style={{ border: 0 }}
+                    allow="autoplay"
+                    className="h-[352px]"
                   />
                 </MediaBox>
               )}
@@ -241,17 +281,14 @@ export default async function ArtistPage({ params }: Props) {
               {/* YouTube */}
               {youtubeSrc && (
                 <MediaBox label="YouTube">
-                  <div className="aspect-video w-full">
-                    <iframe
-                      src={youtubeSrc}
-                      title={`${artist.name} on YouTube`}
-                      loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="h-full w-full"
-                      style={{ border: 0 }}
-                    />
-                  </div>
+                  <ThirdPartyEmbed
+                    provider="YouTube"
+                    src={youtubeSrc}
+                    title={`${artist.name} on YouTube`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="aspect-video"
+                  />
                 </MediaBox>
               )}
             </div>

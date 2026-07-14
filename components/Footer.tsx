@@ -1,13 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import SocialIcon from "@/components/SocialIcons";
-
-const socials = [
-  { href: "https://www.instagram.com/aaaeventsofficial/", label: "Instagram", platform: "instagram" },
-  { href: "https://www.soundcloud.com/aaaeventsofficial", label: "SoundCloud", platform: "soundcloud" },
-  { href: "https://www.facebook.com/aaaeventsofficial", label: "Facebook", platform: "facebook" },
-  { href: "https://www.youtube.com/channel/UCZFxKt8xkwG7_yPFKz3GyMw", label: "YouTube", platform: "youtube" },
-];
+import { SITE_NAME, SOCIAL_LINKS } from "@/lib/site";
 
 export default function Footer() {
   return (
@@ -38,8 +32,10 @@ export default function Footer() {
               {[
                 { href: "/", label: "Home" },
                 { href: "/artists", label: "Artists" },
+                { href: "/events", label: "Events" },
                 { href: "/about", label: "About" },
-                { href: "/contact", label: "Book Now" },
+                { href: "/contact", label: "Book Artists" },
+                { href: "/privacy", label: "Privacy" },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link href={href} className="link-quiet inline-block py-1.5 text-sm">
@@ -72,7 +68,7 @@ export default function Footer() {
               Follow Us
             </h3>
             <ul className="space-y-1">
-              {socials.map(({ href, label, platform }) => (
+              {SOCIAL_LINKS.map(({ href, label, platform }) => (
                 <li key={label}>
                   <a
                     href={href}
@@ -92,11 +88,11 @@ export default function Footer() {
         {/* Social icon bar */}
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t pt-8" style={{ borderColor: "var(--border)" }}>
           <p className="text-xs" style={{ color: "var(--text-40)" }}>
-            © {new Date().getFullYear()} AAA Artists. All rights reserved.
+            © {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
           </p>
           {/* 44px touch targets; negative margins keep the visual footprint compact */}
           <div className="-my-3 -mr-3 flex items-center gap-1">
-            {socials.map(({ href, label, platform }) => (
+            {SOCIAL_LINKS.map(({ href, label, platform }) => (
               <a
                 key={label}
                 href={href}

@@ -9,6 +9,7 @@ import { useTheme } from "@/components/ThemeProvider";
 const links = [
   { href: "/", label: "Home" },
   { href: "/artists", label: "Artists" },
+  { href: "/events", label: "Events" },
   { href: "/about", label: "About" },
 ];
 
@@ -117,7 +118,7 @@ export default function Navbar() {
               href="/contact"
               className="btn-outline px-5 py-2 text-sm font-medium uppercase tracking-widest"
             >
-              Book Now
+              Book Artists
             </Link>
           </li>
         </ul>
@@ -190,7 +191,7 @@ export default function Navbar() {
                 onClick={() => setOpen(false)}
                 className="btn-outline mt-2 inline-flex min-h-[44px] items-center px-5 text-sm uppercase tracking-widest"
               >
-                Book Now
+                Book Artists
               </Link>
             </li>
           </ul>
