@@ -5,13 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
-
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/artists", label: "Artists" },
-  { href: "/events", label: "Events" },
-  { href: "/about", label: "About" },
-];
+import { PRIMARY_NAV_LINKS } from "@/config/navigation";
 
 function SunIcon() {
   return (
@@ -79,7 +73,7 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <ul className="hidden items-center gap-8 md:flex">
-          {links.map(({ href, label }) => {
+          {PRIMARY_NAV_LINKS.map(({ href, label }) => {
             const active = isActive(href);
             return (
               <li key={href}>
@@ -163,7 +157,7 @@ export default function Navbar() {
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
         >
           <ul className="flex flex-col gap-2">
-            {links.map(({ href, label }) => {
+            {PRIMARY_NAV_LINKS.map(({ href, label }) => {
               const active = isActive(href);
               return (
                 <li key={href}>
