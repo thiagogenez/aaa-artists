@@ -9,16 +9,22 @@
     "gen:data": "node scripts/gen-data.mjs",
     "check": "node scripts/gen-artists.mjs --check",
     "check:privacy": "node scripts/check-privacy.mjs",
-    "check:release": "npm run check:privacy && npm test && npm run lint && npm run build",
+    "check:production-env": "node scripts/check-production-env.mjs",
+    "check:dependencies": "npm audit --omit=dev --audit-level=high",
+    "check:release": "npm run check:privacy && npm test && npm run lint && npm run build:production",
     "predev": "npm run gen:data",
     "dev": "next dev",
     "prebuild": "npm run gen:data",
     "build": "next build",
+    "build:production": "npm run check:production-env && npm run build",
+    "deploy": "npm run build:production && wrangler deploy",
+    "deploy:dry-run": "npm run build:production && wrangler deploy --dry-run",
+    "smoke:production": "node scripts/smoke-production.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test": "npm run test:worker",
     "test:worker": "node --test tests/worker/*.test.mjs",
-    "test:e2e": "npm run build && playwright test",
+    "test:e2e": "NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key npm run build && playwright test",
     "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
@@ -39,6 +45,7 @@
     "js-yaml": "^5.0.0",
     "playwright": "^1.60.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "4.110.0"
   }
 }

@@ -1,0 +1,19 @@
+name: Refresh event dates
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  trigger-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the existing Cloudflare production build
+        env:
+          CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: |
+          test -n "$CLOUDFLARE_DEPLOY_HOOK"
+          curl --fail --silent --show-error --request POST "$CLOUDFLARE_DEPLOY_HOOK"
