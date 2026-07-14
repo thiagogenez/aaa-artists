@@ -22,3 +22,7 @@ next-env.d.ts
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Playwright artifacts
+/playwright-report/
+/test-results/

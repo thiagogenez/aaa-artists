@@ -3,11 +3,18 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 const COUNTRY_DATA_KEYS: Record<string, string> = {
+  Eswatini: "Swaziland",
+  Jordan: "Hashemite Kingdom of Jordan",
+  Lithuania: "Republic of Lithuania",
+  "North Macedonia": "Macedonia",
   Moldova: "Republic of Moldova",
+  Myanmar: "Myanmar [Burma]",
   "South Korea": "Republic of Korea",
 };
 
-const cityDataCache = new Map<string, Promise<string[]>>();
+type CityEntry = { city: string; search: string };
+
+const cityDataCache = new Map<string, Promise<CityEntry[]>>();
 
 function normalizeSearchValue(value: string): string {
   return value
@@ -17,19 +24,40 @@ function normalizeSearchValue(value: string): string {
     .trim();
 }
 
-function rankCityMatches(cities: string[], query: string): string[] {
+function prefixStart(cities: CityEntry[], query: string): number {
+  let low = 0;
+  let high = cities.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (cities[middle].search < query) low = middle + 1;
+    else high = middle;
+  }
+  return low;
+}
+
+function rankCityMatches(cities: CityEntry[], query: string): string[] {
   const cityPrefixes: string[] = [];
   const wordPrefixes: string[] = [];
   const substrings: string[] = [];
+  const selected = new Set<string>();
 
-  for (const city of cities) {
-    const searchableCity = normalizeSearchValue(city);
-    if (searchableCity.startsWith(query)) {
-      cityPrefixes.push(city);
-    } else if (searchableCity.split(/[^\p{L}\p{N}]+/u).some((word) => word.startsWith(query))) {
-      wordPrefixes.push(city);
-    } else if (searchableCity.includes(query)) {
-      substrings.push(city);
+  // City-name prefixes are by far the common case. The entries are sorted by
+  // their normalized form, so a binary search avoids scanning large files such
+  // as Brazil and the United States on every keystroke.
+  for (let index = prefixStart(cities, query); index < cities.length; index += 1) {
+    const entry = cities[index];
+    if (!entry.search.startsWith(query) || cityPrefixes.length >= 30) break;
+    cityPrefixes.push(entry.city);
+    selected.add(entry.city);
+  }
+  if (cityPrefixes.length >= 30) return cityPrefixes;
+
+  for (const entry of cities) {
+    if (selected.has(entry.city)) continue;
+    if (entry.search.split(/[^\p{L}\p{N}]+/u).some((word) => word.startsWith(query))) {
+      wordPrefixes.push(entry.city);
+    } else if (entry.search.includes(query)) {
+      substrings.push(entry.city);
     }
   }
 
@@ -45,7 +73,7 @@ function countrySlug(country: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function loadCityData(country: string): Promise<string[]> {
+function loadCityData(country: string): Promise<CityEntry[]> {
   const dataCountry = COUNTRY_DATA_KEYS[country] ?? country;
   const slug = countrySlug(dataCountry);
   const cached = cityDataCache.get(slug);
@@ -56,6 +84,15 @@ function loadCityData(country: string): Promise<string[]> {
       if (!response.ok) throw new Error("City suggestions unavailable");
       return response.json() as Promise<string[]>;
     })
+    .then((countryCities) => Array.from(new Set(
+      countryCities.map((city) => city.trim()).filter(Boolean),
+    ))
+      .map((city) => ({ city, search: normalizeSearchValue(city) }))
+      .sort((first, second) => (
+        first.search < second.search ? -1
+          : first.search > second.search ? 1
+            : first.city.localeCompare(second.city)
+      )))
     .catch((error) => {
       cityDataCache.delete(slug);
       throw error;
@@ -89,7 +126,7 @@ export default function CityCombobox({
   const loadingRef = useRef(false);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [cities, setCities] = useState<string[]>([]);
+  const [cities, setCities] = useState<CityEntry[]>([]);
   const [loadedCountry, setLoadedCountry] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -124,10 +161,7 @@ export default function CityCombobox({
       const countryCities = await loadCityData(country);
       if (!countryCities.length) throw new Error("City suggestions unavailable");
       if (!mounted.current || requestId.current !== currentRequest) return;
-      const uniqueCities = Array.from(new Set(
-        countryCities.map((city) => city.trim()).filter(Boolean),
-      )).sort((first, second) => first.localeCompare(second));
-      setCities(uniqueCities);
+      setCities(countryCities);
       setLoadedCountry(country);
     } catch {
       if (mounted.current && requestId.current === currentRequest) setLoadFailed(true);

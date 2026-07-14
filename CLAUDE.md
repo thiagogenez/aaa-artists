@@ -140,8 +140,8 @@ The booking enquiry form lives in `app/contact/page.tsx` and is grouped into sec
 Delivery uses **Formspree** (no backend, works with static export). Set the form ID in
 `NEXT_PUBLIC_FORMSPREE_ID` (see `.env.local.example`) and enquiries POST straight to your
 Formspree inbox/dashboard. If that variable is empty, the form falls back to opening the
-visitor's email client via `mailto:booking@aaaevents.com`. To change the fallback email,
-search the project for `booking@aaaevents.com`.
+visitor's email client via the address in `config/site.js`. Change booking and privacy
+contact details there so the form, Worker, footer, and privacy notice stay aligned.
 
 > Note: `NEXT_PUBLIC_*` variables are inlined at build time, so changing the form ID
 > requires a rebuild (or setting it in the Vercel dashboard, which rebuilds on deploy).

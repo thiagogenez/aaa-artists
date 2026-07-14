@@ -8,7 +8,19 @@ import { Suspense } from "react";
 import CountryCombobox from "./CountryCombobox";
 import CityCombobox from "./CityCombobox";
 import PhoneField from "./PhoneField";
+import TurnstileWidget from "./TurnstileWidget";
 import type { Iso2 } from "intl-tel-input";
+import {
+  BOOKING_LIMITS,
+  DURATION_HOURS,
+  DURATION_MINUTES,
+  DURATION_VALUES,
+  EMAIL_PATTERN,
+  TIME_PATTERN,
+  durationBetween,
+  formatDuration,
+} from "@/config/booking";
+import { BOOKING_EMAIL } from "@/lib/site";
 
 const EVENT_TYPES = [
   "Club Night",
@@ -26,8 +38,6 @@ const TICKETING = ["Ticketed", "Free entry", "Private / guestlist"];
 
 const HEAR_ABOUT = ["Instagram", "SoundCloud / YouTube", "Google search", "Personal referral", "Booked with us before", "Other"];
 
-const DURATION_HOURS = [1, 2, 3, 4, 5, 6];
-const DURATION_MINUTES = [0, 15, 30, 45];
 const WHATSAPP_CONTACT_METHODS = [
   { value: "none", label: "None" },
   { value: "number", label: "Number" },
@@ -35,9 +45,7 @@ const WHATSAPP_CONTACT_METHODS = [
 ] as const;
 // One duration source of truth: every combination exposed by the hours/minutes
 // menus: one to six hours, in quarter-hour increments.
-const SET_DURATIONS = DURATION_HOURS.flatMap((hours) => (
-  DURATION_MINUTES.map((minutes) => hours * 60 + minutes)
-));
+const SET_DURATIONS = DURATION_VALUES.map(Number);
 
 function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -54,14 +62,7 @@ function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 function formatDurationMinutes(value: string): string {
-  const totalMinutes = Number(value);
-  if (!Number.isInteger(totalMinutes) || totalMinutes <= 0) return "";
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return [
-    hours ? `${hours} ${hours === 1 ? "hour" : "hours"}` : "",
-    minutes ? `${minutes} ${minutes === 1 ? "minute" : "minutes"}` : "",
-  ].filter(Boolean).join(" ");
+  return formatDuration(value);
 }
 
 const EURO_COUNTRIES = new Set([
@@ -78,23 +79,7 @@ function currencyForCountry(country: string): string | null {
 }
 
 function calculateSetDuration(start: string, finish: string): string {
-  const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
-  const startMatch = start.match(timePattern);
-  const finishMatch = finish.match(timePattern);
-  if (!startMatch || !finishMatch || start === finish) return "";
-
-  const startMinutes = Number(startMatch[1]) * 60 + Number(startMatch[2]);
-  const finishMinutes = Number(finishMatch[1]) * 60 + Number(finishMatch[2]);
-  const crossesMidnight = finishMinutes < startMinutes;
-  const durationMinutes = finishMinutes - startMinutes + (crossesMidnight ? 24 * 60 : 0);
-  const hours = Math.floor(durationMinutes / 60);
-  const minutes = durationMinutes % 60;
-  const parts = [
-    hours ? `${hours} ${hours === 1 ? "hour" : "hours"}` : "",
-    minutes ? `${minutes} ${minutes === 1 ? "minute" : "minutes"}` : "",
-  ].filter(Boolean);
-
-  return `${parts.join(" ")}${crossesMidnight ? " · finishes next day" : ""}`;
+  return durationBetween(start, finish);
 }
 
 type ArtistBooking = {
@@ -135,18 +120,6 @@ function bookingIntervalsOverlap(first: ArtistBooking, second: ArtistBooking): b
     const secondFinish = secondStart + secondDuration;
     return Math.max(firstStart, secondStart) < Math.min(firstFinish, secondFinish);
   });
-}
-
-function formatArtistBooking(booking: ArtistBooking, index: number): string {
-  if (booking.timingMode === "duration") {
-    const duration = selectedDurationLabel(booking);
-    return `${index + 1}. ${booking.artist} — ${duration ? `${duration} set · times TBC` : "Timing TBC"}`;
-  }
-  const duration = calculateSetDuration(booking.startTime, booking.finishTime);
-  const schedule = booking.startTime && booking.finishTime
-    ? ` — ${booking.startTime}–${booking.finishTime}${duration ? ` — ${duration}` : ""}`
-    : " — Exact times TBC";
-  return `${index + 1}. ${booking.artist}${schedule}`;
 }
 
 // Common domains used for one inline completion after the visitor starts typing
@@ -339,28 +312,63 @@ const EMAIL_DOMAINS = [
   "xtra.co.nz",
 ];
 
-function emailCompletion(value: string): { email: string; domain: string } | null {
-  if (!value || /\s/.test(value)) return null;
+const VISIBLE_EMAIL_COMPLETIONS = 3;
+
+const REGION_DOMAIN_SUFFIXES: Record<string, string[]> = {
+  GB: [".co.uk"], BR: [".com.br"], MX: [".com.mx"], AR: [".com.ar"],
+  CO: [".com.co"], PE: [".com.pe"], VE: [".com.ve"], TR: [".com.tr"],
+  ZA: [".co.za"], JP: [".co.jp", ".ne.jp"], IN: [".co.in", ".in"],
+  HK: [".com.hk"], TW: [".com.tw"], SG: [".com.sg"], PH: [".com.ph"],
+  MY: [".com.my"], ID: [".co.id"], AU: [".com.au", ".net.au"],
+  NZ: [".co.nz"], IL: [".co.il"],
+};
+
+function browserLocaleRegion(): string {
+  if (typeof navigator === "undefined") return "";
+  for (const language of navigator.languages) {
+    try {
+      const region = new Intl.Locale(language).region;
+      if (region) return region.toUpperCase();
+    } catch {
+      // Ignore malformed custom browser locales and try the next preference.
+    }
+  }
+  return "";
+}
+
+function domainRegionRank(domain: string, region: string): number {
+  if (!region) return domain.endsWith(".com") ? 1 : 2;
+  const regionalSuffixes = [
+    ...(REGION_DOMAIN_SUFFIXES[region] ?? []),
+    `.${region.toLowerCase()}`,
+  ];
+  if (regionalSuffixes.some((suffix) => domain.endsWith(suffix))) return 0;
+  return domain.endsWith(".com") ? 1 : 2;
+}
+
+function emailCompletions(value: string, region = ""): Array<{ email: string; domain: string }> {
+  if (!value || /\s/.test(value)) return [];
   const firstAt = value.indexOf("@");
 
   // Wait for the first domain character rather than assuming a provider.
-  if (firstAt === -1) return null;
-  if (firstAt === 0 || firstAt !== value.lastIndexOf("@")) return null;
+  if (firstAt === -1) return [];
+  if (firstAt === 0 || firstAt !== value.lastIndexOf("@")) return [];
 
   const local = value.slice(0, firstAt);
   const domainPart = value.slice(firstAt + 1).toLowerCase();
-  if (!domainPart) return null;
-  if (EMAIL_DOMAINS.includes(domainPart)) return null;
-  const domain = EMAIL_DOMAINS.find((candidate) => candidate.startsWith(domainPart));
-  return domain ? { email: `${local}@${domain}`, domain } : null;
+  if (!domainPart || EMAIL_DOMAINS.includes(domainPart)) return [];
+  return EMAIL_DOMAINS
+    .map((domain, index) => ({ domain, index }))
+    .filter(({ domain }) => domain.startsWith(domainPart))
+    .sort((first, second) => (
+      domainRegionRank(first.domain, region) - domainRegionRank(second.domain, region)
+      || first.index - second.index
+    ))
+    .map(({ domain }) => ({ email: `${local}@${domain}`, domain }));
 }
 
-// Formspree delivers booking enquiries straight to your inbox + dashboard with no
-// backend. Create a free form at https://formspree.io, then set the form ID via the
-// NEXT_PUBLIC_FORMSPREE_ID environment variable (e.g. "xnqkergb"). Until it is set,
-// the form falls back to opening the visitor's email client (mailto).
-const FORMSPREE_ID = process.env.NEXT_PUBLIC_FORMSPREE_ID ?? "";
-const FORMSPREE_ENDPOINT = FORMSPREE_ID ? `https://formspree.io/f/${FORMSPREE_ID}` : "";
+const CONTACT_API_ENDPOINT = process.env.NEXT_PUBLIC_CONTACT_API_URL ?? "/api/enquiries";
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 // Slim shape passed from the server page — keeps the full artist dataset
 // (bios, gig history) out of the client bundle.
@@ -374,7 +382,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const preselected = artistOptions.some((artist) => artist.name === requestedArtist) ? requestedArtist : "";
   const requestedDate = queryValue("date", 10);
   const preselectedDate = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : "";
-  const requestedCountry = queryValue("country", 80);
+  const requestedCountry = queryValue("country", BOOKING_LIMITS.country);
   const preselectedCountry = COUNTRIES.includes(requestedCountry) ? requestedCountry : "";
 
   const initialForm = {
@@ -387,12 +395,12 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     whatsappUsername: "",
     whatsappUsernameKey: "",
     // The booking
-    eventName: queryValue("event", 120),
+    eventName: queryValue("event", BOOKING_LIMITS.eventName),
     eventType: "",
     date: preselectedDate,
     // Venue & audience
-    venue: queryValue("venue", 120),
-    city: queryValue("city", 80),
+    venue: queryValue("venue", BOOKING_LIMITS.venue),
+    city: queryValue("city", BOOKING_LIMITS.city),
     country: preselectedCountry,
     capacity: "",
     ticketing: "",
@@ -430,6 +438,8 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const [whatsappMode, setWhatsappMode] = useState<"none" | "same" | "different" | "username">("none");
   const [resetVersion, setResetVersion] = useState(0);
   const [currencyTouched, setCurrencyTouched] = useState(false);
+  const [turnstileVersion, setTurnstileVersion] = useState(0);
+  const formStartedAt = useRef(0);
   const whatsappContactType = whatsappMode === "username"
     ? "username"
     : whatsappMode === "none" ? "none" : "number";
@@ -464,6 +474,10 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   // success screen, so screen readers announce the outcome.
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
+    formStartedAt.current = Date.now();
+  }, []);
+
+  useEffect(() => {
     if (submitted) successHeadingRef.current?.focus();
   }, [submitted]);
 
@@ -473,7 +487,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     { key: "email", label: "Email", section: "quick" },
     { key: "date", label: "Event date", section: "quick" },
   ];
-  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const EMAIL_RE = EMAIL_PATTERN;
 
   function validate() {
     const e: Record<string, string> = {};
@@ -497,7 +511,6 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     const allowedArtists = new Set([...artistOptions.map((artist) => artist.name), "Open to suggestions"]);
     const allowedDurations = new Set(SET_DURATIONS.map(String));
     const seenArtists = new Set<string>();
-    const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
     for (const booking of artistBookings) {
       const artistKey = `booking-${booking.id}-artist`;
       const durationKey = `booking-${booking.id}-duration`;
@@ -515,8 +528,8 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           e[durationKey] = "Select a valid set duration";
         }
       } else if (booking.timingMode === "times") {
-        if (booking.startTime && !timePattern.test(booking.startTime)) e[startKey] = "Enter a valid start time";
-        if (booking.finishTime && !timePattern.test(booking.finishTime)) e[finishKey] = "Enter a valid finish time";
+        if (booking.startTime && !TIME_PATTERN.test(booking.startTime)) e[startKey] = "Enter a valid start time";
+        if (booking.finishTime && !TIME_PATTERN.test(booking.finishTime)) e[finishKey] = "Enter a valid finish time";
         if (booking.startTime && !booking.finishTime) e[finishKey] = "Add a finish time";
         if (!booking.startTime && booking.finishTime) e[startKey] = "Add a start time";
         if (booking.startTime && booking.startTime === booking.finishTime) {
@@ -542,7 +555,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   }
 
   function handleEmailCompletion(email: string) {
-    setForm((current) => ({ ...current, email: email.slice(0, 254) }));
+    setForm((current) => ({ ...current, email: email.slice(0, BOOKING_LIMITS.email) }));
     setErrors((current) => ({ ...current, email: "" }));
   }
 
@@ -553,18 +566,18 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   }
 
   function handlePhoneChange(phone: string) {
-    setForm((current) => ({ ...current, phone: phone.slice(0, 32) }));
+    setForm((current) => ({ ...current, phone: phone.slice(0, BOOKING_LIMITS.phone) }));
     setErrors((current) => ({ ...current, phone: "" }));
     if (!phone) setWhatsappMode((current) => current === "same" ? "different" : current);
   }
 
   function handleWhatsAppChange(whatsapp: string) {
-    setForm((current) => ({ ...current, whatsapp: whatsapp.slice(0, 32) }));
+    setForm((current) => ({ ...current, whatsapp: whatsapp.slice(0, BOOKING_LIMITS.phone) }));
     setErrors((current) => ({ ...current, whatsapp: "" }));
   }
 
   function handleWhatsAppUsernameChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const whatsappUsername = event.target.value.replace(/^@+/, "").slice(0, 64);
+    const whatsappUsername = event.target.value.replace(/^@+/, "").slice(0, BOOKING_LIMITS.whatsappUsernameKey);
     setForm((current) => ({ ...current, whatsappUsername }));
     setErrors((current) => ({ ...current, whatsappUsername: "" }));
   }
@@ -602,7 +615,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   }
 
   function handleCityChange(city: string) {
-    setForm((current) => ({ ...current, city: city.slice(0, 80) }));
+    setForm((current) => ({ ...current, city: city.slice(0, BOOKING_LIMITS.city) }));
     setErrors((current) => ({ ...current, city: "" }));
   }
 
@@ -713,6 +726,8 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     setWhatsappValid(true);
     setWhatsappMode("none");
     setCurrencyTouched(false);
+    setTurnstileVersion((current) => current + 1);
+    formStartedAt.current = Date.now();
     setResetVersion((current) => current + 1);
     requestAnimationFrame(() => {
       (document.querySelector('[name="name"]') as HTMLInputElement | null)?.focus();
@@ -721,6 +736,9 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const submittedForm = e.currentTarget as HTMLFormElement;
+    const browserFormData = new FormData(submittedForm);
+    const turnstileToken = String(browserFormData.get("cf-turnstile-response") ?? "");
     setSubmitAttempted(true);
     const errs = validate();
     if (Object.keys(errs).length > 0) {
@@ -750,18 +768,11 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       return;
     }
 
-    const artistNames = artistBookings.map((booking) => booking.artist).filter(Boolean);
-    const artistSchedule = artistBookings.map(formatArtistBooking).join("\n");
-    const subjectArtists = artistNames.length > 2
-      ? `${artistNames.slice(0, 2).join(", ")} +${artistNames.length - 2}`
-      : artistNames.join(", ");
-    const subject = `Booking Enquiry${subjectArtists ? `: ${subjectArtists}` : ""} from ${form.name}`;
-    const location = [form.venue, form.city, form.country].filter(Boolean).join(", ");
-    const budget = form.budgetRange
-      ? form.budgetRange === "Prefer to discuss"
-        ? form.budgetRange
-        : `${form.budgetRange} ${form.currency}`
-      : "";
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setSendError("Please complete the security check, then send your enquiry again.");
+      return;
+    }
+
     const whatsappNumber = whatsappMode === "same"
       ? form.phone
       : whatsappMode === "different" ? form.whatsapp : "";
@@ -772,87 +783,58 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       ? form.whatsappUsernameKey.trim()
       : "";
 
-    // Preferred path: submit straight to Formspree (lands in inbox + dashboard).
-    if (FORMSPREE_ENDPOINT) {
-      setSending(true);
-      setSendError("");
-      try {
-        const payload: Record<string, string> = {
-          _subject: subject,
-          email: form.email, // Formspree uses this as the reply-to address
-          Name: form.name,
-          Email: form.email,
-          ...(form.company && { "Company / promoter": form.company }),
-          ...(form.phone && { Phone: form.phone }),
-          ...(whatsappNumber && { "WhatsApp number": whatsappNumber }),
-          ...(whatsappUsername && { "WhatsApp username": whatsappUsername }),
-          ...(whatsappUsernameKey && { "WhatsApp username key": whatsappUsernameKey }),
-          "Artist schedule": artistSchedule,
-          ...(form.eventName && { "Event name": form.eventName }),
-          ...(form.eventType && { "Event type": form.eventType }),
-          "Event date": dateTbc ? "TBC" : form.date,
-          ...(location && { Location: location }),
-          ...(form.capacity && { "Expected capacity": form.capacity }),
-          ...(form.ticketing && { Ticketing: form.ticketing }),
-          ...(budget && { "Budget / fee offer": budget }),
-          ...(form.lineup && { "Other artists on the bill": form.lineup }),
-          ...(form.hearAbout && { "How they heard about us": form.hearAbout }),
-          Message: form.message,
-        };
-        const res = await fetch(FORMSPREE_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error("Request failed");
-        setSubmitted(true);
-      } catch {
-        setSendError("Something went wrong sending your enquiry. Please email booking@aaaevents.com directly.");
-      } finally {
-        setSending(false);
-      }
-      return;
+    setSending(true);
+    setSendError("");
+    try {
+      const response = await fetch(CONTACT_API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          company: form.company,
+          phone: form.phone,
+          whatsappNumber,
+          whatsappUsername,
+          whatsappUsernameKey,
+          bookings: artistBookings.map(({ artist, timingMode, durationMinutes, startTime, finishTime }) => ({
+            artist,
+            timingMode,
+            durationMinutes,
+            startTime,
+            finishTime,
+          })),
+          eventName: form.eventName,
+          eventType: form.eventType,
+          eventDate: dateTbc ? "TBC" : form.date,
+          venue: form.venue,
+          city: form.city,
+          country: form.country,
+          capacity: form.capacity,
+          ticketing: form.ticketing,
+          currency: form.currency,
+          budgetRange: form.budgetRange,
+          lineup: form.lineup,
+          hearAbout: form.hearAbout,
+          message: form.message,
+          turnstileToken,
+          startedAt: formStartedAt.current,
+          website: String(browserFormData.get("website") ?? ""),
+        }),
+      });
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Request failed");
+      setSubmitted(true);
+    } catch (error) {
+      setTurnstileVersion((current) => current + 1);
+      setSendError(
+        error instanceof Error && error.message !== "Request failed"
+          ? error.message
+          : `Something went wrong sending your enquiry. Please email ${BOOKING_EMAIL} directly.`,
+      );
+    } finally {
+      setSending(false);
     }
-
-    // Fallback when no form service is configured: open the visitor's email client.
-    const body = [
-      "YOUR DETAILS",
-      `Name: ${form.name}`,
-      form.company ? `Company / promoter: ${form.company}` : null,
-      `Email: ${form.email}`,
-      form.phone ? `Phone: ${form.phone}` : null,
-      whatsappNumber ? `WhatsApp number: ${whatsappNumber}` : null,
-      whatsappUsername ? `WhatsApp username: ${whatsappUsername}` : null,
-      whatsappUsernameKey ? `WhatsApp username key: ${whatsappUsernameKey}` : null,
-      "",
-      "ARTIST SCHEDULE",
-      ...artistBookings.map(formatArtistBooking),
-      "",
-      "THE EVENT",
-      form.eventName ? `Event name: ${form.eventName}` : null,
-      form.eventType ? `Event type: ${form.eventType}` : null,
-      `Event date: ${dateTbc ? "TBC" : form.date}`,
-      "",
-      "VENUE & AUDIENCE",
-      location ? `Location: ${location}` : null,
-      form.capacity ? `Expected capacity: ${form.capacity}` : null,
-      form.ticketing ? `Ticketing: ${form.ticketing}` : null,
-      "",
-      "BUDGET & EXTRAS",
-      budget ? `Budget / fee offer: ${budget}` : null,
-      form.lineup ? `Other artists on the bill: ${form.lineup}` : null,
-      form.hearAbout ? `How they heard about us: ${form.hearAbout}` : null,
-      "",
-      "MESSAGE",
-      form.message,
-    ]
-      .filter((l) => l !== null)
-      .join("\n");
-
-    window.open(
-      `mailto:booking@aaaevents.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-    );
-    setSubmitted(true);
   }
 
   if (submitted) {
@@ -868,9 +850,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         </div>
         <h2 ref={successHeadingRef} tabIndex={-1} className="mb-3 text-2xl font-bold outline-none" style={{ color: "var(--text)" }}>Enquiry sent</h2>
         <p className="mb-8 max-w-sm text-sm" style={{ color: "var(--text-40)" }}>
-          {FORMSPREE_ENDPOINT
-            ? "Your enquiry has been sent. We aim to respond within 48 hours."
-            : "Your email client should have opened with your message pre-filled. We aim to respond within 48 hours."}
+          Your enquiry has been sent. We aim to respond within 48 hours.
         </p>
         <button
           onClick={() => resetForm(false)}
@@ -885,6 +865,10 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-8">
+      <div className="sr-only" aria-hidden="true">
+        <label htmlFor="website">Website</label>
+        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
       {submitAttempted && Object.values(errors).some(Boolean) && (
         <div
           role="alert"
@@ -903,20 +887,34 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
             .join(", ")}
         </div>
       )}
-      <p className="text-xs" style={{ color: "var(--text-40)" }}>
-        Fields marked with <span aria-hidden="true">*</span>
-        <span className="sr-only">an asterisk</span> are required.
-      </p>
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-xs" style={{ color: "var(--text-40)" }}>
+          Fields marked with <span aria-hidden="true">*</span>
+          <span className="sr-only">an asterisk</span> are required.
+        </p>
+        {canResetForm && (
+          <button
+            type="button"
+            disabled={sending}
+            onClick={() => resetForm(true)}
+            className="btn-outline min-h-[44px] shrink-0 px-3 text-xs font-semibold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-35"
+            style={{ backgroundColor: "var(--surface)" }}
+          >
+            Clear form
+          </button>
+        )}
+      </div>
       <div className="space-y-3">
       <Collapsible id="quick" step="01" title="Quick enquiry" open={open.quick} onToggle={() => toggle("quick")} error={Boolean(errors.name || errors.email || errors.phone || errors.whatsapp || errors.whatsappUsername || errors.whatsappUsernameKey || errors.date || hasBookingErrors)}>
         <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
           <Field label="Your Name" required error={errors.name}>
-            <Input name="name" autoComplete="name" maxLength={100} placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
+            <Input name="name" autoComplete="name" maxLength={BOOKING_LIMITS.name} placeholder="Jane Smith" value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
           </Field>
           <Field label="Email Address" required error={errors.email}>
             <EmailField
-              maxLength={254}
+              maxLength={BOOKING_LIMITS.email}
               value={form.email}
+              regionHint={form.phone ? phoneCountry : undefined}
               onChange={handleChange}
               onComplete={handleEmailCompletion}
               onBlur={handleBlur}
@@ -1029,7 +1027,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                     autoComplete="off"
                     autoCapitalize="none"
                     spellCheck={false}
-                    maxLength={64}
+                    maxLength={BOOKING_LIMITS.whatsappUsernameKey}
                     placeholder="username"
                     value={form.whatsappUsername}
                     onChange={handleWhatsAppUsernameChange}
@@ -1053,7 +1051,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                   <Input
                     name="whatsappUsernameKey"
                     autoComplete="off"
-                    maxLength={64}
+                    maxLength={BOOKING_LIMITS.whatsappUsernameKey}
                     placeholder="Optional contact key"
                     value={form.whatsappUsernameKey}
                     onChange={handleChange}
@@ -1326,10 +1324,10 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       <Collapsible id="event" step="02" title="Event details (optional)" open={open.event} onToggle={() => toggle("event")} error={Boolean(errors.company || errors.eventName || errors.eventType || errors.venue || errors.city || errors.country || errors.capacity || errors.ticketing)}>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field label="Company / Promoter">
-            <Input name="company" autoComplete="organization" maxLength={120} placeholder="Your venue, brand or agency" value={form.company} onChange={handleChange} onBlur={handleBlur} error={errors.company} />
+            <Input name="company" autoComplete="organization" maxLength={BOOKING_LIMITS.company} placeholder="Your venue, brand or agency" value={form.company} onChange={handleChange} onBlur={handleBlur} error={errors.company} />
           </Field>
           <Field label="Event Name">
-            <Input name="eventName" maxLength={120} placeholder="e.g. Saturday Sessions" value={form.eventName} onChange={handleChange} onBlur={handleBlur} error={errors.eventName} />
+            <Input name="eventName" maxLength={BOOKING_LIMITS.eventName} placeholder="e.g. Saturday Sessions" value={form.eventName} onChange={handleChange} onBlur={handleBlur} error={errors.eventName} />
           </Field>
           <Field label="Event Type">
             <Select name="eventType" value={form.eventType} onChange={handleChange} error={errors.eventType}>
@@ -1338,7 +1336,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
             </Select>
           </Field>
           <Field label="Venue / Location Name">
-            <Input name="venue" maxLength={120} placeholder="e.g. Fabric" value={form.venue} onChange={handleChange} onBlur={handleBlur} error={errors.venue} />
+            <Input name="venue" maxLength={BOOKING_LIMITS.venue} placeholder="e.g. Fabric" value={form.venue} onChange={handleChange} onBlur={handleBlur} error={errors.venue} />
           </Field>
           <Field label="Country" hint="Choose the country first to enable city suggestions">
             <CountryCombobox name="country" value={form.country} onChange={handleCountryChange} error={errors.country} />
@@ -1350,7 +1348,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
               country={form.country}
               value={form.city}
               onChange={handleCityChange}
-              maxLength={80}
+              maxLength={BOOKING_LIMITS.city}
               error={errors.city}
             />
           </Field>
@@ -1396,7 +1394,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
             </Select>
           </Field>
           <Field label="Other / External Artists on the Bill">
-            <Input name="lineup" maxLength={500} placeholder="Anyone else playing alongside?" value={form.lineup} onChange={handleChange} onBlur={handleBlur} error={errors.lineup} />
+            <Input name="lineup" maxLength={BOOKING_LIMITS.lineup} placeholder="Anyone else playing alongside?" value={form.lineup} onChange={handleChange} onBlur={handleBlur} error={errors.lineup} />
           </Field>
         </div>
       </Collapsible>
@@ -1406,7 +1404,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           <textarea
             name="message"
             rows={5}
-            maxLength={4000}
+            maxLength={BOOKING_LIMITS.message}
             placeholder="Tell us about the event, the crowd, timings, and anything else that helps us quote accurately…"
             value={form.message}
             onChange={handleChange}
@@ -1422,7 +1420,8 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       </div>
 
       <div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <TurnstileWidget key={turnstileVersion} siteKey={TURNSTILE_SITE_KEY} />
+        <div>
           <button
             type="submit"
             disabled={sending}
@@ -1434,22 +1433,13 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           >
             {sending ? "Sending…" : "Send Enquiry"}
           </button>
-          <button
-            type="button"
-            disabled={!canResetForm || sending}
-            onClick={() => resetForm(true)}
-            className="link-quiet min-h-[44px] px-4 text-xs font-semibold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            Reset form
-          </button>
         </div>
         {sendError && (
           <p className="mt-4 text-xs" style={{ color: "var(--error)" }}>{sendError}</p>
         )}
         <p className="mt-4 text-xs" style={{ color: "var(--text-30)" }}>
-          {FORMSPREE_ENDPOINT
-            ? "We aim to respond within 48 hours."
-            : "Submitting this form opens your email client with your details pre-filled. We aim to respond within 48 hours."}
+          AAA Artists uses your details to respond to and manage this booking enquiry. Delivery is handled by Formspree. Read our{" "}
+          <Link href="/privacy" className="underline underline-offset-4">privacy notice</Link>. We aim to respond within 48 hours.
         </p>
       </div>
     </form>
@@ -1567,12 +1557,25 @@ function EmailField({
   onComplete,
   onBlur,
   error,
+  regionHint,
   ...rest
 }: React.InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
+  regionHint?: string;
   onComplete: (email: string) => void;
 }) {
-  const completion = emailCompletion(String(value ?? ""));
+  const [showAll, setShowAll] = useState(false);
+  const [localeRegion] = useState(browserLocaleRegion);
+  const suggestionsId = useId();
+  const suggestionsStatusId = useId();
+  const completions = emailCompletions(
+    String(value ?? ""),
+    regionHint?.toUpperCase() || localeRegion,
+  );
+  const visibleCompletions = showAll
+    ? completions
+    : completions.slice(0, VISIBLE_EMAIL_COMPLETIONS);
+  const hiddenCompletionCount = completions.length - visibleCompletions.length;
   return (
     <div className="min-w-0">
       <input
@@ -1583,7 +1586,12 @@ function EmailField({
         autoComplete="email"
         placeholder="jane@example.com"
         value={value}
-        onChange={onChange}
+        aria-controls={completions.length > 0 ? suggestionsId : undefined}
+        aria-describedby={completions.length > 0 ? suggestionsStatusId : undefined}
+        onChange={(event) => {
+          setShowAll(false);
+          onChange?.(event);
+        }}
         onBlur={onBlur}
         className="w-full min-w-0 max-w-full border px-4 py-3 text-base outline-none transition-all"
         style={{
@@ -1592,28 +1600,69 @@ function EmailField({
           color: "var(--text)",
         }}
       />
-      <div aria-live="polite">
-        {completion && (
-          <button
-            type="button"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => onComplete(completion.email)}
-            className="flex min-h-[48px] w-full cursor-pointer items-center justify-between gap-3 border border-t-0 px-3 text-left text-xs transition-opacity duration-200 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-            style={{
-              borderColor: "var(--border)",
-              backgroundColor: "var(--surface-2)",
-              color: "var(--text-60)",
-            }}
-            aria-label={`Complete email as ${completion.email}`}
+      <div>
+        {completions.length > 0 && (
+          <div
+            className="border border-t-0 p-3"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}
           >
-            <span className="font-medium">Add email domain</span>
-            <span
-              className="shrink-0 px-2 py-1 text-sm font-semibold"
-              style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}
+            <p id={suggestionsStatusId} className="text-xs font-medium" aria-live="polite" style={{ color: "var(--text-60)" }}>
+              Add email domain
+            </p>
+            <div
+              id={suggestionsId}
+              role="group"
+              aria-label="Email domain suggestions"
+              className={`mt-2 flex flex-wrap gap-2 ${showAll ? "max-h-64 overflow-y-auto overscroll-contain pr-1" : ""}`}
             >
-              @{completion.domain}
-            </span>
-          </button>
+              {visibleCompletions.map((completion, index) => (
+                <button
+                  key={completion.domain}
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setShowAll(false);
+                    onComplete(completion.email);
+                  }}
+                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-200 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style={{
+                    borderColor: index === 0 ? "var(--text)" : "var(--border)",
+                    backgroundColor: index === 0 ? "var(--text)" : "var(--surface)",
+                    color: index === 0 ? "var(--bg)" : "var(--text)",
+                  }}
+                  aria-label={`Complete email as ${completion.email}`}
+                >
+                  @{completion.domain}
+                </button>
+              ))}
+              {hiddenCompletionCount > 0 && (
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => setShowAll(true)}
+                  aria-expanded={false}
+                  aria-controls={suggestionsId}
+                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-200 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)", color: "var(--text-60)" }}
+                >
+                  +{hiddenCompletionCount} more
+                </button>
+              )}
+              {showAll && completions.length > VISIBLE_EMAIL_COMPLETIONS && (
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => setShowAll(false)}
+                  aria-expanded="true"
+                  aria-controls={suggestionsId}
+                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-200 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)", color: "var(--text-60)" }}
+                >
+                  Show fewer
+                </button>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>
