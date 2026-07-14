@@ -150,10 +150,22 @@ button:not(:disabled) {
    while matching the site's surfaces in both themes. */
 .aaa-phone-field .iti {
   width: 100%;
+  max-width: 100%;
   --iti-hover-color: var(--surface-2);
   --iti-border-color: var(--border);
   --iti-country-selector-bg: var(--surface);
   --iti-icon-color: var(--text-60);
+}
+.aaa-phone-field {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Safari gives date controls a wide intrinsic size. Let grid parents constrain
+   them so the picker stays inside the mobile form boundary. */
+input[type="date"] {
+  min-width: 0;
+  max-width: 100%;
 }
 .aaa-phone-field .iti__selected-country {
   min-width: 44px;
