@@ -1,6 +1,6 @@
 # AAA Artists Website
 
-The artist-management website for **AAA Artists**, built as a Next.js prototype.
+The production artist-management website for **AAA Artists**.
 
 AAA Artists & Events is one company with two public-facing brands. This site covers the
 **artists** side only — bookings, rosters, and artist media. The events side lives on a
@@ -12,13 +12,17 @@ shared **AAA Events** social accounts until dedicated artist socials exist.
 - **Next.js 16** (App Router, static export)
 - **Tailwind CSS v4** (configured via `postcss.config.mjs`, no `tailwind.config.ts` needed)
 - **TypeScript**
-- No database — all artist data lives in `data/artists.ts`
+- Cloudflare Worker for the same-origin booking API
+- No database — editable artist/event content lives in `data/artists/*.yml`
 
 ## Running locally
 
 ```bash
 npm run dev        # starts dev server at http://localhost:3000
 npm run build      # production build
+npm run check      # validates artist and event YAML
+npm test           # Worker security and enquiry tests
+npm run test:e2e   # desktop Chromium and mobile WebKit tests
 ```
 
 ## Project structure
@@ -29,18 +33,29 @@ app/
   artists/page.tsx       # Artist grid (/artists)
   artist/[slug]/page.tsx # Individual artist detail (media boxes + upcoming flyers)
   contact/page.tsx       # Booking enquiry form (/contact)
+  events/page.tsx        # Deduplicated upcoming event listing (/events)
+  privacy/page.tsx       # Privacy notice and complaints route (/privacy)
   about/page.tsx         # About page
   layout.tsx             # Root layout (navbar + footer)
   globals.css            # Tailwind import + CSS theme variables
 components/
   Navbar.tsx             # Fixed top navigation — Home, Artists, About, Book Now
   Footer.tsx             # Site footer (links to AAA Events socials)
+  Breadcrumbs.tsx        # Visible navigation trail + matching JSON-LD
+  ThirdPartyConsent.tsx  # Shared click-to-load privacy facade for external media
+config/
+  booking.js             # Shared enquiry limits, enums, and validation constants
+  navigation.ts          # Shared header/footer navigation definitions
+  privacy.js             # Verified controller facts and privacy release gate
+  site.js                # Canonical origin, public identity, and contact addresses
 data/
   artists/               # ONE friendly YAML file per artist — EDIT THESE
   artists.ts             # types + getArtistBySlug (imports the generated JSON; don't edit content)
   artists.data.json      # generated from data/artists/*.yml (git-ignored, do not edit)
 scripts/
   gen-artists.mjs        # builds artists.data.json from the YAML + validates it
+worker/
+  index.js               # /api/enquiries, validation, Turnstile, limits, redirects
 public/
   logo.png               # AAA Artists logo
   artists/               # Artist photos go here — <slug>.jpg
@@ -132,22 +147,43 @@ public/artists/thiago.jpg
 public/artists/mr-b.jpg
 ```
 
-Then update the `image` field in `data/artists.ts` to point to it (already pre-set).
+Then update the `image` field in the artist's YAML file to point to it.
 The artist page and roster cards will automatically show the photo.
 
 ## Booking form
 
-The booking enquiry form lives in `app/contact/page.tsx` and is grouped into sections
-(your details, the booking, venue & audience, budget & extras, message).
+The booking enquiry form lives in `app/contact/ContactView.tsx`. It supports multiple
+artists, per-artist exact times or durations, country-aware phone/city inputs, email-domain
+assistance, optional WhatsApp numbers/usernames, reset confirmation, and mobile layouts.
 
-Delivery uses **Formspree** (no backend, works with static export). Set the form ID in
-`NEXT_PUBLIC_FORMSPREE_ID` (see `.env.local.example`) and enquiries POST straight to your
-Formspree inbox/dashboard. If that variable is empty, the form falls back to opening the
-visitor's email client via the address in `config/site.js`. Change booking and privacy
-contact details there so the form, Worker, footer, and privacy notice stay aligned.
+The browser submits only to the same-origin `POST /api/enquiries`. The Cloudflare Worker
+streams and validates the body, verifies Turnstile, applies actor and email rate limits,
+and then forwards the accepted enquiry to Formspree. The Formspree ID and Turnstile secret
+are server-side secrets; they must never use a `NEXT_PUBLIC_` name. The public Turnstile
+site key is a build variable because Next.js embeds it in the static export.
 
-> Note: `NEXT_PUBLIC_*` variables are inlined at build time, so changing the form ID
-> requires a rebuild (or setting it in the Vercel dashboard, which rebuilds on deploy).
+Production fails closed and shows a direct-email fallback when Turnstile is not configured.
+See `docs/deployment.md` for the exact variables, secrets, and smoke tests.
+
+## Events and structured data
+
+Every upcoming gig requires a stable `eventId`. Reuse the same ID for every artist on a
+shared event so `/events` can merge the performers into one listing. Dates accept exact
+`YYYY-MM-DD` values or month-only `YYYY-MM` values when the day is TBC. Month-only events
+stay visible but do not produce exact-date `MusicEvent` schema. A ticket URL does not imply
+availability; add `ticketStatus: available` only when it has been verified.
+
+Structured event data is emitted once on `/events`, not duplicated across artist pages.
+Nested artist pages use visible breadcrumbs with matching JSON-LD. Spotify, YouTube, and
+other third-party frames remain click-to-load so they make no provider request beforehand.
+
+## Privacy release gate
+
+Verified controller, address, Companies House, ICO, retention, and complaints information
+lives in `config/privacy.js`. Keep `detailsConfirmed: false` until the remaining decisions
+listed in `TODO.md` are confirmed by the controller and the finished notice has been
+reviewed. While incomplete, the privacy page stays readable but uses `noindex` and remains
+out of the sitemap. Never fill missing legal facts with plausible placeholders.
 
 ## Logo
 
@@ -163,7 +199,30 @@ commit messages. Keep commit messages to the change description only.
 
 ## Deploying
 
-The easiest option is [Vercel](https://vercel.com) — connect the repo and it deploys automatically on every push. Zero config needed for a Next.js project.
+Production is a Next.js static export plus a Cloudflare Worker and static-asset binding.
+The canonical origin is always `https://aaaartists.co`; `www` and HTTP requests are
+permanently redirected by the Worker. Deploy both the Worker and `out/` assets—publishing
+only the static directory leaves `/api/enquiries` unavailable.
+
+Use `npm run build:production`, `npm run deploy:dry-run`, `npm run deploy`, and then
+`npm run smoke:production`. Current external configuration tasks are tracked in `TODO.md`;
+the authoritative setup and release instructions are in `docs/deployment.md`.
+
+## Current implementation state (2026-07-14)
+
+- Contact security, same-origin delivery, Turnstile recovery, streaming size limits,
+  privacy-safe request IDs, retry semantics, and canonical redirects are implemented.
+- Events are normalized and deduplicated, TBC month dates are supported, and structured
+  data no longer makes unverified availability or exact-date claims.
+- Navigation definitions and third-party consent UI are shared; the footer is compact and
+  aligned with the header across phone and desktop widths.
+- Privacy controller/address/ICO/retention/complaints facts are recorded, but the notice
+  deliberately remains incomplete pending the decisions in `TODO.md`.
+- CI, Dependabot, production checks, daily event-refresh workflow, Worker tests, and
+  desktop/mobile browser coverage are present. The last verification passed 9 Worker tests
+  and 24 browser tests; lint had no errors and one pre-existing `ThemeProvider` warning.
+- The accepted dependency audit finding is the moderate nested PostCSS advisory. Do not run
+  the suggested forced downgrade to Next.js 9; monitor for a patched stable Next.js release.
 
 <!-- rtk-instructions v2 -->
 # RTK (Rust Token Killer) - Token-Optimized Commands
