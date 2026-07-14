@@ -37,6 +37,7 @@ pastGigs:
 upcomingGigs:
   # On the XOYO second-room lineup (Skiddle/aaaevents.co)
   - date: "2026-08-22"
+    eventId: aaa-fusion-xoyo-2026-08-22
     venue: XOYO
     city: London
     country: UK

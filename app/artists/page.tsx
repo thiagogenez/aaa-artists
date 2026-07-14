@@ -2,7 +2,6 @@ import Link from "next/link";
 import { artists } from "@/data/artists";
 import ArtistCard from "./ArtistCard";
 import { createPageMetadata } from "@/lib/site";
-import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 
 const description =
   "Browse the AAA Artists roster — DJs and producers across trance, progressive, techno, melodic techno and hard techno. View a profile or book an artist for your event.";
@@ -65,7 +64,6 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
 export default function ArtistsPage() {
   return (
     <div className="min-h-screen overscroll-contain px-6 pb-16 pt-20 sm:py-20" style={{ backgroundColor: "var(--bg)" }}>
-      <BreadcrumbJsonLd items={[{ name: "Home", path: "/" }, { name: "Artists", path: "/artists" }]} />
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8 text-center sm:mb-16">

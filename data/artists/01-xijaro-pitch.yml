@@ -50,6 +50,7 @@ pastGigs:
 upcomingGigs:
   # Tomorrowland Weekend 2 — The Rave Cave, Fri 24 Jul, 19:30–20:30
   - date: '2026-07-24'
+    eventId: tomorrowland-2026-w2-xijaro-pitch
     venue: Tomorrowland
     city: Boom
     country: Belgium
@@ -58,10 +59,12 @@ upcomingGigs:
   # ADE — Amsterdam Trance Event, b2b Alex M.O.R.P.H.; date announced as 24 Oct,
   # reconfirm when tickets go live (source article's weekday didn't match).
   - date: '2026-10-24'
+    eventId: ade-2026-xijaro-pitch
     venue: Club Panama
     city: Amsterdam
     country: Netherlands
   - date: '2026-10-31' # Seriously Uplifting 8
+    eventId: seriously-uplifting-8-2026
     venue: The Globe
     city: Newcastle upon Tyne
     country: UK

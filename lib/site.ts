@@ -53,6 +53,7 @@ export function createPageMetadata({
     description,
     alternates: { canonical: path },
     openGraph: {
+      siteName: SITE_NAME,
       title: socialTitle,
       description,
       url: path,
@@ -67,6 +68,16 @@ export function createPageMetadata({
     },
     ...(robots && { robots }),
   };
+}
+
+export function sentenceDescription(value: string, maxLength = 160): string {
+  const clean = value.replace(/\s+/g, " ").trim();
+  if (clean.length <= maxLength) return clean;
+  const candidate = clean.slice(0, maxLength + 1);
+  const sentenceEnd = Math.max(candidate.lastIndexOf(". "), candidate.lastIndexOf("! "), candidate.lastIndexOf("? "));
+  if (sentenceEnd >= Math.floor(maxLength * 0.55)) return candidate.slice(0, sentenceEnd + 1);
+  const wordEnd = candidate.lastIndexOf(" ");
+  return `${candidate.slice(0, wordEnd > 0 ? wordEnd : maxLength).trimEnd()}…`;
 }
 
 /** Escape characters that can prematurely close an inline JSON-LD script. */

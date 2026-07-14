@@ -1,24 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Artist, Gig } from "@/data/artists";
+import { eventDateBadge, formatEventDate, isUpcomingEventDate } from "@/lib/events";
 import PastDates from "./PastDates";
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+function currentDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function subscribeToDateChange(onChange: () => void) {
+  const interval = window.setInterval(onChange, 60_000);
+  document.addEventListener("visibilitychange", onChange);
+  return () => {
+    window.clearInterval(interval);
+    document.removeEventListener("visibilitychange", onChange);
+  };
 }
 
 /** A flyer-style box for an upcoming event. Uses artwork when provided,
  *  otherwise renders a generated poster from the gig details. */
 function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
-  const month = new Date(gig.date).toLocaleDateString("en-GB", { month: "short" }).toUpperCase();
-  const day = new Date(gig.date).toLocaleDateString("en-GB", { day: "numeric" });
+  const { month, day } = eventDateBadge(gig.date);
 
   return (
     <div className="group flex flex-col border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
@@ -75,7 +80,7 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
         <div>
           <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
           <p className="text-xs" style={{ color: "var(--text-40)" }}>{gig.city}, {gig.country}</p>
-          <p className="mt-1 text-xs font-medium" style={{ color: "var(--text-60)" }}>{formatDate(gig.date)}</p>
+          <p className="mt-1 text-xs font-medium" style={{ color: "var(--text-60)" }}>{formatEventDate(gig.date)}</p>
         </div>
         {gig.ticketLink && gig.ticketLink !== "#" ? (
           <a
@@ -84,7 +89,7 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
             rel="noopener noreferrer"
             className="btn-cta inline-flex min-h-[44px] w-full items-center justify-center py-3 text-center text-xs font-semibold uppercase tracking-widest"
           >
-            Get Tickets
+            {gig.ticketStatus === "available" ? "Get tickets" : "Event details"}
           </a>
         ) : (
           <span
@@ -104,19 +109,16 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
  *  The page is statically exported, so a build-time split would freeze: gigs
  *  would never move from Upcoming to Past until a rebuild. Instead the server
  *  renders with `buildNow` (so server and first client render match — no
- *  hydration mismatch) and an effect swaps in the real current date after
- *  mount, letting the UI correct itself at view time. */
+ *  hydration mismatch), then subscribes to the viewer's current date so the
+ *  UI corrects itself after hydration and while a tab remains open. */
 export default function EventsSection({ artist, buildNow }: { artist: Artist; buildNow: string }) {
-  const [now, setNow] = useState(buildNow);
-  useEffect(() => {
-    setNow(new Date().toISOString().slice(0, 10));
-  }, []);
+  const now = useSyncExternalStore(subscribeToDateChange, currentDate, () => buildNow);
 
-  const upcomingGigs = artist.upcomingGigs.filter((g) => g.date >= now);
+  const upcomingGigs = artist.upcomingGigs.filter((g) => isUpcomingEventDate(g.date, now));
   // Past includes any listed-as-upcoming gigs whose date has since passed,
   // kept in date order (oldest → newest; PastDates shows newest first).
   const pastGigs = [...artist.pastGigs, ...artist.upcomingGigs]
-    .filter((g) => g.date < now)
+    .filter((g) => !isUpcomingEventDate(g.date, now))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   return (
@@ -144,8 +146,8 @@ export default function EventsSection({ artist, buildNow }: { artist: Artist; bu
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-5">
-                {upcomingGigs.map((gig, i) => (
-                  <FlyerCard key={i} artist={artist} gig={gig} />
+                {upcomingGigs.map((gig) => (
+                  <FlyerCard key={gig.eventId ?? `${gig.date}-${gig.venue}`} artist={artist} gig={gig} />
                 ))}
               </div>
             )}

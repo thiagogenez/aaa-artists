@@ -38,6 +38,7 @@ pastGigs:
     country: UK
 upcomingGigs:
   - date: "2026-08-22"
+    eventId: aaa-fusion-xoyo-2026-08-22
     venue: XOYO
     city: London
     country: UK

@@ -44,10 +44,12 @@ pastGigs:                     # dates in the past — shown dimmed
 
 upcomingGigs:                 # future dates — shown as flyer cards
   - date: "2026-07-04"
+    eventId: asot-festival-2026
     venue: A State of Trance Festival
     city: Utrecht
     country: Netherlands
-    ticketLink: https://…     # optional — "Get Tickets" button (omit → "Tickets soon")
+    ticketLink: https://…     # optional — links to organiser details
+    ticketStatus: available   # optional; only when availability is verified
     flyer: /flyers/asot.webp  # optional — real poster art (omit → auto-generated poster)
 ```
 
@@ -61,5 +63,8 @@ upcomingGigs:                 # future dates — shown as flyer cards
   the whole URL (the `?si=…` part is fine — the site extracts the ID).
 - **Photos:** drop a `.webp`/`.jpg` in `public/artists/` and point `image:` at it.
 - **Flyers:** drop artwork in `public/flyers/` and set `flyer:` on the gig.
+- **Dates:** use `YYYY-MM-DD`, or `YYYY-MM` when the exact day is TBC. Month-only dates are not emitted as exact-date event structured data.
+- **Shared events:** every upcoming gig needs a stable `eventId`; use the same ID for every artist appearing at that event.
+- **Tickets:** omit `ticketStatus` unless availability has been checked. Allowed values are `available`, `sold-out`, and `unavailable`.
 - A finished gig drops off "Upcoming" automatically once its date passes; move it to
   `pastGigs` if you want to keep it in the history list.

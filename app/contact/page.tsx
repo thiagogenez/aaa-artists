@@ -1,7 +1,6 @@
 import { artists } from "@/data/artists";
 import ContactView from "./ContactView";
 import { createPageMetadata } from "@/lib/site";
-import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 
 const description =
   "Send a booking enquiry for one or more AAA Artists DJs. Share the date, venue, capacity and budget and we'll get back to you within 48 hours.";
@@ -19,7 +18,6 @@ export default function ContactPage() {
   const artistOptions = artists.map((a) => ({ name: a.name, slug: a.slug }));
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Home", path: "/" }, { name: "Book Artists", path: "/contact" }]} />
       <ContactView artistOptions={artistOptions} />
     </>
   );

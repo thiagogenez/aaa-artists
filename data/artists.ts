@@ -9,10 +9,12 @@ import data from "./artists.data.json";
 
 export interface Gig {
   date: string;
+  eventId?: string;
   venue: string;
   city: string;
   country: string;
   ticketLink?: string;
+  ticketStatus?: "available" | "sold-out" | "unavailable";
   /** Optional flyer artwork for the event — e.g. "/flyers/xijaro-utrecht.jpg".
    *  When omitted, a generated poster card is shown from the gig details. */
   flyer?: string;

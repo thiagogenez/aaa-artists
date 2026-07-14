@@ -21,12 +21,14 @@ pastGigs: []
 upcomingGigs:
   # Tomorrowland 2026 debut — Weekend 1, House of Fortune by JBL stage
   - date: "2026-07-19"
+    eventId: tomorrowland-2026-w1-krevix
     venue: Tomorrowland
     city: Boom
     country: Belgium
     ticketLink: https://www.tomorrowland.com/
     flyer: /flyers/tomorrowland-2026.webp # official Consciencia lineup poster (Krevix listed)
   - date: "2026-08-22"
+    eventId: aaa-fusion-xoyo-2026-08-22
     venue: XOYO
     city: London
     country: UK

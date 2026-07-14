@@ -89,17 +89,20 @@ pastGigs:                     # dates in the past — shown dimmed
     country: Spain
 upcomingGigs:                 # future dates — shown as flyer cards
   - date: "2026-07-04"
+    eventId: asot-festival-2026
     venue: A State of Trance Festival
     city: Utrecht
     country: Netherlands
-    ticketLink: https://…     # optional — shows a "Get Tickets" button (omit → "Tickets soon")
+    ticketLink: https://…     # optional — links to organiser details
+    ticketStatus: available   # optional; only when availability is verified
     flyer: /flyers/asot.webp  # optional — real poster art (omit → auto-generated poster)
 ```
 
 **Workflow:** edit a YAML file → `npm run dev` (or `npm run build`) automatically
 regenerates `data/artists.data.json` that the site reads. Run **`npm run check`** any
 time to validate the files — it lists exactly which file/field is wrong before anything
-breaks. Quote dates as `"YYYY-MM-DD"`. To add a new artist, copy an existing file with
+breaks. Quote dates as `"YYYY-MM-DD"`, or `"YYYY-MM"` when the exact day is TBC. Every
+upcoming gig needs a stable `eventId`; reuse it across artists on the same event. To add a new artist, copy an existing file with
 the next number prefix.
 
 ### Media boxes ("Listen & Watch")
@@ -113,7 +116,7 @@ The artist page shows a grid of media boxes. SoundCloud renders a live embed fro
 
 Each entry in `upcomingGigs` renders as a flyer card. Set `flyer: "/flyers/<file>.jpg"`
 to show real artwork; if omitted, a clean text poster is generated from the gig details.
-Add `ticketLink` to show a "Get Tickets" button.
+Add `ticketLink` to show event details. Add `ticketStatus: available` only after availability is verified.
 
 ## Adding artist photos
 

@@ -5,9 +5,9 @@ import SpotifyPlayer from "@/components/SpotifyPlayer";
 import SocialIcon from "@/components/SocialIcons";
 import { artists, getArtistBySlug } from "@/data/artists";
 import type { Metadata } from "next";
-import { SITE_URL, createPageMetadata, serializeJsonLd } from "@/lib/site";
+import { SITE_URL, createPageMetadata, sentenceDescription, serializeJsonLd } from "@/lib/site";
 import EventsSection from "./EventsSection";
-import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import ThirdPartyEmbed from "@/components/ThirdPartyEmbed";
 
 interface Props {
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const artist = getArtistBySlug(slug);
   if (!artist) return { title: "Artist Not Found" };
-  const description = artist.bio.slice(0, 160);
+  const description = sentenceDescription(artist.bio);
   return createPageMetadata({
     title: artist.name,
     description,
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     socialTitle: `${artist.name} — AAA Artists`,
     image: artist.image,
     imageAlt: artist.name,
-    openGraphType: "profile",
+    openGraphType: artist.artistType === "solo" ? "profile" : "website",
   });
 }
 
@@ -127,67 +127,23 @@ export default async function ArtistPage({ params }: Props) {
     image: `${SITE_URL}${artist.image}`,
     sameAs: Object.values(artist.socials).filter(Boolean),
   };
-  const eventLd = artist.upcomingGigs.map((gig) => ({
-    "@context": "https://schema.org",
-    "@type": "MusicEvent",
-    name: `${artist.name} at ${gig.venue}`,
-    startDate: gig.date,
-    eventStatus: "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    url: `${SITE_URL}/artist/${artist.slug}`,
-    image: `${SITE_URL}${gig.flyer ?? artist.image}`,
-    location: {
-      "@type": "Place",
-      name: gig.venue,
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: gig.city,
-        addressCountry: gig.country,
-      },
-    },
-    performer: {
-      "@type": artist.artistType === "group" ? "MusicGroup" : "Person",
-      name: artist.name,
-      url: `${SITE_URL}/artist/${artist.slug}`,
-    },
-    ...(gig.ticketLink && {
-      offers: {
-        "@type": "Offer",
-        url: gig.ticketLink,
-        availability: "https://schema.org/InStock",
-      },
-    }),
-  }));
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
-      <BreadcrumbJsonLd items={[
-        { name: "Home", path: "/" },
-        { name: "Artists", path: "/artists" },
-        { name: artist.name, path: `/artist/${artist.slug}` },
-      ]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(artistLd) }}
       />
-      {eventLd.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: serializeJsonLd(eventLd) }}
-        />
-      )}
       {/* Artist hero */}
       <div className="relative border-b px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
-          <Link
-            href="/artists"
-            className="link-quiet mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-widest"
-          >
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            All Artists
-          </Link>
+          <Breadcrumbs
+            className="mb-8"
+            items={[
+              { name: "Home", path: "/" },
+              { name: "Artists", path: "/artists" },
+              { name: artist.name, path: `/artist/${artist.slug}` },
+            ]}
+          />
 
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-[300px_1fr]">
             {/* Artist photo */}

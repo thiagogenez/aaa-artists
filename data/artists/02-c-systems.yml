@@ -31,15 +31,16 @@ pastGigs:
     city: London
     country: UK
 upcomingGigs:
-  # Timescape runs 7–9 Aug 2026; C-Systems confirmed on the lineup, exact day
-  # TBC — update the date once the timetable is out.
-  - date: "2026-08-07"
+  # Timescape runs 7–9 Aug 2026; C-Systems confirmed on the lineup, exact day TBC.
+  - date: "2026-08"
+    eventId: timescape-festival-2026
     venue: Timescape Festival
     city: Huntingdon
     country: UK
     ticketLink: https://www.skiddle.com/whats-on/Peterborough/Abbots-Ripton-Cambridgeshire/Timescape-Festival-2026/41279107/
     flyer: /flyers/timescape-2026.webp
   - date: "2026-08-22"
+    eventId: aaa-fusion-xoyo-2026-08-22
     venue: XOYO
     city: London
     country: UK

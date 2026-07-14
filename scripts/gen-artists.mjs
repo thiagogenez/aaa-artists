@@ -22,6 +22,10 @@ function asDateString(value) {
 }
 
 function isValidDate(value) {
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    const [year, month] = value.split("-").map(Number);
+    return year >= 2000 && month >= 1 && month <= 12;
+  }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.valueOf()) && date.toISOString().startsWith(value);
@@ -52,9 +56,17 @@ function checkGigs(gigs, file, listName) {
     for (const field of GIG_REQUIRED) {
       if (!gig?.[field]) errors.push(`${where}: missing "${field}"`);
     }
+    if (listName === "upcomingGigs" && !gig?.eventId) errors.push(`${where}: missing "eventId"`);
+    if (gig?.eventId && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(gig.eventId)) {
+      errors.push(`${where}: "eventId" must contain lowercase letters, numbers and single hyphens only`);
+    }
     const date = asDateString(gig?.date);
-    if (date && !isValidDate(date)) errors.push(`${where}: "date" must be a real YYYY-MM-DD date`);
+    if (date && !isValidDate(date)) errors.push(`${where}: "date" must be a real YYYY-MM-DD or YYYY-MM date`);
     if (gig?.ticketLink && !isHttpsUrl(gig.ticketLink)) errors.push(`${where}: "ticketLink" must be an https URL`);
+    if (gig?.ticketStatus && !["available", "sold-out", "unavailable"].includes(gig.ticketStatus)) {
+      errors.push(`${where}: "ticketStatus" must be "available", "sold-out", or "unavailable"`);
+    }
+    if (gig?.ticketStatus && !gig?.ticketLink) errors.push(`${where}: "ticketStatus" requires "ticketLink"`);
     if (gig?.flyer && !isLocalAsset(gig.flyer)) errors.push(`${where}: "flyer" must be a local /path image`);
     return { ...gig, date };
   });
@@ -121,6 +133,27 @@ for (const file of files) {
   doc.pastGigs = checkGigs(doc.pastGigs, file, "pastGigs");
   doc.upcomingGigs = checkGigs(doc.upcomingGigs, file, "upcomingGigs");
   artists.push(doc);
+}
+
+const eventsById = new Map();
+for (const artist of artists) {
+  for (const gig of artist.upcomingGigs) {
+    const existing = eventsById.get(gig.eventId);
+    const comparable = JSON.stringify({
+      date: gig.date,
+      venue: gig.venue,
+      city: gig.city,
+      country: gig.country,
+      ticketLink: gig.ticketLink ?? "",
+      ticketStatus: gig.ticketStatus ?? "",
+      flyer: gig.flyer ?? "",
+    });
+    if (existing && existing.comparable !== comparable) {
+      errors.push(`${artist.slug}: eventId "${gig.eventId}" conflicts with ${existing.artist}`);
+    } else if (!existing) {
+      eventsById.set(gig.eventId, { comparable, artist: artist.slug });
+    }
+  }
 }
 
 if (errors.length > 0) {
