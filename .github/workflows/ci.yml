@@ -78,4 +78,5 @@ jobs:
     permissions:
       contents: read
       deployments: write
+    secrets: inherit
     uses: ./.github/workflows/deploy-production.yml
