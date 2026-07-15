@@ -1,5 +1,5 @@
 {
-  // Cloudflare Workers config — serves this site as static assets only.
+  // Cloudflare Workers config — serves the static site and same-origin enquiry API.
   // `npm run build` produces a static export in ./out (next.config: output "export"),
   // and Cloudflare deploys that folder. Having this file present stops Wrangler from
   // auto-detecting "Next.js server" and running the OpenNext adapter (which fails for
@@ -8,9 +8,13 @@
   "name": "aaa-artists",
   "compatibility_date": "2026-07-14",
   "main": "./worker/index.js",
+  "secrets": {
+    "required": ["FORMSPREE_FORM_ID", "TURNSTILE_SECRET_KEY"]
+  },
   "assets": {
     "directory": "./out",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    "run_worker_first": true
   },
   "vars": {
     "ENVIRONMENT": "production"

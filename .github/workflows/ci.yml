@@ -8,30 +8,74 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          node-version: 22
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
           cache: npm
-      - run: npm ci
-      - run: npm run check
-      - run: npm test
-      - run: npm run lint
-      - run: npm run check:dependencies
-      - run: NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key npm run build
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate artist and event data
+        run: npm run check
+      - name: Run Worker tests
+        run: npm test
+      - name: Lint source
+        run: npm run lint
+      - name: Audit production dependencies
+        run: npm run check:dependencies
+      - name: Validate production build requirements
+        env:
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+        run: npm run check:production-env
 
   browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          node-version: 22
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
           cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
-      - run: npm run test:e2e
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build test export
+        env:
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: test-site-key
+        run: npm run build
+      - name: Validate Cloudflare deployment bundle
+        run: npm run check:deploy
+      - name: Install Playwright browsers
+        run: npm exec -- playwright install --with-deps chromium webkit
+      - name: Run browser tests
+        run: npm run test:e2e:run
+
+  deploy-production:
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      vars.DEPLOYMENT_AUTHORITY == 'github'
+    needs: [verify, browser]
+    permissions:
+      contents: read
+      deployments: write
+    uses: ./.github/workflows/deploy-production.yml

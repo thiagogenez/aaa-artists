@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "gen:artists": "node scripts/gen-artists.mjs",
     "gen:cities": "node scripts/gen-cities.mjs",
@@ -11,20 +14,23 @@
     "check:privacy": "node scripts/check-privacy.mjs",
     "check:production-env": "node scripts/check-production-env.mjs",
     "check:dependencies": "npm audit --omit=dev --audit-level=high",
+    "check:deploy": "wrangler deploy --dry-run",
     "check:release": "npm run check:privacy && npm test && npm run lint && npm run build:production",
     "predev": "npm run gen:data",
     "dev": "next dev",
     "prebuild": "npm run gen:data",
     "build": "next build",
     "build:production": "npm run check:production-env && npm run build",
-    "deploy": "npm run build:production && wrangler deploy",
-    "deploy:dry-run": "npm run build:production && wrangler deploy --dry-run",
+    "deploy": "npm run build:production && npm run deploy:built",
+    "deploy:built": "wrangler deploy",
+    "deploy:dry-run": "npm run build:production && npm run check:deploy",
     "smoke:production": "node scripts/smoke-production.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test": "npm run test:worker",
     "test:worker": "node --test tests/worker/*.test.mjs",
-    "test:e2e": "NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key npm run build && playwright test",
+    "test:e2e": "NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key npm run build && npm run test:e2e:run",
+    "test:e2e:run": "playwright test",
     "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
@@ -36,7 +42,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "all-countries-and-cities-json": "^1.0.0",
