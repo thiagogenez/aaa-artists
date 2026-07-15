@@ -8,6 +8,16 @@
   "name": "aaa-artists",
   "compatibility_date": "2026-07-14",
   "main": "./worker/index.js",
+  "routes": [
+    {
+      "pattern": "aaaartists.co",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.aaaartists.co",
+      "custom_domain": true
+    }
+  ],
   "secrets": {
     "required": ["FORMSPREE_FORM_ID", "TURNSTILE_SECRET_KEY"]
   },
