@@ -3,9 +3,18 @@
 ## Project architecture
 
 - AAA Artists is a Next.js 16 App Router static export deployed with a Cloudflare Worker.
+- Build, local-development, and CI tooling target Node.js 24 LTS. Keep `.node-version`,
+  `package.json` engines, GitHub Actions, and `@types/node` on the same major.
+- Keep GitHub Actions pinned to full commit SHAs, with version comments for Dependabot.
+  Preserve read-only CI permissions, checkout credential isolation, bounded timeouts, and
+  the Wrangler dry-run against the same static export exercised by Playwright.
+- GitHub Actions is the intended production deployment authority. Keep deployment dependent
+  on both `verify` and `browser`, protected by the `production` environment and the
+  `DEPLOYMENT_AUTHORITY=github` cutover guard. Do not restore a second automatic path.
 - Editable artist and event content is in `data/artists/*.yml`; generated JSON is not edited.
 - The canonical origin is `https://aaaartists.co`. The Worker redirects HTTP and `www` to
-  HTTPS apex while preserving the path and query string.
+  HTTPS apex while preserving the path and query string. Static Assets must continue to run
+  the Worker first unless equivalent Cloudflare redirect rules replace host normalization.
 - The contact form always posts to same-origin `/api/enquiries`. Do not restore a public
   cross-origin endpoint or direct browser-to-Formspree delivery.
 - The Worker validates streamed bodies, verifies Cloudflare Turnstile before the email
@@ -43,4 +52,3 @@
 - Use `apply_patch` for tracked file edits and preserve unrelated user changes.
 - Keep Conventional Commit messages GPG-signed when requested; never add AI attribution.
 - Before release, follow `docs/deployment.md` and run the proportional test suite.
-

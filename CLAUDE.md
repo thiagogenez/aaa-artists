@@ -10,6 +10,7 @@ shared **AAA Events** social accounts until dedicated artist socials exist.
 ## Tech stack
 
 - **Next.js 16** (App Router, static export)
+- **Node.js 24 LTS** for local builds, GitHub Actions, and matching type definitions
 - **Tailwind CSS v4** (configured via `postcss.config.mjs`, no `tailwind.config.ts` needed)
 - **TypeScript**
 - Cloudflare Worker for the same-origin booking API
@@ -208,7 +209,17 @@ Use `npm run build:production`, `npm run deploy:dry-run`, `npm run deploy`, and 
 `npm run smoke:production`. Current external configuration tasks are tracked in `TODO.md`;
 the authoritative setup and release instructions are in `docs/deployment.md`.
 
-## Current implementation state (2026-07-14)
+GitHub Actions is the intended sole production deployment authority. A push to protected
+`main` deploys only after `verify` and `browser` pass and only when the repository variable
+`DEPLOYMENT_AUTHORITY` equals `github`. Disable Cloudflare's automatic Git deployment before
+enabling that variable. Scheduled event refreshes reuse the same protected workflow.
+
+The repository targets Node.js 24 LTS through `.node-version`, `package.json` engines,
+GitHub Actions, and `@types/node`. Keep those declarations aligned during future LTS
+upgrades. Cloudflare's deployed Worker uses the Workers runtime rather than a full Node.js
+process; the Node version controls dependency installation, generation, tests, and builds.
+
+## Current implementation state (2026-07-15)
 
 - Contact security, same-origin delivery, Turnstile recovery, streaming size limits,
   privacy-safe request IDs, retry semantics, and canonical redirects are implemented.

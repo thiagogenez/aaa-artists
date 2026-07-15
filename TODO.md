@@ -1,22 +1,22 @@
 # AAA Artists release TODO
 
-Updated: 2026-07-14
+Updated: 2026-07-15
 
 Do not place key values, secrets, deploy-hook URLs, or personal data in this file.
 
 ## Required before the protected form is released
 
-- [ ] In Cloudflare Turnstile, create a **Managed** widget named for the AAA Artists booking
+- [x] In Cloudflare Turnstile, create a **Managed** widget named for the AAA Artists booking
   form and restrict it to `aaaartists.co`. The `www` hostname redirects to the apex before
   the form loads.
-- [ ] Add the widget's public **Site key** to the Cloudflare production **build** variable
+- [x] Add the widget's public **Site key** to the GitHub `production` environment variable
   `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
-- [ ] Add the paired private **Secret key** to the deployed Worker's encrypted runtime secret
+- [x] Add the paired private **Secret key** to the deployed Worker's encrypted runtime secret
   `TURNSTILE_SECRET_KEY`. Never give it a `NEXT_PUBLIC_` name or commit it.
-- [ ] Confirm the deployed Worker has the encrypted `FORMSPREE_FORM_ID` secret containing
+- [x] Confirm the deployed Worker has the encrypted `FORMSPREE_FORM_ID` secret containing
   only the Formspree form ID.
-- [ ] Confirm Cloudflare builds with `npm run build:production` and deploys the Worker plus
-  static assets with `npx wrangler deploy`.
+- [ ] Confirm GitHub builds with `npm run build:production` and deploys the Worker plus
+  static assets with the pinned Wrangler CLI.
 - [ ] Deploy the current changes, then run `npm run smoke:production`.
 - [ ] Manually verify the contact form and Turnstile on a real phone and desktop browser.
 - [ ] Verify one-hop permanent redirects from HTTP apex and HTTPS `www` to HTTPS apex,
@@ -44,11 +44,17 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
 
 ## Scheduled event refresh and repository automation
 
-- [ ] Create a Cloudflare production deploy hook for the existing build.
-- [ ] Store the hook URL in GitHub Actions as the encrypted repository secret
-  `CLOUDFLARE_DEPLOY_HOOK`.
-- [ ] Manually run `.github/workflows/refresh-events.yml` once and confirm the production
-  build completes successfully.
+- [x] Re-authenticated the GitHub CLI and verified repository administrator access.
+- [x] Protected `main` for administrators and contributors: pull requests plus the stable
+  `verify` and `browser` checks are required, branches must be current, conversations must
+  be resolved, and force pushes/deletion are blocked.
+- [x] Created the GitHub `production` environment and restricted deployments to `main`.
+- [x] Add scoped `production` environment secrets `CLOUDFLARE_ACCOUNT_ID` and
+  `CLOUDFLARE_API_TOKEN`, plus environment variable `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
+- [x] Disable automatic production deployment from Cloudflare's Git integration, then set
+  the GitHub repository variable `DEPLOYMENT_AUTHORITY=github`. Never enable both paths.
+- [ ] Manually run `.github/workflows/refresh-events.yml` once and confirm the reusable
+  deployment workflow builds, dry-runs, deploys, and passes the production smoke tests.
 - [ ] Confirm the CI workflow runs successfully on the first pushed branch/commit set.
 
 ## Follow-up maintenance
@@ -73,5 +79,7 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
   compacted the footer to align with the header.
 - [x] Added production checks, pinned Wrangler, CI/Dependabot workflows, scheduled event
   refresh automation, deployment smoke tests, and responsive browser coverage.
+- [x] Added a reusable CI-gated GitHub production deployment with concurrency, required
+  Worker secrets, a guarded Cloudflare-authority cutover, and retrying smoke tests.
 - [x] Passed 9 Worker tests, 24 desktop/mobile browser tests, TypeScript, content validation,
   production dry-run, and responsive visual QA.
