@@ -45,7 +45,7 @@
     "js-yaml": "^5.2.1",
     "playwright": "^1.60.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
+    "typescript": "^7",
     "wrangler": "4.110.0"
   }
 }
