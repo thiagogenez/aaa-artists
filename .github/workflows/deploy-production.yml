@@ -51,10 +51,72 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npm run check:deploy
-      - name: Deploy Worker and static assets
+      - name: Verify Cloudflare access and production domains
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npm run deploy:built -- --message "GitHub Actions ${GITHUB_SHA}"
-      - name: Smoke-test production
+        run: npm run check:cloudflare-access
+      - name: Record current production version
+        id: previous
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          deployment="$(npm exec -- wrangler deployments status --name aaa-artists --json)"
+          version_id="$(jq -r '.versions[] | select(.percentage == 100) | .version_id // empty' <<<"$deployment")"
+          [[ "$version_id" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::Could not identify the current 100% production version"; exit 1; }
+          echo "version_id=$version_id" >> "$GITHUB_OUTPUT"
+      - name: Upload inactive release candidate
+        id: candidate
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          deployment_tag="github-${GITHUB_SHA:0:12}"
+          export WRANGLER_OUTPUT_FILE_PATH="${RUNNER_TEMP}/wrangler-upload-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.jsonl"
+          npm exec -- wrangler versions upload --strict --tag "$deployment_tag" --message "GitHub Actions ${GITHUB_SHA}"
+          upload="$(jq -cs '[.[] | select(.type == "version-upload")] | last' "$WRANGLER_OUTPUT_FILE_PATH")"
+          version_id="$(jq -r '.version_id // empty' <<<"$upload")"
+          preview_url="$(jq -r '.preview_url // empty' <<<"$upload")"
+          [[ "$version_id" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::Could not identify the uploaded release candidate"; exit 1; }
+          [[ "$preview_url" =~ ^https://[^/]+\.workers\.dev/?$ ]] || { echo "::error::Wrangler did not return a valid candidate preview URL"; exit 1; }
+          echo "version_id=$version_id" >> "$GITHUB_OUTPUT"
+          echo "preview_url=$preview_url" >> "$GITHUB_OUTPUT"
+      - name: Smoke-test inactive release candidate
+        env:
+          SMOKE_ORIGIN: ${{ steps.candidate.outputs.preview_url }}
         run: npm run smoke:production
+      - name: Promote verified release candidate
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CANDIDATE_VERSION_ID: ${{ steps.candidate.outputs.version_id }}
+          PREVIOUS_VERSION_ID: ${{ steps.previous.outputs.version_id }}
+        run: |
+          set +e
+          npm exec -- wrangler versions deploy "${CANDIDATE_VERSION_ID}@100" --yes --message "GitHub Actions ${GITHUB_SHA}"
+          promotion_exit=$?
+          set -e
+
+          if [[ "$promotion_exit" -eq 0 ]]; then
+            exit 0
+          fi
+
+          echo "::warning::Wrangler reported a promotion error; reconciling Cloudflare's active deployment state"
+          for delay in 0 2 4 8 12; do
+            if [[ "$delay" -gt 0 ]]; then sleep "$delay"; fi
+            if deployment="$(npm exec -- wrangler deployments status --name aaa-artists --json)"; then
+              active_version_id="$(jq -r '.versions[] | select(.percentage == 100) | .version_id // empty' <<<"$deployment")"
+              if [[ "$active_version_id" == "$CANDIDATE_VERSION_ID" ]]; then
+                echo "::warning::Cloudflare confirms the candidate was promoted; treating the release as successful"
+                exit 0
+              fi
+              if [[ "$active_version_id" == "$PREVIOUS_VERSION_ID" ]]; then
+                echo "::error::Promotion failed and production remains on the previous version"
+                exit "$promotion_exit"
+              fi
+            fi
+          done
+
+          echo "::error::Promotion result is unknown after repeated Cloudflare status checks; inspect the deployment before retrying"
+          exit "$promotion_exit"

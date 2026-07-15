@@ -13,6 +13,7 @@
     "check": "node scripts/gen-artists.mjs --check",
     "check:privacy": "node scripts/check-privacy.mjs",
     "check:production-env": "node scripts/check-production-env.mjs",
+    "check:cloudflare-access": "node scripts/check-cloudflare-deployment-access.mjs",
     "check:dependencies": "npm audit --omit=dev --audit-level=high",
     "check:deploy": "wrangler deploy --dry-run",
     "check:release": "npm run check:privacy && npm test && npm run lint && npm run build:production",

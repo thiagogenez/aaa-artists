@@ -50,6 +50,12 @@ Wrangler is pinned in `devDependencies`. Before deployment run `npm run deploy:d
 
 Attach `aaaartists.co` and `www.aaaartists.co` to the Worker. Static Assets is configured with `run_worker_first: true` so the Worker can permanently redirect HTTP apex and HTTPS `www` requests before an existing page asset is served, preserving the path and query string. A Cloudflare redirect rule may replace this only after equivalent one-hop behaviour is verified; if it does, narrow Worker-first routing to `/api/*` to avoid unnecessary Worker invocations.
 
+The production workflow verifies its API permissions and confirms that both production domains already target the Worker before uploading application code. It then uploads a commit-tagged Worker version without deploying it and smoke-tests that exact version through its `workers.dev` preview URL. Promotion to 100% production traffic is the final workflow action. A failed validation, build, access check, upload, or candidate smoke test therefore leaves the active production deployment untouched; routine releases do not use automatic rollback.
+
+Domain attachment is infrastructure rather than part of each application release. When `wrangler.jsonc` domain routes intentionally change, apply and verify that change separately with `npx wrangler triggers deploy` before merging the application release. This keeps route mutations out of the traffic-promotion transaction.
+
+If Wrangler reports an error while sending the final promotion request, the workflow repeatedly queries the active deployment. It reports success when Cloudflare confirms the candidate is active and reports failure when the previous version remains active. An unresolved result is surfaced for manual inspection rather than issuing an automatic rollback.
+
 The obsolete Vercel hostname cannot be redirected by Cloudflare because Cloudflare does not control it. Configure a permanent redirect in the old Vercel project or retire the old deployment after its URLs have been removed from search.
 
 After deployment, verify:
@@ -74,7 +80,7 @@ GitHub Actions is the intended production deployment authority. On a push to pro
 The deployment remains fail-safe until the repository variable `DEPLOYMENT_AUTHORITY` is exactly `github`. Perform the one-time cutover in this order:
 
 1. Create a protected GitHub environment named `production`, restricted to `main`.
-2. Add environment secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Scope the API token to the AAA Artists Cloudflare account and only the Worker permissions required for deployment.
+2. Add environment variable `CLOUDFLARE_ACCOUNT_ID` and environment secret `CLOUDFLARE_API_TOKEN`. Scope the API token to the AAA Artists Cloudflare account and only the Worker and zone permissions required by the deployment preflight and version promotion. `CLOUDFLARE_ZONE_ID` is not required; the preflight resolves the `aaaartists.co` zone from the account.
 3. Add environment variable `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
 4. Disable automatic production deployments from Cloudflare's Git integration.
 5. Add repository variable `DEPLOYMENT_AUTHORITY=github`.
