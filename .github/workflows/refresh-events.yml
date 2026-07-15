@@ -7,13 +7,14 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: production-event-refresh
+  cancel-in-progress: false
+
 jobs:
-  trigger-deployment:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger the existing Cloudflare production build
-        env:
-          CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
-        run: |
-          test -n "$CLOUDFLARE_DEPLOY_HOOK"
-          curl --fail --silent --show-error --request POST "$CLOUDFLARE_DEPLOY_HOOK"
+  deploy-production:
+    if: vars.DEPLOYMENT_AUTHORITY == 'github'
+    permissions:
+      contents: read
+      deployments: write
+    uses: ./.github/workflows/deploy-production.yml
