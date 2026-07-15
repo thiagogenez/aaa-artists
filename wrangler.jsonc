@@ -8,6 +8,16 @@
   "name": "aaa-artists",
   "compatibility_date": "2026-07-14",
   "main": "./worker/index.js",
+  // Production traffic is served only on the custom domains below. Keep the
+  // Worker off its workers.dev root ("workers_dev": false), but enable per-version
+  // Preview URLs so the deploy workflow can smoke-test the exact inactive
+  // candidate at https://<version>-aaa-artists.<subdomain>.workers.dev before
+  // promoting it to 100% traffic. NOTE: `wrangler versions upload` only READS
+  // this setting — Preview URLs must be enabled once on the Worker itself
+  // (Cloudflare dashboard, or a one-time `npx wrangler triggers deploy`) so the
+  // first authoritative run's upload returns a preview URL. See docs/deployment.md.
+  "workers_dev": false,
+  "preview_urls": true,
   "routes": [
     {
       "pattern": "aaaartists.co",

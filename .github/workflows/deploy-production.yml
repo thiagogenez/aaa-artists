@@ -79,7 +79,14 @@ jobs:
           version_id="$(jq -r '.version_id // empty' <<<"$upload")"
           preview_url="$(jq -r '.preview_url // empty' <<<"$upload")"
           [[ "$version_id" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::Could not identify the uploaded release candidate"; exit 1; }
-          [[ "$preview_url" =~ ^https://[^/]+\.workers\.dev/?$ ]] || { echo "::error::Wrangler did not return a valid candidate preview URL"; exit 1; }
+          # The preview URL must be version-prefixed (https://<8-hex-version>-<worker>.<subdomain>.workers.dev)
+          # so the smoke test exercises this exact inactive candidate — never a stable
+          # alias or the workers.dev root, which could point at a different version.
+          if [[ ! "$preview_url" =~ ^https://[0-9a-f]{8}-[a-z0-9-]+\.[^/]+\.workers\.dev/?$ ]]; then
+            echo "::error::Candidate ${version_id} uploaded, but Wrangler returned no version-prefixed Preview URL (got: '${preview_url:-<empty>}')."
+            echo "::error::Version Preview URLs must be enabled on the aaa-artists Worker so the exact inactive candidate can be smoke-tested before promotion. wrangler.jsonc sets \"preview_urls\": true, but \`wrangler versions upload\` only reads this — enable Preview URLs once on the Worker (Cloudflare dashboard, or a one-time \`npx wrangler triggers deploy\`). See docs/deployment.md. Not promoting."
+            exit 1
+          fi
           echo "version_id=$version_id" >> "$GITHUB_OUTPUT"
           echo "preview_url=$preview_url" >> "$GITHUB_OUTPUT"
       - name: Smoke-test inactive release candidate
