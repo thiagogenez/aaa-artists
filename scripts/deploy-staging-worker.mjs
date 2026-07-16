@@ -15,7 +15,14 @@ const STAGING_URL_PATTERN = /^https:\/\/aaa-artists-staging\.[^/]+\.workers\.dev
 
 try {
   const outputFilePath = join(process.env.RUNNER_TEMP || tmpdir(), `wrangler-staging-${process.pid}.jsonl`);
-  const deployExit = runWrangler(["deploy", "--env", "staging"], {
+  const deployArgs = ["deploy", "--env", "staging"];
+  // Annotate CI deploys like production so the Cloudflare version history shows
+  // which commit each staging version came from. Local deploys stay unannotated.
+  const commit = process.env.GITHUB_SHA?.trim();
+  if (commit) {
+    deployArgs.push("--tag", `github-${commit.slice(0, 12)}`, "--message", `GitHub Actions ${commit}`);
+  }
+  const deployExit = runWrangler(deployArgs, {
     env: { WRANGLER_OUTPUT_FILE_PATH: outputFilePath },
   });
   if (deployExit !== 0) throw new Error(`wrangler deploy --env staging exited with status ${deployExit}`);
