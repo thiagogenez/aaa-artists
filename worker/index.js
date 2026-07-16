@@ -180,7 +180,12 @@ async function verifyTurnstile(request, env, token) {
   });
   if (!response.ok) return false;
   const result = await response.json();
-  if (!result.success || result.action !== "booking_enquiry") return false;
+  if (!result.success) return false;
+  // Cloudflare's always-pass test keys return no action and hostname "example.com",
+  // flagged by metadata.result_with_testing_key. Accept them only outside production
+  // so staging exercises the full siteverify path without the real widget secret.
+  if (env.ENVIRONMENT !== "production" && result.metadata?.result_with_testing_key === true) return true;
+  if (result.action !== "booking_enquiry") return false;
   return result.hostname === (env.TURNSTILE_HOSTNAME || SITE_HOSTNAME);
 }
 
@@ -325,7 +330,17 @@ const worker = {
       }
       return handleEnquiry(request, env);
     }
-    return env.ASSETS.fetch(request);
+    const assetResponse = await env.ASSETS.fetch(request);
+    if (env.ENVIRONMENT === "production") return assetResponse;
+    // Non-production deployments (staging on workers.dev) serve the same export with
+    // production canonical URLs baked in; keep them out of search results.
+    const headers = new Headers(assetResponse.headers);
+    headers.set("X-Robots-Tag", "noindex");
+    return new Response(assetResponse.body, {
+      status: assetResponse.status,
+      statusText: assetResponse.statusText,
+      headers,
+    });
   },
 };
 

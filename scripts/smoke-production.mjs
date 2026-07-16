@@ -5,9 +5,18 @@ const REQUEST_TIMEOUT_MS = 10_000;
 const RETRY_DELAYS_MS = [0, 2_000, 4_000, 8_000, 12_000];
 const configuredOrigin = process.env.SMOKE_ORIGIN?.trim();
 const targetOrigin = configuredOrigin ? new URL(configuredOrigin).origin : SITE_ORIGIN;
+// canonical: production custom domains (no SMOKE_ORIGIN).
+// candidate: an inactive production version's preview URL (SMOKE_ORIGIN set).
+// staging: the staging Worker's workers.dev root (SMOKE_TARGET=staging + SMOKE_ORIGIN).
+const smokeTarget = process.env.SMOKE_TARGET === "staging"
+  ? "staging"
+  : configuredOrigin ? "candidate" : "canonical";
 
+if (smokeTarget === "staging" && !configuredOrigin) {
+  throw new Error("SMOKE_TARGET=staging requires SMOKE_ORIGIN to be the staging workers.dev origin");
+}
 if (configuredOrigin && !targetOrigin.endsWith(".workers.dev")) {
-  throw new Error("SMOKE_ORIGIN must be a Cloudflare workers.dev preview URL");
+  throw new Error("SMOKE_ORIGIN must be a Cloudflare workers.dev URL");
 }
 
 function requestOptions(options = {}) {
@@ -33,13 +42,16 @@ async function check(name, run) {
   });
 }
 
-await check(configuredOrigin ? "candidate homepage" : "apex homepage", async () => {
+await check(smokeTarget === "canonical" ? "apex homepage" : `${smokeTarget} homepage`, async () => {
   const response = await fetch(`${targetOrigin}/`, requestOptions({ redirect: "manual" }));
   if (response.status !== 200) throw new Error(`expected 200, received ${response.status}`);
   if (!response.headers.get("content-security-policy")) throw new Error("CSP header is missing");
+  if (smokeTarget === "staging" && response.headers.get("x-robots-tag") !== "noindex") {
+    throw new Error("staging must send X-Robots-Tag: noindex");
+  }
 });
 
-if (!configuredOrigin) {
+if (smokeTarget === "canonical") {
   const redirectPath = "/events?source=production-smoke";
   for (const source of ["http://aaaartists.co", "https://www.aaaartists.co"]) {
     await check(`${source} redirect`, async () => {
@@ -50,7 +62,7 @@ if (!configuredOrigin) {
   }
 }
 
-await check(configuredOrigin ? "candidate enquiry route" : "Worker enquiry route", async () => {
+await check(smokeTarget === "canonical" ? "Worker enquiry route" : `${smokeTarget} enquiry route`, async () => {
   const response = await fetch(`${targetOrigin}/api/enquiries`, requestOptions({
     method: "POST",
     headers: { "Content-Type": "application/json" },

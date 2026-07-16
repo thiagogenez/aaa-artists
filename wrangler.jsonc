@@ -4,51 +4,92 @@
   // and Cloudflare deploys that folder. Having this file present stops Wrangler from
   // auto-detecting "Next.js server" and running the OpenNext adapter (which fails for
   // a static export).
+  //
+  // Two deploy targets are defined under "env":
+  //   --env staging     https://aaa-artists-staging.<subdomain>.workers.dev
+  //                     Deployed automatically on every push to main (after checks).
+  //   --env production  https://aaaartists.co (custom domains only)
+  //                     Deployed only by the manual "Deploy production" workflow via
+  //                     the transactional upload → candidate smoke → promote flow.
+  // Binding-like keys (vars, ratelimits, secrets) are NOT inherited by named
+  // environments, so each env spells them out in full.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "aaa-artists",
   "compatibility_date": "2026-07-14",
   "main": "./worker/index.js",
-  // Production traffic is served only on the custom domains below. Keep the
-  // Worker off its workers.dev root ("workers_dev": false), but enable per-version
-  // Preview URLs so the deploy workflow can smoke-test the exact inactive
-  // candidate at https://<version>-aaa-artists.<subdomain>.workers.dev before
-  // promoting it to 100% traffic. NOTE: `wrangler versions upload` only READS
-  // this setting — Preview URLs must be enabled once on the Worker itself
-  // (Cloudflare dashboard, or a one-time `npx wrangler triggers deploy`) so the
-  // first authoritative run's upload returns a preview URL. See docs/deployment.md.
-  "workers_dev": false,
-  "preview_urls": true,
-  "routes": [
-    {
-      "pattern": "aaaartists.co",
-      "custom_domain": true
-    },
-    {
-      "pattern": "www.aaaartists.co",
-      "custom_domain": true
-    }
-  ],
-  "secrets": {
-    "required": ["FORMSPREE_FORM_ID", "TURNSTILE_SECRET_KEY"]
-  },
   "assets": {
     "directory": "./out",
     "binding": "ASSETS",
     "run_worker_first": true
   },
-  "vars": {
-    "ENVIRONMENT": "production"
-  },
-  "ratelimits": [
-    {
-      "name": "CONTACT_ACTOR_RATE_LIMIT",
-      "namespace_id": "2001",
-      "simple": { "limit": 10, "period": 60 }
+  "env": {
+    "staging": {
+      "name": "aaa-artists-staging",
+      // Staging is served on its workers.dev root; the Worker adds
+      // X-Robots-Tag: noindex to every asset response outside production.
+      "workers_dev": true,
+      "preview_urls": true,
+      "vars": {
+        "ENVIRONMENT": "staging"
+      },
+      // Staging uses Cloudflare's always-pass Turnstile test key pair and may point
+      // FORMSPREE_FORM_ID at a dedicated staging form. Both must still be set so a
+      // misconfigured staging deploy fails at publish time, like production.
+      "secrets": {
+        "required": ["FORMSPREE_FORM_ID", "TURNSTILE_SECRET_KEY"]
+      },
+      "ratelimits": [
+        {
+          "name": "CONTACT_ACTOR_RATE_LIMIT",
+          "namespace_id": "2101",
+          "simple": { "limit": 10, "period": 60 }
+        },
+        {
+          "name": "CONTACT_EMAIL_RATE_LIMIT",
+          "namespace_id": "2102",
+          "simple": { "limit": 5, "period": 60 }
+        }
+      ]
     },
-    {
-      "name": "CONTACT_EMAIL_RATE_LIMIT",
-      "namespace_id": "2002",
-      "simple": { "limit": 5, "period": 60 }
+    "production": {
+      "name": "aaa-artists",
+      // Production traffic is served only on the custom domains below. Keep the
+      // Worker off its workers.dev root ("workers_dev": false), but enable per-version
+      // Preview URLs so the deploy workflow can smoke-test the exact inactive
+      // candidate at https://<version>-aaa-artists.<subdomain>.workers.dev before
+      // promoting it to 100% traffic. NOTE: `wrangler versions upload` only READS
+      // this setting — it was enabled on the Worker with a one-time
+      // `npx wrangler triggers deploy` on 2026-07-15. See docs/deployment.md.
+      "workers_dev": false,
+      "preview_urls": true,
+      "routes": [
+        {
+          "pattern": "aaaartists.co",
+          "custom_domain": true
+        },
+        {
+          "pattern": "www.aaaartists.co",
+          "custom_domain": true
+        }
+      ],
+      "vars": {
+        "ENVIRONMENT": "production"
+      },
+      "secrets": {
+        "required": ["FORMSPREE_FORM_ID", "TURNSTILE_SECRET_KEY"]
+      },
+      "ratelimits": [
+        {
+          "name": "CONTACT_ACTOR_RATE_LIMIT",
+          "namespace_id": "2001",
+          "simple": { "limit": 10, "period": 60 }
+        },
+        {
+          "name": "CONTACT_EMAIL_RATE_LIMIT",
+          "namespace_id": "2002",
+          "simple": { "limit": 5, "period": 60 }
+        }
+      ]
     }
-  ]
+  }
 }
