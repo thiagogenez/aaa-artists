@@ -197,6 +197,45 @@ test("preserves upstream retry semantics without exposing enquiry data", async (
   assert.doesNotMatch(JSON.stringify(body), /jane@example\.com|Jane Booker/);
 });
 
+test("accepts Turnstile testing-key results only outside production", async (context) => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    if (String(url).includes("siteverify")) {
+      return Response.json({ success: true, hostname: "example.com", metadata: { result_with_testing_key: true } });
+    }
+    return Response.json({ ok: true });
+  };
+  context.after(() => { globalThis.fetch = originalFetch; });
+
+  const staging = await worker.fetch(
+    request(validPayload({ turnstileToken: "XXXX.DUMMY.TOKEN.XXXX" })),
+    env({ ENVIRONMENT: "staging", TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA" }),
+  );
+  const production = await worker.fetch(
+    request(validPayload({ turnstileToken: "XXXX.DUMMY.TOKEN.XXXX" })),
+    env({ ENVIRONMENT: "production", TURNSTILE_SECRET_KEY: "real-secret" }),
+  );
+  assert.equal(staging.status, 200);
+  assert.equal(production.status, 400);
+});
+
+test("marks non-production asset responses noindex and leaves production untouched", async () => {
+  const asset = () => new Response("asset", { headers: { "Content-Type": "text/html" } });
+  const staging = await worker.fetch(
+    new Request("https://aaa-artists-staging.example.workers.dev/"),
+    env({ ENVIRONMENT: "staging", ASSETS: { fetch: async () => asset() } }),
+  );
+  const production = await worker.fetch(
+    new Request("https://aaaartists.co/"),
+    env({ ENVIRONMENT: "production", ASSETS: { fetch: async () => asset() } }),
+  );
+  assert.equal(staging.status, 200);
+  assert.equal(staging.headers.get("X-Robots-Tag"), "noindex");
+  assert.equal(await staging.text(), "asset");
+  assert.equal(production.headers.get("X-Robots-Tag"), null);
+  assert.equal(production.headers.get("Content-Type"), "text/html");
+});
+
 test("redirects HTTP apex and www to the HTTPS canonical origin", async () => {
   const http = await worker.fetch(new Request("http://aaaartists.co/events?source=test"), env());
   const www = await worker.fetch(new Request("https://www.aaaartists.co/privacy"), env());

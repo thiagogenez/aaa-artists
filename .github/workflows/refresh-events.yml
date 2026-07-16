@@ -1,5 +1,11 @@
 name: Refresh event dates
 
+# The static event split and structured data need a fresh build as dates pass.
+# Staging is refreshed unconditionally. Production is refreshed only when main
+# is the same commit already live in production — a date-only rebuild of code
+# that was already released. If main is ahead, production is skipped: new code
+# reaches production only through a manual "Deploy production" dispatch.
+
 on:
   schedule:
     - cron: "17 3 * * *"
@@ -12,8 +18,47 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy-production:
+  refresh-staging:
     if: vars.DEPLOYMENT_AUTHORITY == 'github'
+    permissions:
+      contents: read
+      deployments: write
+    secrets: inherit
+    uses: ./.github/workflows/deploy-staging.yml
+
+  production-guard:
+    if: vars.DEPLOYMENT_AUTHORITY == 'github'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: production
+    permissions:
+      contents: read
+    outputs:
+      refresh: ${{ steps.compare.outputs.refresh }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Compare main with the live production commit
+        id: compare
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node scripts/check-production-refresh.mjs
+
+  refresh-production:
+    needs: [production-guard]
+    if: needs.production-guard.outputs.refresh == 'true'
     permissions:
       contents: read
       deployments: write

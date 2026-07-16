@@ -1,0 +1,72 @@
+name: Deploy staging
+
+# Deploys the aaa-artists-staging Worker and static assets to its workers.dev
+# origin. Staging is the pre-production test bed: it uses the Turnstile test key
+# pair, serves every page with X-Robots-Tag: noindex, and never touches the
+# production Worker or the custom domains. A plain `wrangler deploy` is
+# deliberate here — the transactional upload/promote flow is a production
+# safeguard, and staging exists to absorb failures.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Job-level so it still serializes when this workflow is called from CI and
+    # the scheduled refresh (workflow-level concurrency is ignored in called
+    # reusable workflows).
+    concurrency:
+      group: staging-worker-deployment
+      cancel-in-progress: false
+    environment:
+      name: staging
+      url: ${{ steps.publish.outputs.staging_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Verify staging configuration
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+        run: |
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Missing staging CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Missing staging CLOUDFLARE_API_TOKEN"; exit 1; }
+          test -n "$NEXT_PUBLIC_TURNSTILE_SITE_KEY" || { echo "::error::Missing staging NEXT_PUBLIC_TURNSTILE_SITE_KEY"; exit 1; }
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate artist and event data
+        run: npm run check
+      - name: Build staging export
+        env:
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+        run: npm run build:production
+      - name: Validate staging deployment bundle
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npm run check:deploy:staging
+      - name: Deploy staging Worker and assets
+        id: publish
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node scripts/deploy-staging-worker.mjs
+      - name: Smoke-test staging
+        env:
+          SMOKE_ORIGIN: ${{ steps.publish.outputs.staging_url }}
+        run: npm run smoke:staging

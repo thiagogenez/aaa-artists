@@ -209,10 +209,28 @@ Use `npm run build:production`, `npm run deploy:dry-run`, `npm run deploy`, and 
 `npm run smoke:production`. Current external configuration tasks are tracked in `TODO.md`;
 the authoritative setup and release instructions are in `docs/deployment.md`.
 
-GitHub Actions is the intended sole production deployment authority. A push to protected
-`main` deploys only after `verify` and `browser` pass and only when the repository variable
-`DEPLOYMENT_AUTHORITY` equals `github`. Disable Cloudflare's automatic Git deployment before
-enabling that variable. Scheduled event refreshes reuse the same protected workflow.
+There are three environments. Dev is local (`npm run dev`). Staging is the
+`aaa-artists-staging` Worker on `https://aaa-artists-staging.thiagogenez.workers.dev`,
+deployed automatically on every push to protected `main` after the reusable checks suite
+(`checks / verify` and `checks / browser`) passes; it serves every page with
+`X-Robots-Tag: noindex` and uses the Turnstile test key pair. Production is the
+`aaa-artists` Worker on `https://aaaartists.co`, released only by manually dispatching the
+**Deploy production** workflow on `main`. Both targets live in `wrangler.jsonc` under
+`env.staging` and `env.production`; every Wrangler command needs `--env`.
+
+GitHub Actions is the sole deployment authority, guarded by the repository variable
+`DEPLOYMENT_AUTHORITY=github`; Cloudflare's automatic Git deployment must stay disabled.
+The daily event refresh updates staging unconditionally and rebuilds production only when
+`main` is the exact commit already live in production, so new code never reaches
+production through the schedule.
+
+The production workflow is transactional: it re-runs checks, verifies configuration and
+domains, uploads an inactive commit-tagged candidate, smoke-tests that exact candidate on
+its version-prefixed preview URL, and only then promotes it to 100% traffic, followed by a
+canonical-domain smoke test. Do not replace this with an early `wrangler deploy` or add
+routine automatic rollback. Deployment logic lives in versioned `scripts/*.mjs` files, not
+inline workflow shell. Cloudflare custom-domain/route mutations remain a separate
+infrastructure operation.
 
 The repository targets Node.js 24 LTS through `.node-version`, `package.json` engines,
 GitHub Actions, and `@types/node`. Keep those declarations aligned during future LTS
@@ -220,6 +238,25 @@ upgrades. Cloudflare's deployed Worker uses the Workers runtime rather than a fu
 process; the Node version controls dependency installation, generation, tests, and builds.
 
 ## Current implementation state (2026-07-15)
+
+- The transactional GitHub Actions deployment path is live and verified end to end.
+  PR #12 (merged at `815b46d`) introduced the workflow; PR #13 (merged at `49f0ef8`)
+  fixed inactive-candidate preview discovery.
+- Root cause of the earlier failed run `29446902618`: Version Preview URLs were never
+  enabled on the `aaa-artists` Worker, so `wrangler versions upload` returned no
+  `preview_url`. `wrangler.jsonc` now sets `preview_urls: true` with `workers_dev: false`,
+  the workflow only accepts a version-prefixed preview URL, and the one-time enablement
+  was applied with `npx wrangler triggers deploy` on 2026-07-15.
+- Run `29450382754` completed the full transaction: uploaded candidate
+  `5a9cc6d4-0ee9-4e0d-8f14-44261c7683ba` (tag `github-49f0ef883098`), smoke-tested it on
+  its version-prefixed preview URL, promoted it to 100%, and `npm run smoke:production`
+  then passed against the canonical domains.
+- The pipeline was then redesigned into dev/staging/production (2026-07-16): pushes to
+  `main` deploy staging only; production releases require a manual "Deploy production"
+  dispatch. The `aaa-artists-staging` Worker, its secrets (Turnstile test pair, Formspree
+  placeholder), the GitHub `staging` environment, and the `checks / verify` +
+  `checks / browser` required branch checks are already provisioned. The staging
+  `CLOUDFLARE_API_TOKEN` environment secret must be set by the repository owner.
 
 - Contact security, same-origin delivery, Turnstile recovery, streaming size limits,
   privacy-safe request IDs, retry semantics, and canonical redirects are implemented.

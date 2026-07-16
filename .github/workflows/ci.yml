@@ -1,5 +1,9 @@
 name: CI
 
+# Pull requests run the checks suite only. Pushes to main additionally deploy
+# STAGING (workers.dev). Production is never deployed from here — it is released
+# only by the manually dispatched "Deploy production" workflow.
+
 on:
   pull_request:
   push:
@@ -13,70 +17,19 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  verify:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version-file: .node-version
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
-      - name: Validate artist and event data
-        run: npm run check
-      - name: Run Worker tests
-        run: npm test
-      - name: Lint source
-        run: npm run lint
-      - name: Audit production dependencies
-        run: npm run check:dependencies
-      - name: Validate production build requirements
-        env:
-          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
-        run: npm run check:production-env
+  checks:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/checks.yml
 
-  browser:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version-file: .node-version
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
-      - name: Build test export
-        env:
-          NEXT_PUBLIC_TURNSTILE_SITE_KEY: test-site-key
-        run: npm run build
-      - name: Validate Cloudflare deployment bundle
-        run: npm run check:deploy
-      - name: Install Playwright browsers
-        run: npm exec -- playwright install --with-deps chromium webkit
-      - name: Run browser tests
-        run: npm run test:e2e:run
-
-  deploy-production:
+  deploy-staging:
     if: >-
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       vars.DEPLOYMENT_AUTHORITY == 'github'
-    needs: [verify, browser]
+    needs: [checks]
     permissions:
       contents: read
       deployments: write
     secrets: inherit
-    uses: ./.github/workflows/deploy-production.yml
+    uses: ./.github/workflows/deploy-staging.yml

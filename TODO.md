@@ -1,8 +1,48 @@
 # AAA Artists release TODO
 
-Updated: 2026-07-15
+Updated: 2026-07-16
 
 Do not place key values, secrets, deploy-hook URLs, or personal data in this file.
+
+## Staging/production pipeline rollout
+
+- [ ] Set the `staging` GitHub environment secret `CLOUDFLARE_API_TOKEN` (same
+  account-scoped token as production): `gh secret set CLOUDFLARE_API_TOKEN --env staging`.
+- [ ] Merge the `feat/staging-environment` PR. The push to `main` must deploy staging only
+  and leave production untouched.
+- [ ] Verify `https://aaa-artists-staging.thiagogenez.workers.dev` renders, sends
+  `X-Robots-Tag: noindex`, and passes `npm run smoke:staging`.
+- [ ] Dispatch **Deploy production** once and confirm: checks re-run, candidate uploaded
+  and smoke-tested on its preview URL, same version promoted, canonical smoke passes.
+- [ ] Optionally create a dedicated staging Formspree form and replace the staging
+  Worker's placeholder `FORMSPREE_FORM_ID` so end-to-end delivery can be tested there.
+- [x] Staging Worker `aaa-artists-staging` created and deployed with Turnstile test-pair
+  secrets; GitHub `staging` environment created with `CLOUDFLARE_ACCOUNT_ID` and the
+  Turnstile test site key; required branch checks renamed to `checks / verify` and
+  `checks / browser` (2026-07-16).
+
+## Immediate handoff after PR #12
+
+- [x] Merged PR #12 into `main` at merge commit `815b46d`. The transactional workflow
+  from commit `90080ab` is now the repository's production deployment path.
+- [x] Confirmed the post-merge `verify` and `browser` jobs passed in GitHub Actions run
+  `29446902618`.
+- [x] Confirmed the deployment preflight passed: production configuration, build, bundle,
+  Cloudflare API access, custom domains, and the current active version were all valid.
+- [x] Fixed inactive-candidate preview discovery in PR #13 (merged into `main` at
+  `49f0ef8`). Root cause: Version Preview URLs were never enabled on the `aaa-artists`
+  Worker, so Wrangler's `version-upload` output legitimately had no `preview_url`.
+  `wrangler.jsonc` now declares `preview_urls: true` with `workers_dev: false`, and the
+  workflow only accepts a version-prefixed preview URL.
+- [x] Verified the supported mechanism: Cloudflare Version Preview URLs
+  (`https://<version>-aaa-artists.<subdomain>.workers.dev`) serve the exact inactive
+  version's Worker and static assets. The invariant is preserved and strengthened.
+- [x] Performed the one-time enablement with `npx wrangler triggers deploy` (non-versioned
+  settings only; custom domains unchanged, no version promoted).
+- [x] Confirmed the corrected run end to end: run `29450382754` captured the candidate's
+  version-prefixed preview URL, passed the candidate smoke test, promoted the same version
+  `5a9cc6d4-0ee9-4e0d-8f14-44261c7683ba` to 100%, and `npm run smoke:production` passed
+  against the canonical production domains.
 
 ## Required before the protected form is released
 
@@ -15,9 +55,9 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
   `TURNSTILE_SECRET_KEY`. Never give it a `NEXT_PUBLIC_` name or commit it.
 - [x] Confirm the deployed Worker has the encrypted `FORMSPREE_FORM_ID` secret containing
   only the Formspree form ID.
-- [ ] Confirm GitHub builds with `npm run build:production` and deploys the Worker plus
-  static assets with the pinned Wrangler CLI.
-- [ ] Deploy the current changes, then run `npm run smoke:production`.
+- [x] Confirm GitHub builds with `npm run build:production` and deploys the Worker plus
+  static assets with the pinned Wrangler CLI (run `29450382754`).
+- [x] Deploy the current changes, then run `npm run smoke:production`.
 - [ ] Manually verify the contact form and Turnstile on a real phone and desktop browser.
 - [ ] Verify one-hop permanent redirects from HTTP apex and HTTPS `www` to HTTPS apex,
   preserving paths and query strings.
@@ -53,9 +93,11 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
   `CLOUDFLARE_API_TOKEN`, plus environment variable `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
 - [x] Disable automatic production deployment from Cloudflare's Git integration, then set
   the GitHub repository variable `DEPLOYMENT_AUTHORITY=github`. Never enable both paths.
-- [ ] Manually run `.github/workflows/refresh-events.yml` once and confirm the reusable
-  deployment workflow builds, dry-runs, deploys, and passes the production smoke tests.
-- [ ] Confirm the CI workflow runs successfully on the first pushed branch/commit set.
+- [x] Manually run `.github/workflows/refresh-events.yml` once and confirm the reusable
+  deployment workflow builds, dry-runs, deploys, and passes the production smoke tests
+  (run `29450382754` on 2026-07-15).
+- [x] Confirm the PR and protected-`main` `verify` and `browser` jobs pass. The
+  inactive-candidate preview issue is resolved; the transactional deployment path is live.
 
 ## Follow-up maintenance
 
@@ -81,5 +123,8 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
   refresh automation, deployment smoke tests, and responsive browser coverage.
 - [x] Added a reusable CI-gated GitHub production deployment with concurrency, required
   Worker secrets, a guarded Cloudflare-authority cutover, and retrying smoke tests.
+- [x] Merged the transactional Cloudflare release workflow: preflight first, inactive
+  candidate upload, candidate smoke testing, and final traffic promotion with ambiguous
+  result reconciliation and no routine automatic rollback.
 - [x] Passed 9 Worker tests, 24 desktop/mobile browser tests, TypeScript, content validation,
   production dry-run, and responsive visual QA.
