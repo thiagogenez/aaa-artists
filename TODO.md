@@ -4,22 +4,27 @@ Updated: 2026-07-16
 
 Do not place key values, secrets, deploy-hook URLs, or personal data in this file.
 
-## Staging/production pipeline rollout
+## Staging/production pipeline rollout (completed 2026-07-16)
 
-- [ ] Set the `staging` GitHub environment secret `CLOUDFLARE_API_TOKEN` (same
-  account-scoped token as production): `gh secret set CLOUDFLARE_API_TOKEN --env staging`.
-- [ ] Merge the `feat/staging-environment` PR. The push to `main` must deploy staging only
-  and leave production untouched.
-- [ ] Verify `https://aaa-artists-staging.thiagogenez.workers.dev` renders, sends
-  `X-Robots-Tag: noindex`, and passes `npm run smoke:staging`.
-- [ ] Dispatch **Deploy production** once and confirm: checks re-run, candidate uploaded
-  and smoke-tested on its preview URL, same version promoted, canonical smoke passes.
+- [x] Staging Worker `aaa-artists-staging` created and deployed with Turnstile test-pair
+  secrets; GitHub `staging` environment created with `CLOUDFLARE_ACCOUNT_ID`, the
+  Turnstile test site key, and `CLOUDFLARE_API_TOKEN` (Cloudflare token rolled and set in
+  both environments); required branch checks renamed to `checks / verify` and
+  `checks / browser`.
+- [x] Merged PR #14 (three-tier pipeline), PR #15 (staging version annotations), and
+  PR #16 (drop post-promotion canonical smoke). Pushes to `main` deploy staging only.
+- [x] Verified staging renders, sends `X-Robots-Tag: noindex`, titles its Cloudflare
+  versions with the deployed commit, and passes `npm run smoke:staging`.
+- [x] Confirmed the failed first dispatch (run `29489950086`) was Cloudflare **Bot Fight
+  Mode** challenging GitHub-runner IPs (Security Events: `ruleId bot_fight_mode`, ASN 8075
+  Microsoft) — the release itself had succeeded; the post-promotion smoke step was removed
+  so promotion is again the final action.
+- [x] Dispatched **Deploy production** (run `29492075743`): fully green — checks re-ran,
+  candidate uploaded and smoke-tested on its preview URL, promoted to 100%
+  (`github-f40c1fd`), and `npm run smoke:production` passed locally. `main` and production
+  are aligned, so the daily event refresh resumes rebuilding production.
 - [ ] Optionally create a dedicated staging Formspree form and replace the staging
   Worker's placeholder `FORMSPREE_FORM_ID` so end-to-end delivery can be tested there.
-- [x] Staging Worker `aaa-artists-staging` created and deployed with Turnstile test-pair
-  secrets; GitHub `staging` environment created with `CLOUDFLARE_ACCOUNT_ID` and the
-  Turnstile test site key; required branch checks renamed to `checks / verify` and
-  `checks / browser` (2026-07-16).
 
 ## Immediate handoff after PR #12
 
