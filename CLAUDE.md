@@ -226,8 +226,9 @@ production through the schedule.
 
 The production workflow is transactional: it re-runs checks, verifies configuration and
 domains, uploads an inactive commit-tagged candidate, smoke-tests that exact candidate on
-its version-prefixed preview URL, and only then promotes it to 100% traffic, followed by a
-canonical-domain smoke test. Do not replace this with an early `wrangler deploy` or add
+its version-prefixed preview URL, and only then promotes it to 100% traffic as the final
+action. The canonical domains are smoke-tested locally (`npm run smoke:production`), not
+from the workflow — Cloudflare's zone bot protection 403s GitHub-runner IPs. Do not replace this with an early `wrangler deploy` or add
 routine automatic rollback. Deployment logic lives in versioned `scripts/*.mjs` files, not
 inline workflow shell. Cloudflare custom-domain/route mutations remain a separate
 infrastructure operation.

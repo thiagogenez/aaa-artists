@@ -98,5 +98,8 @@ jobs:
           CANDIDATE_VERSION_ID: ${{ steps.candidate.outputs.version_id }}
           PREVIOUS_VERSION_ID: ${{ steps.previous.outputs.version_id }}
         run: node scripts/promote-production-candidate.mjs
-      - name: Smoke-test canonical domains
-        run: npm run smoke:production
+      # No canonical-domain smoke test here: Cloudflare's zone bot protection
+      # returns 403 to GitHub-runner IPs, so it would mark successful releases
+      # red. The promoted bytes were already smoke-tested on the candidate
+      # preview URL, and the preflight verified both domains target the Worker.
+      # Run `npm run smoke:production` locally after a release.
