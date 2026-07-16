@@ -8,9 +8,14 @@
 - Keep GitHub Actions pinned to full commit SHAs, with version comments for Dependabot.
   Preserve read-only CI permissions, checkout credential isolation, bounded timeouts, and
   the Wrangler dry-run against the same static export exercised by Playwright.
-- GitHub Actions is the intended production deployment authority. Keep deployment dependent
-  on both `verify` and `browser`, protected by the `production` environment and the
-  `DEPLOYMENT_AUTHORITY=github` cutover guard. Do not restore a second automatic path.
+- GitHub Actions is the sole deployment authority. Three tiers: local dev, the
+  `aaa-artists-staging` Worker (workers.dev, deployed automatically on pushes to `main`
+  after the reusable checks suite), and the `aaa-artists` production Worker (custom
+  domains, released only by the manual "Deploy production" dispatch). Keep deployments
+  dependent on `checks / verify` and `checks / browser`, protected by the `staging` and
+  `production` environments and the `DEPLOYMENT_AUTHORITY=github` guard. Do not restore a
+  second automatic path, and never let the scheduled refresh ship a commit that is not
+  already live in production.
 - Editable artist and event content is in `data/artists/*.yml`; generated JSON is not edited.
 - The canonical origin is `https://aaaartists.co`. The Worker redirects HTTP and `www` to
   HTTPS apex while preserving the path and query string. Static Assets must continue to run
@@ -35,7 +40,7 @@
 - Do not add a generic cookie banner unless non-essential storage, analytics, or advertising
   is introduced.
 
-## Current state (2026-07-14)
+## Current state (2026-07-15)
 
 - The privacy/security/SEO/DRY/responsive plan is implemented in the repository.
 - Verification passed 9 Worker tests and 24 Playwright tests across desktop Chromium and
@@ -45,6 +50,18 @@
 - The production dependency audit reports only the accepted moderate nested PostCSS issue;
   do not use the audit's forced downgrade to Next.js 9.
 - Production still needs the external configuration and controller decisions in `TODO.md`.
+- The transactional Cloudflare deployment path is live and verified. PR #12 (`815b46d`)
+  merged the workflow; PR #13 (`49f0ef8`) fixed candidate preview discovery by enabling
+  Version Preview URLs (`preview_urls: true`, `workers_dev: false`, plus a one-time
+  `npx wrangler triggers deploy` on 2026-07-15). Run `29450382754` uploaded candidate
+  `5a9cc6d4-0ee9-4e0d-8f14-44261c7683ba`, smoke-tested it on its version-prefixed preview
+  URL, promoted it to 100%, and `npm run smoke:production` passed on the canonical domains.
+- The pipeline was then redesigned into staging/production tiers: pushes to `main` deploy
+  staging only; production releases require a manual "Deploy production" dispatch that
+  re-runs checks and keeps the upload → candidate smoke → promote transaction. Wrangler
+  uses named environments (`--env staging` / `--env production`), staging serves
+  `X-Robots-Tag: noindex` with the Turnstile test key pair, and deployment logic lives in
+  versioned `scripts/*.mjs` files rather than inline workflow shell.
 
 ## Working conventions
 

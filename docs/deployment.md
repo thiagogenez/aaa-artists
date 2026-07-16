@@ -2,6 +2,26 @@
 
 The site is a Next.js static export plus a Cloudflare Worker route for booking enquiries.
 
+## Environments
+
+| Tier | Worker | URL | Released by |
+| --- | --- | --- | --- |
+| Development | none | `npm run dev` locally | — |
+| Staging | `aaa-artists-staging` | `https://aaa-artists-staging.thiagogenez.workers.dev` | every push to protected `main`, automatically, after checks pass |
+| Production | `aaa-artists` | `https://aaaartists.co` | manual **Deploy production** workflow dispatch only |
+
+Staging exists to absorb failures before production: it serves every page with
+`X-Robots-Tag: noindex`, uses Cloudflare's always-pass Turnstile test key pair, and never
+touches the custom domains. Merging to `main` can only ever change staging. Production
+changes require dispatching **Deploy production** (Actions → Deploy production → Run
+workflow on `main`), which re-runs the full checks suite and then performs the
+transactional release described below. The daily event refresh updates staging
+unconditionally and rebuilds production only when `main` is the exact commit already live
+in production, so new code never reaches production through the schedule.
+
+Both deploy targets are defined in `wrangler.jsonc` under `env.staging` and
+`env.production`; every Wrangler command takes `--env staging` or `--env production`.
+
 ## Build settings
 
 - Node.js version: `24` LTS, declared in `.node-version` and `package.json`
@@ -27,6 +47,12 @@ The enquiry API is intentionally fixed to same-origin `/api/enquiries`; there is
 ## Worker secrets and bindings
 
 Configure these on the deployed `aaa-artists` Worker. Never use a `NEXT_PUBLIC_` name for either secret.
+The `aaa-artists-staging` Worker declares the same required secrets: its
+`TURNSTILE_SECRET_KEY` is Cloudflare's always-pass test secret
+(`1x0000000000000000000000000000000AA`), and its `FORMSPREE_FORM_ID` currently holds a
+placeholder — point it at a dedicated staging Formspree form if end-to-end delivery needs
+testing on staging. The Worker accepts Turnstile testing-key verdicts only when
+`ENVIRONMENT` is not `production`.
 
 - Secret `FORMSPREE_FORM_ID`: only the ID from the Formspree endpoint.
 - Secret `TURNSTILE_SECRET_KEY`: the secret paired with the public Turnstile site key.
@@ -44,15 +70,28 @@ npx wrangler secret put TURNSTILE_SECRET_KEY
 
 In production, the enquiry endpoint returns `503` rather than accepting unprotected submissions if Turnstile, Formspree, or a rate-limit binding is missing.
 
-Wrangler is pinned in `devDependencies`. Before deployment run `npm run deploy:dry-run`; deploy both the Worker and static assets with `npm run deploy`. Publishing only `out/` leaves `/api/enquiries` unavailable. `wrangler.jsonc` declares both runtime secret names as required, so production deployment fails before publication when either secret is absent. Existing encrypted secrets are preserved across ordinary Wrangler deployments.
+Wrangler is pinned in `devDependencies`. Before deployment run `npm run deploy:dry-run`
+(production) or `npm run check:deploy:staging`; deploy with `npm run deploy` (production)
+or `npm run deploy:staging`. Publishing only `out/` leaves `/api/enquiries` unavailable.
+`wrangler.jsonc` declares both runtime secret names as required in both environments, so
+deployment fails before publication when either secret is absent. Existing encrypted
+secrets are preserved across ordinary Wrangler deployments.
 
 ## Domain configuration
 
 Attach `aaaartists.co` and `www.aaaartists.co` to the Worker. Static Assets is configured with `run_worker_first: true` so the Worker can permanently redirect HTTP apex and HTTPS `www` requests before an existing page asset is served, preserving the path and query string. A Cloudflare redirect rule may replace this only after equivalent one-hop behaviour is verified; if it does, narrow Worker-first routing to `/api/*` to avoid unnecessary Worker invocations.
 
-The production workflow verifies its API permissions and confirms that both production domains already target the Worker before uploading application code. It then uploads a commit-tagged Worker version without deploying it and smoke-tests that exact version through its `workers.dev` preview URL. Promotion to 100% production traffic is the final workflow action. A failed validation, build, access check, upload, or candidate smoke test therefore leaves the active production deployment untouched; routine releases do not use automatic rollback.
+The production workflow runs only from a manual **Deploy production** dispatch on `main`
+(or from the scheduled refresh when `main` already matches the live production commit).
+It first re-runs the reusable checks suite, then verifies its API permissions and confirms
+that both production domains already target the Worker before uploading application code.
+It then uploads a commit-tagged Worker version without deploying it and smoke-tests that
+exact version through its `workers.dev` preview URL. Promotion to 100% production traffic
+happens only after that, followed by a canonical-domain smoke test. A failed check, build,
+access check, upload, or candidate smoke test therefore leaves the active production
+deployment untouched; routine releases do not use automatic rollback.
 
-Version Preview URLs must be enabled on the `aaa-artists` Worker for the candidate smoke test to work. `wrangler.jsonc` declares `preview_urls: true` (with `workers_dev: false`, so production stays on the custom domains only), and every uploaded version then exposes `https://<version>-aaa-artists.<subdomain>.workers.dev`, serving that version's exact static assets and Worker. Because `wrangler versions upload` only reads this setting, enable Preview URLs once on the Worker itself — via the Cloudflare dashboard, or a one-time `npx wrangler triggers deploy` (a non-versioned settings change that does not promote a version) — before the first authoritative run. The workflow refuses to promote a candidate whose exact version-prefixed preview URL was not returned, so a Worker without Preview URLs enabled fails safe at the upload step rather than promoting an unsmoke-tested version.
+Version Preview URLs must be enabled on the `aaa-artists` Worker for the candidate smoke test to work. `env.production` in `wrangler.jsonc` declares `preview_urls: true` (with `workers_dev: false`, so production stays on the custom domains only), and every uploaded version then exposes `https://<version>-aaa-artists.<subdomain>.workers.dev`, serving that version's exact static assets and Worker. Because `wrangler versions upload` only reads this setting, it was enabled once on the Worker with `npx wrangler triggers deploy` on 2026-07-15 (a non-versioned settings change that does not promote a version). The workflow refuses to promote a candidate whose exact version-prefixed preview URL was not returned, so a Worker without Preview URLs enabled fails safe at the upload step rather than promoting an unsmoke-tested version.
 
 Domain attachment is infrastructure rather than part of each application release. When `wrangler.jsonc` domain routes intentionally change, apply and verify that change separately with `npx wrangler triggers deploy` before merging the application release. This keeps route mutations out of the traffic-promotion transaction.
 
@@ -71,24 +110,42 @@ Run `npm run smoke:production` after deployment. Its API check submits only an e
 
 ## Scheduled event refresh
 
-The static event split and structured data need a fresh build as dates pass. `.github/workflows/refresh-events.yml` calls the same reusable production deployment workflow daily and can also be run manually. It deploys the current protected `main` commit; it does not require or retain a Cloudflare deploy-hook URL.
+The static event split and structured data need a fresh build as dates pass.
+`.github/workflows/refresh-events.yml` runs daily and can also be run manually. It always
+refreshes staging. It refreshes production only when `main` is the exact commit already
+live in production (`scripts/check-production-refresh.mjs` compares the live version's
+`github-<sha12>` tag with `main`); a date-only rebuild of released code is safe, while new
+code must be released through a manual **Deploy production** dispatch. It does not require
+or retain a Cloudflare deploy-hook URL.
 
 The CI workflow validates content, Worker tests, lint, dependency advisories, production export, and desktop/mobile browser behaviour. High or critical production dependency advisories fail CI; the currently accepted moderate nested PostCSS advisory remains visible for review.
 
-CI uses `.node-version`, immutable action commit SHAs, read-only permissions, locked installs, bounded job timeouts, stale pull-request cancellation, and a credential-free Wrangler dry-run of the exact export used by Playwright. Keep the `verify` and `browser` job names stable if they are configured as required branch checks.
+CI uses `.node-version`, immutable action commit SHAs, read-only permissions, locked installs, bounded job timeouts, stale pull-request cancellation, and a credential-free Wrangler dry-run of the exact export used by Playwright. The `verify` and `browser` jobs live in the reusable `.github/workflows/checks.yml`; the required branch checks are named `checks / verify` and `checks / browser`.
 
-GitHub Actions is the intended production deployment authority. On a push to protected `main`, the deployment job waits for both `verify` and `browser`, builds with the production Turnstile site key, runs a Wrangler dry-run, deploys the Worker and assets, and smoke-tests the canonical domains and enquiry route. The same reusable workflow handles scheduled event refreshes.
+GitHub Actions is the sole deployment authority for both Workers. On a push to protected
+`main`, CI waits for the reusable `checks` suite (`verify` and `browser`) and then deploys
+staging only. Production is released by manually dispatching **Deploy production** on
+`main`: it re-runs the same checks, builds with the production Turnstile site key, runs
+the preflight and Wrangler dry-run, uploads and smoke-tests the inactive candidate,
+promotes it, and finally smoke-tests the canonical domains. The heavy deployment logic
+lives in versioned scripts (`scripts/record-production-version.mjs`,
+`scripts/upload-production-candidate.mjs`, `scripts/promote-production-candidate.mjs`,
+`scripts/deploy-staging-worker.mjs`, `scripts/check-production-refresh.mjs`) rather than
+inline workflow shell, so it is linted and can be exercised locally.
 
-The deployment remains fail-safe until the repository variable `DEPLOYMENT_AUTHORITY` is exactly `github`. Perform the one-time cutover in this order:
+The deployment remains fail-safe until the repository variable `DEPLOYMENT_AUTHORITY` is exactly `github`. The one-time cutover (already performed):
 
 1. Create a protected GitHub environment named `production`, restricted to `main`.
 2. Add environment variable `CLOUDFLARE_ACCOUNT_ID` and environment secret `CLOUDFLARE_API_TOKEN`. Scope the API token to the AAA Artists Cloudflare account and only the Worker and zone permissions required by the deployment preflight and version promotion. `CLOUDFLARE_ZONE_ID` is not required; the preflight resolves the `aaaartists.co` zone from the account.
 3. Add environment variable `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
-4. Disable automatic production deployments from Cloudflare's Git integration.
-5. Add repository variable `DEPLOYMENT_AUTHORITY=github`.
-6. Manually run `Refresh event dates`, confirm the `production` environment deployment, and verify the smoke-test result.
+4. Create a GitHub environment named `staging` with variables `CLOUDFLARE_ACCOUNT_ID` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (Turnstile test site key `1x00000000000000000000AA`) and secret `CLOUDFLARE_API_TOKEN`.
+5. Disable automatic production deployments from Cloudflare's Git integration.
+6. Add repository variable `DEPLOYMENT_AUTHORITY=github`.
+7. Merge to `main` and confirm the staging deployment and smoke test, then dispatch `Deploy production` and verify the transactional release and canonical smoke tests.
 
-Do not enable the repository variable before disabling Cloudflare's automatic Git deployment, or the two release paths can race and deploy the same commit twice.
+Do not enable the repository variable before disabling Cloudflare's automatic Git deployment, or the two release paths can race and deploy the same commit twice. The required
+branch checks on `main` are `checks / verify` and `checks / browser` (the reusable checks
+suite); keep those names stable.
 
 ## Privacy release gate
 
