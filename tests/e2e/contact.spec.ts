@@ -136,6 +136,54 @@ test.describe("booking form regression coverage", () => {
     expect(requestBody).not.toHaveProperty("_subject");
   });
 
+  test("preserves an in-progress draft across navigation until reset or submit", async ({ page }) => {
+    const storedDraft = () => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"));
+    await page.goto("/contact");
+    const nameInput = page.locator('input[name="name"]');
+    await nameInput.fill("Jane Draft");
+    await page.locator('input[name="email"]').fill("jane@example.com");
+    await expect.poll(storedDraft).not.toBeNull();
+
+    // Navigate away and back: the draft is restored.
+    await page.goto("/privacy");
+    await page.goto("/contact");
+    await expect(nameInput).toHaveValue("Jane Draft");
+    await expect(page.locator('input[name="email"]')).toHaveValue("jane@example.com");
+
+    // A booking link with prefill parameters starts a fresh enquiry instead,
+    // without destroying the stored draft.
+    await page.goto("/contact?artist=Krevix");
+    await expect(page.locator('select[name="booking-0-artist"]')).toHaveValue("Krevix");
+    await expect(nameInput).toHaveValue("");
+    await page.goto("/contact");
+    await expect(nameInput).toHaveValue("Jane Draft");
+
+    // Clearing the form removes the draft permanently.
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Clear form", exact: true }).click();
+    await expect(nameInput).toHaveValue("");
+    await expect.poll(storedDraft).toBeNull();
+    await page.goto("/privacy");
+    await page.goto("/contact");
+    await expect(nameInput).toHaveValue("");
+  });
+
+  test("clears the stored draft after a successful submission", async ({ page }) => {
+    await page.route("**/api/enquiries", async (route) => {
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+    });
+    await page.goto("/contact");
+    await page.locator('input[name="name"]').fill("Jane Booker");
+    await page.locator('input[name="email"]').fill("jane@example.com");
+    await page.locator('input[name="date"]').fill("2026-12-01");
+    await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
+    await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"))).not.toBeNull();
+
+    await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"))).toBeNull();
+  });
+
   test("associates email errors and suggestions with the input", async ({ page }) => {
     await page.goto("/contact");
     const emailInput = page.locator('input[name="email"]');
