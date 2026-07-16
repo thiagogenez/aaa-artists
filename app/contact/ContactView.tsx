@@ -360,6 +360,67 @@ const CONTACT_API_ENDPOINT = "/api/enquiries";
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
 
+// In-progress enquiries are kept in sessionStorage so a visitor who navigates
+// away mid-form and comes back does not lose their draft. sessionStorage is
+// per-tab, never leaves the device, and is cleared when the tab closes —
+// strictly functional storage for a user-initiated action, holding only what
+// the visitor typed. Never store the security token or honeypot here.
+const DRAFT_STORAGE_KEY = "aaa-booking-draft-v1";
+
+type DraftShape = {
+  form: Record<string, string>;
+  artistBookings: ArtistBooking[];
+  dateTbc: boolean;
+  whatsappMode: "none" | "same" | "different" | "username";
+  phoneCountry: string;
+  currencyTouched: boolean;
+};
+
+function readDraft(validArtists: Set<string>): DraftShape | null {
+  try {
+    const raw = window.sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { version?: number } & Partial<DraftShape>;
+    if (parsed.version !== 1 || typeof parsed.form !== "object" || !parsed.form) return null;
+    const form: Record<string, string> = {};
+    for (const [key, value] of Object.entries(parsed.form)) {
+      if (typeof value === "string") form[key] = value.slice(0, 2000);
+    }
+    const bookings = (Array.isArray(parsed.artistBookings) ? parsed.artistBookings : [])
+      .filter((booking) => booking && typeof booking === "object")
+      .map((booking, index) => ({
+        id: index,
+        artist: typeof booking.artist === "string" && validArtists.has(booking.artist) ? booking.artist : "",
+        timingMode: booking.timingMode === "times" ? "times" as const : "duration" as const,
+        durationMinutes: typeof booking.durationMinutes === "string" ? booking.durationMinutes : "60",
+        startTime: typeof booking.startTime === "string" ? booking.startTime : "",
+        finishTime: typeof booking.finishTime === "string" ? booking.finishTime : "",
+      }));
+    return {
+      form,
+      artistBookings: bookings.length > 0 ? bookings : [],
+      dateTbc: parsed.dateTbc === true,
+      whatsappMode: ["none", "same", "different", "username"].includes(parsed.whatsappMode ?? "")
+        ? parsed.whatsappMode as DraftShape["whatsappMode"]
+        : "none",
+      phoneCountry: typeof parsed.phoneCountry === "string" && /^[a-z]{2}$/.test(parsed.phoneCountry)
+        ? parsed.phoneCountry
+        : "gb",
+      currencyTouched: parsed.currencyTouched === true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft() {
+  try {
+    window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch {
+    // Storage may be unavailable (private mode restrictions); losing the draft is fine.
+  }
+}
+
 // Slim shape passed from the server page — keeps the full artist dataset
 // (bios, gig history) out of the client bundle.
 export type ArtistOption = { name: string; slug: string };
@@ -429,6 +490,11 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const [resetVersion, setResetVersion] = useState(0);
   const [currencyTouched, setCurrencyTouched] = useState(false);
   const [turnstileVersion, setTurnstileVersion] = useState(0);
+  const draftRestored = useRef(false);
+  // Arriving with booking query parameters (artist page "Book Now", shared
+  // links) is a fresh enquiry intent — it wins over any stored draft.
+  const hasPrefillParams = ["artist", "event", "date", "venue", "city", "country"]
+    .some((key) => Boolean(searchParams.get(key)));
   const whatsappContactType = whatsappMode === "username"
     ? "username"
     : whatsappMode === "none" ? "none" : "number";
@@ -437,6 +503,68 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     || dateTbc
     || whatsappMode !== "none";
   const canResetForm = isFormDirty || submitAttempted || Boolean(sendError);
+
+  // Restore a saved draft once, after hydration (initialising state from
+  // sessionStorage during render would mismatch the server-rendered markup).
+  useEffect(() => {
+    if (draftRestored.current) return;
+    draftRestored.current = true;
+    if (hasPrefillParams) return;
+    const draft = readDraft(new Set(artistOptions.map((artist) => artist.name)));
+    if (!draft) return;
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setForm((current) => {
+      const restored = { ...current };
+      for (const key of Object.keys(current) as Array<keyof typeof current>) {
+        if (typeof draft.form[key] === "string") restored[key] = draft.form[key];
+      }
+      return restored;
+    });
+    if (draft.artistBookings.length > 0) {
+      setArtistBookings(draft.artistBookings);
+      setExpandedBookingIds(new Set(draft.artistBookings.map((booking) => booking.id)));
+      nextBookingId.current = draft.artistBookings.length;
+    }
+    setDateTbc(draft.dateTbc);
+    setWhatsappMode(draft.whatsappMode);
+    setPhoneCountry(draft.phoneCountry as Iso2);
+    setCurrencyTouched(draft.currencyTouched);
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only restore
+  }, []);
+
+  // Keep the draft current while the visitor types (debounced). Only clear the
+  // stored draft when the form transitions dirty -> clean: clearing on initial
+  // cleanliness would race the mount-time restore and delete the draft it is
+  // about to apply.
+  const formWasDirty = useRef(false);
+  useEffect(() => {
+    if (!draftRestored.current || submitted) return;
+    const handle = setTimeout(() => {
+      if (!isFormDirty) {
+        if (formWasDirty.current) {
+          formWasDirty.current = false;
+          clearDraft();
+        }
+        return;
+      }
+      formWasDirty.current = true;
+      try {
+        window.sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
+          version: 1,
+          form,
+          artistBookings,
+          dateTbc,
+          whatsappMode,
+          phoneCountry,
+          currencyTouched,
+        }));
+      } catch {
+        // Storage full or unavailable — the form still works without drafts.
+      }
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [form, artistBookings, dateTbc, whatsappMode, phoneCountry, currencyTouched, isFormDirty, submitted]);
   const selectedArtists = new Set(artistBookings.map((booking) => booking.artist).filter(Boolean));
   const overlapArtists = new Map<number, string[]>();
   for (let first = 0; first < artistBookings.length; first += 1) {
@@ -712,6 +840,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     setTurnstileVersion((current) => current + 1);
     setSubmissionId(crypto.randomUUID());
     setResetVersion((current) => current + 1);
+    clearDraft();
     requestAnimationFrame(() => {
       (document.querySelector('[name="name"]') as HTMLInputElement | null)?.focus();
     });
@@ -806,6 +935,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         throw new Error(`${result.error || "Request failed"}${reference}`);
       }
       setSubmitted(true);
+      clearDraft();
     } catch (error) {
       setTurnstileVersion((current) => current + 1);
       setSendError(

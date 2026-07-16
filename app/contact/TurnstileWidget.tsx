@@ -1,17 +1,25 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 declare global {
   interface Window {
-    turnstile?: { reset: () => void };
+    turnstile?: {
+      render?: (container: HTMLElement, params: Record<string, unknown>) => string | undefined;
+      reset: (widgetId?: string) => void;
+      remove?: (widgetId: string) => void;
+    };
     [key: `aaaTurnstile${string}`]: (() => void) | undefined;
   }
 }
 
+const EXPIRED_MESSAGE = "The security check expired. Please complete it again.";
+const ERROR_MESSAGE = "The security check could not load. Check your connection and try again.";
+
 export default function TurnstileWidget({ siteKey }: { siteKey: string }) {
   const callbackId = useId().replace(/[^A-Za-z0-9]/g, "");
+  const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState("");
   const successCallback = `aaaTurnstileSuccess${callbackId}` as const;
   const expiredCallback = `aaaTurnstileExpired${callbackId}` as const;
@@ -19,14 +27,37 @@ export default function TurnstileWidget({ siteKey }: { siteKey: string }) {
 
   useEffect(() => {
     window[successCallback] = () => setStatus("");
-    window[expiredCallback] = () => setStatus("The security check expired. Please complete it again.");
-    window[errorCallback] = () => setStatus("The security check could not load. Check your connection and try again.");
+    window[expiredCallback] = () => setStatus(EXPIRED_MESSAGE);
+    window[errorCallback] = () => setStatus(ERROR_MESSAGE);
     return () => {
       delete window[successCallback];
       delete window[expiredCallback];
       delete window[errorCallback];
     };
   }, [errorCallback, expiredCallback, successCallback]);
+
+  // Cloudflare's api.js only auto-renders .cf-turnstile elements that exist when
+  // the script loads. This component is remounted (key bump) after form reset or
+  // a failed submission to obtain a fresh single-use token, so when the script is
+  // already present the new container must be rendered explicitly or the widget
+  // silently disappears.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !window.turnstile?.render) return;
+    if (container.childElementCount > 0) return;
+    const widgetId = window.turnstile.render(container, {
+      sitekey: siteKey,
+      action: "booking_enquiry",
+      theme: "auto",
+      size: "flexible",
+      callback: () => setStatus(""),
+      "expired-callback": () => setStatus(EXPIRED_MESSAGE),
+      "error-callback": () => setStatus(ERROR_MESSAGE),
+    });
+    return () => {
+      if (widgetId) window.turnstile?.remove?.(widgetId);
+    };
+  }, [siteKey]);
 
   if (!siteKey || siteKey === "test-site-key") return null;
 
@@ -35,9 +66,10 @@ export default function TurnstileWidget({ siteKey }: { siteKey: string }) {
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
-        onError={() => setStatus("The security check could not load. Check your connection and try again.")}
+        onError={() => setStatus(ERROR_MESSAGE)}
       />
       <div
+        ref={containerRef}
         className="cf-turnstile"
         data-sitekey={siteKey}
         data-action="booking_enquiry"

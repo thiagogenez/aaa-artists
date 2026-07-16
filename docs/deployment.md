@@ -87,9 +87,11 @@ It first re-runs the reusable checks suite, then verifies its API permissions an
 that both production domains already target the Worker before uploading application code.
 It then uploads a commit-tagged Worker version without deploying it and smoke-tests that
 exact version through its `workers.dev` preview URL. Promotion to 100% production traffic
-happens only after that, followed by a canonical-domain smoke test. A failed check, build,
-access check, upload, or candidate smoke test therefore leaves the active production
-deployment untouched; routine releases do not use automatic rollback.
+is the final workflow action. A failed check, build, access check, upload, or candidate
+smoke test therefore leaves the active production deployment untouched; routine releases
+do not use automatic rollback. The canonical domains are not smoke-tested from the
+workflow because Cloudflare's zone bot protection returns 403 to GitHub-runner IPs; run
+`npm run smoke:production` locally after a release.
 
 Version Preview URLs must be enabled on the `aaa-artists` Worker for the candidate smoke test to work. `env.production` in `wrangler.jsonc` declares `preview_urls: true` (with `workers_dev: false`, so production stays on the custom domains only), and every uploaded version then exposes `https://<version>-aaa-artists.<subdomain>.workers.dev`, serving that version's exact static assets and Worker. Because `wrangler versions upload` only reads this setting, it was enabled once on the Worker with `npx wrangler triggers deploy` on 2026-07-15 (a non-versioned settings change that does not promote a version). The workflow refuses to promote a candidate whose exact version-prefixed preview URL was not returned, so a Worker without Preview URLs enabled fails safe at the upload step rather than promoting an unsmoke-tested version.
 
@@ -126,8 +128,8 @@ GitHub Actions is the sole deployment authority for both Workers. On a push to p
 `main`, CI waits for the reusable `checks` suite (`verify` and `browser`) and then deploys
 staging only. Production is released by manually dispatching **Deploy production** on
 `main`: it re-runs the same checks, builds with the production Turnstile site key, runs
-the preflight and Wrangler dry-run, uploads and smoke-tests the inactive candidate,
-promotes it, and finally smoke-tests the canonical domains. The heavy deployment logic
+the preflight and Wrangler dry-run, uploads and smoke-tests the inactive candidate, and
+promotes it as the final action. The heavy deployment logic
 lives in versioned scripts (`scripts/record-production-version.mjs`,
 `scripts/upload-production-candidate.mjs`, `scripts/promote-production-candidate.mjs`,
 `scripts/deploy-staging-worker.mjs`, `scripts/check-production-refresh.mjs`) rather than
