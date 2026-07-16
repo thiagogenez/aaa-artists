@@ -254,10 +254,11 @@ process; the Node version controls dependency installation, generation, tests, a
   then passed against the canonical domains.
 - The pipeline was then redesigned into dev/staging/production (2026-07-16): pushes to
   `main` deploy staging only; production releases require a manual "Deploy production"
-  dispatch. The `aaa-artists-staging` Worker, its secrets (Turnstile test pair, Formspree
-  placeholder), the GitHub `staging` environment, and the `checks / verify` +
-  `checks / browser` required branch checks are already provisioned. The staging
-  `CLOUDFLARE_API_TOKEN` environment secret must be set by the repository owner.
+  dispatch. All staging infrastructure is provisioned (Worker, secrets, GitHub `staging`
+  environment, `checks / verify` + `checks / browser` required branch checks). The first
+  fully green dispatch (run `29492075743`) released `github-f40c1fd`. Cloudflare Bot Fight
+  Mode challenges GitHub-runner IPs on the canonical domains (confirmed in Security
+  Events), which is why the workflow never smoke-tests aaaartists.co directly.
 
 - Contact security, same-origin delivery, Turnstile recovery, streaming size limits,
   privacy-safe request IDs, retry semantics, and canonical redirects are implemented.
