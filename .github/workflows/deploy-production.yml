@@ -1,20 +1,39 @@
 name: Deploy production
 
+# Production is released only from this workflow: manually dispatched from main,
+# or called by the scheduled event refresh when main is already the commit live
+# in production. The checks suite re-runs first, so a production release can
+# never outrun a red pipeline. The deploy itself is transactional: preflight,
+# upload an inactive commit-tagged candidate, smoke-test that exact version on
+# its preview URL, and promote it to 100% traffic only as the final action.
+
 on:
+  workflow_dispatch:
   workflow_call:
 
 permissions:
   contents: read
   deployments: write
 
-concurrency:
-  group: production-deployment
-  cancel-in-progress: false
-
 jobs:
+  checks:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/checks.yml
+
   deploy:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      vars.DEPLOYMENT_AUTHORITY == 'github'
+    needs: [checks]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # Job-level so a manual dispatch and the scheduled refresh can never touch
+    # the production Worker concurrently (workflow-level concurrency is ignored
+    # in called reusable workflows).
+    concurrency:
+      group: production-worker-deployment
+      cancel-in-progress: false
     environment:
       name: production
       url: https://aaaartists.co
@@ -61,34 +80,13 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          deployment="$(npm exec -- wrangler deployments status --name aaa-artists --json)"
-          version_id="$(jq -r '.versions[] | select(.percentage == 100) | .version_id // empty' <<<"$deployment")"
-          [[ "$version_id" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::Could not identify the current 100% production version"; exit 1; }
-          echo "version_id=$version_id" >> "$GITHUB_OUTPUT"
+        run: node scripts/record-production-version.mjs
       - name: Upload inactive release candidate
         id: candidate
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          deployment_tag="github-${GITHUB_SHA:0:12}"
-          export WRANGLER_OUTPUT_FILE_PATH="${RUNNER_TEMP}/wrangler-upload-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.jsonl"
-          npm exec -- wrangler versions upload --strict --tag "$deployment_tag" --message "GitHub Actions ${GITHUB_SHA}"
-          upload="$(jq -cs '[.[] | select(.type == "version-upload")] | last' "$WRANGLER_OUTPUT_FILE_PATH")"
-          version_id="$(jq -r '.version_id // empty' <<<"$upload")"
-          preview_url="$(jq -r '.preview_url // empty' <<<"$upload")"
-          [[ "$version_id" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::Could not identify the uploaded release candidate"; exit 1; }
-          # The preview URL must be version-prefixed (https://<8-hex-version>-<worker>.<subdomain>.workers.dev)
-          # so the smoke test exercises this exact inactive candidate — never a stable
-          # alias or the workers.dev root, which could point at a different version.
-          if [[ ! "$preview_url" =~ ^https://[0-9a-f]{8}-[a-z0-9-]+\.[^/]+\.workers\.dev/?$ ]]; then
-            echo "::error::Candidate ${version_id} uploaded, but Wrangler returned no version-prefixed Preview URL (got: '${preview_url:-<empty>}')."
-            echo "::error::Version Preview URLs must be enabled on the aaa-artists Worker so the exact inactive candidate can be smoke-tested before promotion. wrangler.jsonc sets \"preview_urls\": true, but \`wrangler versions upload\` only reads this — enable Preview URLs once on the Worker (Cloudflare dashboard, or a one-time \`npx wrangler triggers deploy\`). See docs/deployment.md. Not promoting."
-            exit 1
-          fi
-          echo "version_id=$version_id" >> "$GITHUB_OUTPUT"
-          echo "preview_url=$preview_url" >> "$GITHUB_OUTPUT"
+        run: node scripts/upload-production-candidate.mjs
       - name: Smoke-test inactive release candidate
         env:
           SMOKE_ORIGIN: ${{ steps.candidate.outputs.preview_url }}
@@ -99,31 +97,6 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CANDIDATE_VERSION_ID: ${{ steps.candidate.outputs.version_id }}
           PREVIOUS_VERSION_ID: ${{ steps.previous.outputs.version_id }}
-        run: |
-          set +e
-          npm exec -- wrangler versions deploy "${CANDIDATE_VERSION_ID}@100" --yes --message "GitHub Actions ${GITHUB_SHA}"
-          promotion_exit=$?
-          set -e
-
-          if [[ "$promotion_exit" -eq 0 ]]; then
-            exit 0
-          fi
-
-          echo "::warning::Wrangler reported a promotion error; reconciling Cloudflare's active deployment state"
-          for delay in 0 2 4 8 12; do
-            if [[ "$delay" -gt 0 ]]; then sleep "$delay"; fi
-            if deployment="$(npm exec -- wrangler deployments status --name aaa-artists --json)"; then
-              active_version_id="$(jq -r '.versions[] | select(.percentage == 100) | .version_id // empty' <<<"$deployment")"
-              if [[ "$active_version_id" == "$CANDIDATE_VERSION_ID" ]]; then
-                echo "::warning::Cloudflare confirms the candidate was promoted; treating the release as successful"
-                exit 0
-              fi
-              if [[ "$active_version_id" == "$PREVIOUS_VERSION_ID" ]]; then
-                echo "::error::Promotion failed and production remains on the previous version"
-                exit "$promotion_exit"
-              fi
-            fi
-          done
-
-          echo "::error::Promotion result is unknown after repeated Cloudflare status checks; inspect the deployment before retrying"
-          exit "$promotion_exit"
+        run: node scripts/promote-production-candidate.mjs
+      - name: Smoke-test canonical domains
+        run: npm run smoke:production
