@@ -1,6 +1,6 @@
 # AAA Artists release TODO
 
-Updated: 2026-07-16
+Updated: 2026-07-17
 
 Do not place key values, secrets, deploy-hook URLs, or personal data in this file.
 
@@ -26,7 +26,7 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
 - [ ] Optionally create a dedicated staging Formspree form and replace the staging
   Worker's placeholder `FORMSPREE_FORM_ID` so end-to-end delivery can be tested there.
 
-## Immediate handoff after PR #12
+## Resolved transactional deployment work (PR #12 onward)
 
 - [x] Merged PR #12 into `main` at merge commit `815b46d`. The transactional workflow
   from commit `90080ab` is now the repository's production deployment path.

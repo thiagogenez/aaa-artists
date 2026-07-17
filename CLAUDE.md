@@ -240,7 +240,7 @@ GitHub Actions, and `@types/node`. Keep those declarations aligned during future
 upgrades. Cloudflare's deployed Worker uses the Workers runtime rather than a full Node.js
 process; the Node version controls dependency installation, generation, tests, and builds.
 
-## Current implementation state (2026-07-15)
+## Current implementation state (2026-07-17)
 
 - The transactional GitHub Actions deployment path is live and verified end to end.
   PR #12 (merged at `815b46d`) introduced the workflow; PR #13 (merged at `49f0ef8`)
@@ -261,6 +261,12 @@ process; the Node version controls dependency installation, generation, tests, a
   fully green dispatch (run `29492075743`) released `github-f40c1fd`. Cloudflare Bot Fight
   Mode challenges GitHub-runner IPs on the canonical domains (confirmed in Security
   Events), which is why the workflow never smoke-tests aaaartists.co directly.
+- Shipped 2026-07-16/17 through the gated flow: Turnstile remount fix (PR #18), booking
+  form sessionStorage draft persistence with permanent e2e coverage (PR #19), unified
+  date-driven `gigs:` schema (PR #20), e2e submit-flake guard — 15s window + one visible
+  CI retry (PR #21), and the Turnstile widget following the site theme via `useTheme()`
+  (PR #22). Production runs `github-366d17e8d372`; the daily refresh cron fires at
+  01:11 UTC ("AAA o'clock").
 
 - Contact security, same-origin delivery, Turnstile recovery, streaming size limits,
   privacy-safe request IDs, retry semantics, and canonical redirects are implemented.
