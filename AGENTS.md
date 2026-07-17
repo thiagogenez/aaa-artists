@@ -42,7 +42,7 @@
 - Do not add a generic cookie banner unless non-essential storage, analytics, or advertising
   is introduced.
 
-## Current state (2026-07-15)
+## Current state (2026-07-17)
 
 - The privacy/security/SEO/DRY/responsive plan is implemented in the repository.
 - Verification passed 9 Worker tests and 24 Playwright tests across desktop Chromium and
@@ -64,6 +64,11 @@
   uses named environments (`--env staging` / `--env production`), staging serves
   `X-Robots-Tag: noindex` with the Turnstile test key pair, and deployment logic lives in
   versioned `scripts/*.mjs` files rather than inline workflow shell.
+- Shipped 2026-07-16/17: Turnstile explicit rendering that follows the site theme
+  (PR #22, verified light/dark/reset lifecycle with the always-pass test key), booking
+  form sessionStorage drafts (PR #19), unified date-driven `gigs:` schema (PR #20), and
+  an e2e flake guard (PR #21). Production runs `github-366d17e8d372`; the refresh cron
+  fires at 01:11 UTC.
 
 ## Working conventions
 
