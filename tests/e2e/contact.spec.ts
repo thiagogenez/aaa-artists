@@ -122,7 +122,10 @@ test.describe("booking form regression coverage", () => {
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
     await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
 
-    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible();
+    // Mobile WebKit on busy CI runners regularly needs more than the global 5s
+    // expectation window here (twice killed scheduled deploys); the submit
+    // round-trip is mocked, so a generous timeout costs nothing when healthy.
+    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible({ timeout: 15_000 });
     expect(requestBody).toMatchObject({
       name: "Jane Booker",
       email: "jane@example.com",
