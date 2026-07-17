@@ -5,6 +5,10 @@ export default defineConfig({
   fullyParallel: true,
   timeout: 30_000,
   expect: { timeout: 5_000 },
+  // One retry on CI only: a transiently slow runner must not kill a scheduled
+  // deploy, and Playwright still reports retried tests as "flaky" (with trace)
+  // rather than hiding them, so genuine regressions stay visible.
+  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: "http://127.0.0.1:3100",
