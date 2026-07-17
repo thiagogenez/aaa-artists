@@ -17,7 +17,7 @@ socials:
   spotify: https://open.spotify.com/artist/23u5Z7BfuCPFLl4JE1uacp
   beatport: https://www.beatport.com/artist/c-systems/
 # Verified gigs only. Oldest first — the site shows newest first.
-pastGigs:
+gigs:
   - date: '2025-01-18'
     venue: Basing House
     city: London
@@ -30,7 +30,6 @@ pastGigs:
     venue: Egg London
     city: London
     country: UK
-upcomingGigs:
   # Timescape runs 7–9 Aug 2026; C-Systems confirmed on the lineup, exact day TBC.
   - date: "2026-08"
     eventId: timescape-festival-2026

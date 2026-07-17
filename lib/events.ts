@@ -47,7 +47,7 @@ export function eventDateBadge(date: string): { day: string; month: string } {
 export function normalizeUpcomingEvents(allArtists: Artist[], today = new Date().toISOString().slice(0, 10)): NormalizedEvent[] {
   const byId = new Map<string, NormalizedEvent>();
   for (const artist of allArtists) {
-    for (const gig of artist.upcomingGigs) {
+    for (const gig of artist.gigs) {
       if (!gig.eventId || !isUpcomingEventDate(gig.date, today)) continue;
       const existing = byId.get(gig.eventId);
       if (existing) {

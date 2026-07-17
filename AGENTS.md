@@ -28,7 +28,9 @@
 
 ## Content, SEO, and privacy invariants
 
-- Upcoming gigs require stable `eventId` values. Shared events reuse the same ID.
+- Gigs live in one `gigs:` list per artist (oldest to newest); the date decides past vs
+  upcoming. Future-dated gigs require stable `eventId` values; shared events reuse the
+  same ID.
 - Exact dates use `YYYY-MM-DD`; `YYYY-MM` means the exact day is TBC and must not generate
   exact-date `MusicEvent` structured data.
 - Ticket URLs do not imply availability; assert it only through explicit `ticketStatus`.

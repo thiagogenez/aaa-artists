@@ -98,14 +98,13 @@ socials:                      # all optional
   beatport: https://…
 # spotifyEmbed: https://…     # optional — a Spotify URL renders a live player box
 # youtubeEmbed: https://…     # optional — a YouTube URL renders a live player box
-pastGigs:                     # dates in the past — shown dimmed
-  - date: "2025-10-18"
+gigs:                         # ONE list, oldest → newest; the date decides past vs upcoming
+  - date: "2025-10-18"        # past date → shown dimmed in the history list
     venue: Privilege
     city: Ibiza
     country: Spain
-upcomingGigs:                 # future dates — shown as flyer cards
-  - date: "2026-07-04"
-    eventId: asot-festival-2026
+  - date: "2026-07-04"        # future date → shown as a flyer card
+    eventId: asot-festival-2026   # required while the date is today or later
     venue: A State of Trance Festival
     city: Utrecht
     country: Netherlands
@@ -118,7 +117,10 @@ upcomingGigs:                 # future dates — shown as flyer cards
 regenerates `data/artists.data.json` that the site reads. Run **`npm run check`** any
 time to validate the files — it lists exactly which file/field is wrong before anything
 breaks. Quote dates as `"YYYY-MM-DD"`, or `"YYYY-MM"` when the exact day is TBC. Every
-upcoming gig needs a stable `eventId`; reuse it across artists on the same event. To add a new artist, copy an existing file with
+future-dated gig needs a stable `eventId`; reuse it across artists on the same event
+(once the date passes the ID may stay — it is ignored). Gigs live in ONE `gigs:` list per
+artist, ordered oldest to newest; the date decides whether an entry shows as upcoming or
+past, so finished gigs need no editing. To add a new artist, copy an existing file with
 the next number prefix.
 
 ### Media boxes ("Listen & Watch")
@@ -130,7 +132,7 @@ The artist page shows a grid of media boxes. SoundCloud renders a live embed fro
 
 ### Upcoming events (flyer boxes)
 
-Each entry in `upcomingGigs` renders as a flyer card. Set `flyer: "/flyers/<file>.jpg"`
+Each future-dated entry in `gigs` renders as a flyer card. Set `flyer: "/flyers/<file>.jpg"`
 to show real artwork; if omitted, a clean text poster is generated from the gig details.
 Add `ticketLink` to show event details. Add `ticketStatus: available` only after availability is verified.
 
@@ -168,7 +170,7 @@ See `docs/deployment.md` for the exact variables, secrets, and smoke tests.
 
 ## Events and structured data
 
-Every upcoming gig requires a stable `eventId`. Reuse the same ID for every artist on a
+Every future-dated gig requires a stable `eventId`. Reuse the same ID for every artist on a
 shared event so `/events` can merge the performers into one listing. Dates accept exact
 `YYYY-MM-DD` values or month-only `YYYY-MM` values when the day is TBC. Month-only events
 stay visible but do not produce exact-date `MusicEvent` schema. A ticket URL does not imply

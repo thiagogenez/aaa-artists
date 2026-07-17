@@ -15,7 +15,7 @@ socials:
   # Add FROGR's real Spotify URL here to show a live player, e.g.
   # spotify: https://open.spotify.com/artist/REAL_ID
 # Verified gigs only (AAA pres. Fusion circuit). Oldest first — the site shows newest first.
-pastGigs:
+gigs:
   - date: '2025-01-18'
     venue: Basing House
     city: London
@@ -36,7 +36,6 @@ pastGigs:
     venue: Egg London
     city: London
     country: UK
-upcomingGigs:
   - date: "2026-08-22"
     eventId: aaa-fusion-xoyo-2026-08-22
     venue: XOYO

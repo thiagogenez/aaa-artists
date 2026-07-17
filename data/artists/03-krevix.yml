@@ -17,8 +17,7 @@ socials:
   beatport: https://www.beatport.com/artist/krevix/
 # No verifiable past gigs found (2024+) — leave empty rather than invent;
 # the site shows "No past dates on record yet."
-pastGigs: []
-upcomingGigs:
+gigs:
   # Tomorrowland 2026 debut — Weekend 1, House of Fortune by JBL stage
   - date: "2026-07-19"
     eventId: tomorrowland-2026-w1-krevix
