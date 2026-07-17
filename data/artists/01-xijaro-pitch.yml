@@ -18,7 +18,7 @@ socials:
   spotify: https://open.spotify.com/artist/0CcmU1Eun8Nwb3VlOAeJUK
   beatport: https://www.beatport.com/artist/xijaro-pitch/
 # Verified gigs only. Oldest first — the site shows newest first.
-pastGigs:
+gigs:
   - date: '2025-08-24'
     venue: Ministry of Sound Courtyard
     city: London
@@ -47,7 +47,6 @@ pastGigs:
     venue: Gianpula Village
     city: Rabat
     country: Malta
-upcomingGigs:
   # Tomorrowland Weekend 2 — The Rave Cave, Fri 24 Jul, 19:30–20:30
   - date: '2026-07-24'
     eventId: tomorrowland-2026-w2-xijaro-pitch

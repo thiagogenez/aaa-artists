@@ -14,7 +14,7 @@ socials:
   soundcloud: https://soundcloud.com/daniel-huckett # SAGO's real account (soundcloud.com/sago is someone else)
   facebook: https://facebook.com/sagoofficial
 # Verified gigs only (AAA pres. Fusion circuit). Oldest first — the site shows newest first.
-pastGigs:
+gigs:
   - date: '2025-01-18'
     venue: Basing House
     city: London
@@ -35,7 +35,6 @@ pastGigs:
     venue: Egg London
     city: London
     country: UK
-upcomingGigs:
   - date: "2026-08-22"
     eventId: aaa-fusion-xoyo-2026-08-22
     venue: XOYO

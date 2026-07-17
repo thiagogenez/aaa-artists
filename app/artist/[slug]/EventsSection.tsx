@@ -114,10 +114,9 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
 export default function EventsSection({ artist, buildNow }: { artist: Artist; buildNow: string }) {
   const now = useSyncExternalStore(subscribeToDateChange, currentDate, () => buildNow);
 
-  const upcomingGigs = artist.upcomingGigs.filter((g) => isUpcomingEventDate(g.date, now));
-  // Past includes any listed-as-upcoming gigs whose date has since passed,
-  // kept in date order (oldest → newest; PastDates shows newest first).
-  const pastGigs = [...artist.pastGigs, ...artist.upcomingGigs]
+  const upcomingGigs = artist.gigs.filter((g) => isUpcomingEventDate(g.date, now));
+  // Kept in date order (oldest → newest; PastDates shows newest first).
+  const pastGigs = artist.gigs
     .filter((g) => !isUpcomingEventDate(g.date, now))
     .sort((a, b) => a.date.localeCompare(b.date));
 

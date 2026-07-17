@@ -14,6 +14,13 @@ const SOCIAL_FIELDS = new Set(["instagram", "soundcloud", "facebook", "spotify",
 
 const errors = [];
 const seenSlugs = new Map();
+const today = new Date().toISOString().slice(0, 10);
+
+// Matches lib/events.ts isUpcomingEventDate: exact dates compare to today,
+// month-only (YYYY-MM) dates count as upcoming for their whole month.
+function isUpcomingDate(date) {
+  return date.length === 7 ? date >= today.slice(0, 7) : date >= today;
+}
 
 function asDateString(value) {
   // YAML may parse an unquoted date as a Date object — normalise to "YYYY-MM-DD".
@@ -56,12 +63,18 @@ function checkGigs(gigs, file, listName) {
     for (const field of GIG_REQUIRED) {
       if (!gig?.[field]) errors.push(`${where}: missing "${field}"`);
     }
-    if (listName === "upcomingGigs" && !gig?.eventId) errors.push(`${where}: missing "eventId"`);
+    const date = asDateString(gig?.date);
+    if (date && !isValidDate(date)) errors.push(`${where}: "date" must be a real YYYY-MM-DD or YYYY-MM date`);
+    // The date decides past vs upcoming. Future-dated entries need a stable
+    // eventId so /events can merge shared line-ups; once the date has passed
+    // the requirement lapses (it only ever relaxes, so scheduled rebuilds can
+    // never start failing on their own).
+    if (!gig?.eventId && date && isValidDate(date) && isUpcomingDate(date)) {
+      errors.push(`${where}: missing "eventId" (required while the date is today or later)`);
+    }
     if (gig?.eventId && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(gig.eventId)) {
       errors.push(`${where}: "eventId" must contain lowercase letters, numbers and single hyphens only`);
     }
-    const date = asDateString(gig?.date);
-    if (date && !isValidDate(date)) errors.push(`${where}: "date" must be a real YYYY-MM-DD or YYYY-MM date`);
     if (gig?.ticketLink && !isHttpsUrl(gig.ticketLink)) errors.push(`${where}: "ticketLink" must be an https URL`);
     if (gig?.ticketStatus && !["available", "sold-out", "unavailable"].includes(gig.ticketStatus)) {
       errors.push(`${where}: "ticketStatus" must be "available", "sold-out", or "unavailable"`);
@@ -130,14 +143,19 @@ for (const file of files) {
   for (const embedField of ["spotifyEmbed", "youtubeEmbed"]) {
     if (doc[embedField] && !isHttpsUrl(doc[embedField])) errors.push(`${file}: "${embedField}" must be an https URL`);
   }
-  doc.pastGigs = checkGigs(doc.pastGigs, file, "pastGigs");
-  doc.upcomingGigs = checkGigs(doc.upcomingGigs, file, "upcomingGigs");
+  for (const legacyKey of ["pastGigs", "upcomingGigs"]) {
+    if (legacyKey in doc) {
+      errors.push(`${file}: "${legacyKey}" was merged into a single "gigs" list (ordered oldest to newest; the date decides past vs upcoming) — see data/artists/README.md`);
+    }
+  }
+  doc.gigs = checkGigs(doc.gigs, file, "gigs");
   artists.push(doc);
 }
 
 const eventsById = new Map();
 for (const artist of artists) {
-  for (const gig of artist.upcomingGigs) {
+  for (const gig of artist.gigs) {
+    if (!gig.eventId) continue;
     const existing = eventsById.get(gig.eventId);
     const comparable = JSON.stringify({
       date: gig.date,

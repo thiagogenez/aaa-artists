@@ -36,15 +36,13 @@ socials:                      # all optional
   beatport: https://…
 # youtubeEmbed: https://…     # optional — a YouTube URL renders a live video player
 
-pastGigs:                     # dates in the past — shown dimmed
-  - date: "2025-10-18"
+gigs:                         # ONE list, oldest → newest; the date decides
+  - date: "2025-10-18"        # past date → shown dimmed in the history list
     venue: Privilege
     city: Ibiza
     country: Spain
-
-upcomingGigs:                 # future dates — shown as flyer cards
-  - date: "2026-07-04"
-    eventId: asot-festival-2026
+  - date: "2026-07-04"        # future date → shown as a flyer card
+    eventId: asot-festival-2026   # required while the date is today or later
     venue: A State of Trance Festival
     city: Utrecht
     country: Netherlands
@@ -64,7 +62,7 @@ upcomingGigs:                 # future dates — shown as flyer cards
 - **Photos:** drop a `.webp`/`.jpg` in `public/artists/` and point `image:` at it.
 - **Flyers:** drop artwork in `public/flyers/` and set `flyer:` on the gig.
 - **Dates:** use `YYYY-MM-DD`, or `YYYY-MM` when the exact day is TBC. Month-only dates are not emitted as exact-date event structured data.
-- **Shared events:** every upcoming gig needs a stable `eventId`; use the same ID for every artist appearing at that event.
+- **Shared events:** every future-dated gig needs a stable `eventId`; use the same ID for every artist appearing at that event. Once the date passes the ID may stay — it is simply ignored.
 - **Tickets:** omit `ticketStatus` unless availability has been checked. Allowed values are `available`, `sold-out`, and `unavailable`.
-- A finished gig drops off "Upcoming" automatically once its date passes; move it to
-  `pastGigs` if you want to keep it in the history list.
+- A finished gig moves from "Upcoming" to the past-dates list automatically once its
+  date passes — no edit needed. Just keep the list ordered oldest → newest when adding.

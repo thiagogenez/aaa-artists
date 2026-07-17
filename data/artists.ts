@@ -41,8 +41,10 @@ export interface Artist {
    *  youtubeEmbed: a single YouTube video or playlist URL. */
   spotifyEmbed?: string;
   youtubeEmbed?: string;
-  pastGigs: Gig[];
-  upcomingGigs: Gig[];
+  /** All gigs, oldest to newest. The date decides past vs upcoming at render
+   *  time; future-dated entries carry an eventId so /events can merge shared
+   *  line-ups. */
+  gigs: Gig[];
 }
 
 export const artists: Artist[] = data as Artist[];
