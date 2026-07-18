@@ -31,7 +31,7 @@ Official guidance:
 
 | Activity | Personal data | Purpose | Likely basis to verify | Recipients/processors | Retention |
 | --- | --- | --- | --- | --- | --- |
-| Booking enquiry | Identity, email, phone/WhatsApp, event, artist, schedule, venue, audience, budget, lineup, message | Assess, quote, and take requested steps towards a booking | Pre-contract steps; legitimate interests for business contacts | Formspree, email provider, authorised booking staff, relevant artists/representatives | No longer than 3 months |
+| Booking enquiry | Identity, email, phone/WhatsApp, event, artist, schedule, venue, audience, budget, lineup, message | Assess, quote, acknowledge receipt, and take requested steps towards a booking | Pre-contract steps; legitimate interests for business contacts | Brevo, email provider, authorised booking staff, relevant artists/representatives | No longer than 3 months |
 | Confirmed booking | Enquiry, correspondence, contract, payment/accounting records | Administer the contract, resolve disputes, meet accounting/legal duties | Contract; legal obligation; legitimate interests | Booking staff, artists/representatives, accountants and advisers as needed | Up to 6 years |
 | Form security | IP-derived request context, token result, timing, hashed email rate-limit key, logs | Prevent spam, abuse, and security incidents | Legitimate interests | Cloudflare and Turnstile | Confirm provider/log retention |
 | Theme preference | Light/dark setting in browser local storage | Remember the visitor's interface choice | User-requested functionality | Stored in the visitor's browser | Until removed by the visitor |
@@ -42,7 +42,7 @@ The Worker hashes the lower-cased email address before using it as a rate-limit 
 ## Processor and transfer record
 
 - Cloudflare: confirm the customer DPA, account region/settings, Turnstile configuration, log retention, and authorised administrators.
-- Formspree: confirm the account plan, DPA/SCCs, submission retention, deletion workflow, notification recipients, and authorised administrators.
+- Brevo: confirm the account plan, DPA, EU data-hosting terms, transactional-email content retention, deletion/export workflow, authenticated sending domain, and authorised administrators. Keep open and click tracking disabled because it is unnecessary for booking acknowledgements.
 - Email provider: identify the provider, account owner, MFA, administrators, retention/deletion settings, and international-processing terms.
 - Artists and representatives: document when enquiry details are shared, the minimum fields needed, locations, and whether each recipient acts as an independent controller or processor.
 - Other systems: Paul must identify WhatsApp, CRM, accounting, spreadsheets, cloud drives, backups, and any other enquiry stores.
@@ -71,7 +71,7 @@ The Worker hashes the lower-cased email address before using it as a rate-limit 
 
 1. Record the date, request, requester, affected systems, and one-month response deadline.
 2. Verify identity proportionately without collecting unnecessary documents.
-3. Search Formspree, email, WhatsApp, CRM, spreadsheets, cloud storage, accounting systems, and relevant recipients.
+3. Search Brevo, email, WhatsApp, CRM, spreadsheets, cloud storage, accounting systems, and relevant recipients.
 4. Apply legal exceptions and preserve records that must be retained.
 5. Respond securely and document the outcome, searches, disclosures, corrections, or deletion.
 
@@ -96,7 +96,7 @@ The controller-designated privacy owner must complete this check monthly. Store 
 
 | Check | Evidence to record |
 | --- | --- |
-| Formspree | Oldest unsuccessful submission date, deletion/export action, account administrators |
+| Brevo | Oldest retained booking email, deletion/export action, account administrators, tracking disabled |
 | Booking mailbox | Search date, oldest unsuccessful enquiry, deletion action, retention-rule exceptions |
 | WhatsApp/CRM/spreadsheets/cloud drives | Systems checked, records deleted, records converted to confirmed bookings |
 | Backups | Backup retention window and next expiry date; document why immediate deletion is not technically possible |

@@ -21,9 +21,11 @@
   HTTPS apex while preserving the path and query string. Static Assets must continue to run
   the Worker first unless equivalent Cloudflare redirect rules replace host normalization.
 - The contact form always posts to same-origin `/api/enquiries`. Do not restore a public
-  cross-origin endpoint or direct browser-to-Formspree delivery.
+  cross-origin endpoint or direct browser-to-email-provider delivery.
 - The Worker validates streamed bodies, verifies Cloudflare Turnstile before the email
-  quota, rate-limits by hashed actor and email, and forwards accepted enquiries to Formspree.
+  quota, rate-limits by hashed actor and email, and sends accepted enquiries through Brevo
+  (EU-hosted) with an idempotency key. The customer is the visible recipient, the booking
+  mailbox is BCC'd on the same message, and replies return to `bookings@aaaartists.co`.
 - Secrets stay server-side. Only `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is public/build-time.
 
 ## Content, SEO, and privacy invariants

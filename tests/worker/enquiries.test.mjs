@@ -50,7 +50,7 @@ function request(payload, method = "POST", extraHeaders = {}) {
 
 function env(overrides = {}) {
   return {
-    FORMSPREE_FORM_ID: "testform",
+    BREVO_API_KEY: "xkeysib-test-api-key",
     ASSETS: { fetch: () => new Response("asset") },
     CONTACT_ACTOR_RATE_LIMIT: { limit: async () => ({ success: true }) },
     CONTACT_EMAIL_RATE_LIMIT: { limit: async () => ({ success: true }) },
@@ -58,23 +58,48 @@ function env(overrides = {}) {
   };
 }
 
-test("validates and forwards a clean enquiry with a stable reference", async (context) => {
+test("validates and emails a clean enquiry with a stable threaded reference", async (context) => {
   const originalFetch = globalThis.fetch;
   let forwarded;
   globalThis.fetch = async (url, init) => {
-    assert.equal(String(url), "https://formspree.io/f/testform");
+    assert.equal(String(url), "https://api.brevo.com/v3/smtp/email");
+    assert.equal(init.headers["api-key"], "xkeysib-test-api-key");
+    assert.equal(init.headers["Idempotency-Key"], SUBMISSION_ID);
     forwarded = JSON.parse(init.body);
-    return Response.json({ ok: true });
+    return Response.json({ messageId: "<202607180101.123456789@smtp-relay.mailin.fr>" }, { status: 201 });
   };
   context.after(() => { globalThis.fetch = originalFetch; });
 
   const response = await worker.fetch(request(validPayload()), env());
   const result = await response.json();
   assert.equal(response.status, 200);
-  assert.equal(forwarded.Email, "jane@example.com");
-  assert.equal(forwarded["Submission reference"], SUBMISSION_ID);
-  assert.match(forwarded["Artist schedule"], /Xijaro & Pitch.*1 hour set/);
+  assert.deepEqual(forwarded.to, [{ email: "jane@example.com", name: "Jane Booker" }]);
+  assert.deepEqual(forwarded.bcc, [{ email: "bookings@aaaartists.co" }]);
+  assert.deepEqual(forwarded.replyTo, { email: "bookings@aaaartists.co" });
+  assert.equal(forwarded.sender.email, "bookings@aaaartists.co");
+  assert.match(forwarded.subject, /Booking enquiry \[123E4567\].*Xijaro & Pitch/);
+  assert.match(forwarded.textContent, new RegExp(`Submission reference: ${SUBMISSION_ID}`));
+  assert.match(forwarded.textContent, /Artist schedule:.*Xijaro & Pitch.*1 hour set/s);
+  assert.match(forwarded.textContent, /not confirmation/i);
   assert.match(result.requestId, /^[0-9a-f-]{36}$/i);
+});
+
+test("escapes customer content in the HTML confirmation", async (context) => {
+  const originalFetch = globalThis.fetch;
+  let forwarded;
+  globalThis.fetch = async (_url, init) => {
+    forwarded = JSON.parse(init.body);
+    return Response.json({ messageId: "<202607180101.123456789@smtp-relay.mailin.fr>" }, { status: 201 });
+  };
+  context.after(() => { globalThis.fetch = originalFetch; });
+
+  const response = await worker.fetch(request(validPayload({
+    message: '<img src=x onerror="alert(1)">',
+  })), env());
+  assert.equal(response.status, 200);
+  assert.doesNotMatch(forwarded.htmlContent, /<img src=x/);
+  assert.match(forwarded.htmlContent, /&lt;img src=x onerror=&quot;alert\(1\)&quot;&gt;/);
+  assert.match(forwarded.textContent, /<img src=x onerror="alert\(1\)">/);
 });
 
 test("rejects invalid fields and honeypot submissions before delivery", async (context) => {
@@ -159,7 +184,12 @@ test("requires the expected Turnstile action and hostname", async (context) => {
 test("fails closed when production security bindings or secrets are missing", async () => {
   const response = await worker.fetch(
     request(validPayload()),
-    env({ ENVIRONMENT: "production", TURNSTILE_SECRET_KEY: undefined, CONTACT_EMAIL_RATE_LIMIT: undefined }),
+    env({
+      ENVIRONMENT: "production",
+      BREVO_API_KEY: undefined,
+      TURNSTILE_SECRET_KEY: undefined,
+      CONTACT_EMAIL_RATE_LIMIT: undefined,
+    }),
   );
   const body = await response.json();
   assert.equal(response.status, 503);
@@ -184,7 +214,7 @@ test("stops oversized streamed and dishonest-length bodies at 64 KiB", async () 
   assert.equal((await worker.fetch(dishonestRequest, env())).status, 413);
 });
 
-test("preserves upstream retry semantics without exposing enquiry data", async (context) => {
+test("preserves email-provider retry semantics without exposing enquiry data", async (context) => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response("busy", { status: 429, headers: { "Retry-After": "120" } });
   context.after(() => { globalThis.fetch = originalFetch; });

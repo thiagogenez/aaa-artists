@@ -161,9 +161,12 @@ assistance, optional WhatsApp numbers/usernames, reset confirmation, and mobile 
 
 The browser submits only to the same-origin `POST /api/enquiries`. The Cloudflare Worker
 streams and validates the body, verifies Turnstile, applies actor and email rate limits,
-and then forwards the accepted enquiry to Formspree. The Formspree ID and Turnstile secret
-are server-side secrets; they must never use a `NEXT_PUBLIC_` name. The public Turnstile
-site key is a build variable because Next.js embeds it in the static export.
+and then sends an idempotent Brevo email to the customer with a BCC copy to
+`bookings@aaaartists.co`. Brevo is EU-hosted, chosen so booking-email content stays in the
+EU/EEA. The customer and booking inbox receive the same original message;
+replies go to the booking address. The Brevo API key and Turnstile secret are server-side
+secrets and must never use a `NEXT_PUBLIC_` name. The public Turnstile site key is a build
+variable because Next.js embeds it in the static export.
 
 Production fails closed and shows a direct-email fallback when Turnstile is not configured.
 See `docs/deployment.md` for the exact variables, secrets, and smoke tests.

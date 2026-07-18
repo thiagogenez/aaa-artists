@@ -3,7 +3,7 @@
 // required value below and the completed notice has been reviewed for release.
 export const PRIVACY_CONFIG = Object.freeze({
   detailsConfirmed: false,
-  lastUpdated: "2026-07-14",
+  lastUpdated: "2026-07-17",
   controller: {
     legalName: "AAA ARTISTS AND EVENTS LTD",
     tradingName: "AAA Artists",

@@ -47,14 +47,13 @@ The enquiry API is intentionally fixed to same-origin `/api/enquiries`; there is
 ## Worker secrets and bindings
 
 Configure these on the deployed `aaa-artists` Worker. Never use a `NEXT_PUBLIC_` name for either secret.
-The `aaa-artists-staging` Worker declares the same required secrets: its
-`TURNSTILE_SECRET_KEY` is Cloudflare's always-pass test secret
-(`1x0000000000000000000000000000000AA`), and its `FORMSPREE_FORM_ID` currently holds a
-placeholder — point it at a dedicated staging Formspree form if end-to-end delivery needs
-testing on staging. The Worker accepts Turnstile testing-key verdicts only when
-`ENVIRONMENT` is not `production`.
+The `aaa-artists-staging` Worker requires only its Turnstile test secret. Outbound email is
+disabled there unless a deliberately restricted staging `BREVO_API_KEY` is added. Do not
+put the production Brevo key behind the public staging form, whose Turnstile test pair is
+designed to pass every challenge. The Worker accepts Turnstile testing-key verdicts only
+when `ENVIRONMENT` is not `production`.
 
-- Secret `FORMSPREE_FORM_ID`: only the ID from the Formspree endpoint.
+- Secret `BREVO_API_KEY`: a dedicated Brevo API key used only by the Worker, for the verified `aaaartists.co` sending domain. Brevo is EU-hosted, which keeps booking-email content inside the EU/EEA.
 - Secret `TURNSTILE_SECRET_KEY`: the secret paired with the public Turnstile site key.
 - Rate-limit bindings `CONTACT_ACTOR_RATE_LIMIT` and `CONTACT_EMAIL_RATE_LIMIT`: defined in `wrangler.jsonc`.
 - Variable `ENVIRONMENT=production`: defined in `wrangler.jsonc` and activates fail-closed configuration checks.
@@ -64,18 +63,40 @@ The expected Turnstile hostname comes from `config/site.js`. `TURNSTILE_HOSTNAME
 Add secrets in Workers & Pages → `aaa-artists` → Settings → Variables and Secrets, or with:
 
 ```sh
-npx wrangler secret put FORMSPREE_FORM_ID
-npx wrangler secret put TURNSTILE_SECRET_KEY
+npx wrangler secret put BREVO_API_KEY --env production
+npx wrangler secret put TURNSTILE_SECRET_KEY --env production
 ```
 
-In production, the enquiry endpoint returns `503` rather than accepting unprotected submissions if Turnstile, Formspree, or a rate-limit binding is missing.
+Before adding the key, authenticate `aaaartists.co` in Brevo with the exact DNS records it
+generates (Brevo code, DKIM, and DMARC as offered) and leave open/click tracking disabled
+for transactional email. Configure Cloudflare Email Routing so incoming mail for
+`bookings@aaaartists.co` reaches the authorised booking inbox. To keep staff replies
+visibly within the same thread and identity, configure that mailbox to send as
+`bookings@aaaartists.co` using Brevo's SMTP relay or another authenticated outbound
+provider. Brevo issues SMTP credentials separately from API keys; never copy the Worker's
+production `BREVO_API_KEY` into an email client.
+
+The Worker sends one idempotent message to the customer, BCCs the booking mailbox, and sets
+`Reply-To: bookings@aaaartists.co`. Both parties therefore receive a copy of the same
+original message and subject reference. A customer reply returns to the booking mailbox;
+staff can then reply from the configured booking alias in that thread. If staff respond
+from the initial BCC copy before the customer has replied, they must use **Reply all** so
+the customer remains a recipient. Confirm this behaviour in the real booking mail client,
+because visual thread grouping is ultimately controlled by each client.
+
+The Worker sends each accepted enquiry with a UUID `Idempotency-Key` (the submission ID),
+which Brevo deduplicates for 30 minutes, so client retries of the same submission cannot
+double-email anyone.
+
+In production, the enquiry endpoint returns `503` rather than accepting unprotected submissions if Turnstile, Brevo, or a rate-limit binding is missing.
 
 Wrangler is pinned in `devDependencies`. Before deployment run `npm run deploy:dry-run`
 (production) or `npm run check:deploy:staging`; deploy with `npm run deploy` (production)
 or `npm run deploy:staging`. Publishing only `out/` leaves `/api/enquiries` unavailable.
-`wrangler.jsonc` declares both runtime secret names as required in both environments, so
-deployment fails before publication when either secret is absent. Existing encrypted
-secrets are preserved across ordinary Wrangler deployments.
+`wrangler.jsonc` requires Turnstile in both environments and additionally requires Brevo
+in production, so a production deployment fails before publication when either production
+secret is absent. Existing encrypted secrets are preserved across ordinary Wrangler
+deployments.
 
 ## Domain configuration
 
@@ -108,7 +129,7 @@ After deployment, verify:
 - the Turnstile widget accepts only the intended hostname; and
 - `POST /api/enquiries` returns JSON rather than an asset fallback.
 
-Run `npm run smoke:production` after deployment. Its API check submits only an empty invalid payload, so it verifies fail-closed configuration without creating a Formspree enquiry.
+Run `npm run smoke:production` after deployment. Its API check submits only an empty invalid payload, so it verifies fail-closed configuration without creating a Brevo email.
 
 ## Scheduled event refresh
 

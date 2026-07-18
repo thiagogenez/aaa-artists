@@ -23,8 +23,35 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
   candidate uploaded and smoke-tested on its preview URL, promoted to 100%
   (`github-f40c1fd`), and `npm run smoke:production` passed locally. `main` and production
   are aligned, so the daily event refresh resumes rebuilding production.
-- [ ] Optionally create a dedicated staging Formspree form and replace the staging
-  Worker's placeholder `FORMSPREE_FORM_ID` so end-to-end delivery can be tested there.
+- [x] Keep outbound email disabled on public staging while it uses Turnstile's always-pass
+  test pair; never expose the production email key there.
+
+## Brevo booking email migration
+
+Brevo was chosen over Formspree (paid tier, indefinite third-party form storage) and
+Resend (US company — content and logs stay in the US even with its EU sending region).
+Brevo is a French provider with EU data centres and a free 300-emails/day tier; under UK
+GDPR the EEA is covered by the UK adequacy regulations, so no extra transfer safeguards
+are needed for it.
+
+- [ ] Create the Brevo account under the business owner, enable MFA, accept/review its
+  data-processing terms, and create a dedicated production API key used only by the Worker.
+- [ ] Authenticate `aaaartists.co` in Brevo using the exact DNS records it provides
+  (Brevo code, DKIM, and DMARC as offered). Keep open and click tracking disabled for
+  transactional email.
+- [ ] Enable Cloudflare Email Routing for `bookings@aaaartists.co`, forward it to the
+  authorised booking inbox, and verify the destination address.
+- [ ] Configure the booking mailbox to send as `bookings@aaaartists.co` using Brevo's SMTP
+  relay (or the mailbox provider), so staff replies do not expose another address. Brevo
+  SMTP credentials are separate from API keys; do not reuse the Worker key.
+- [ ] Add `BREVO_API_KEY` as an encrypted secret on the production Worker. Do not use a
+  `NEXT_PUBLIC_` name and do not add the production key to staging.
+- [ ] Test one real enquiry: the customer and the BCC booking inbox must receive the same
+  reference and details; the customer's reply must arrive at `bookings@aaaartists.co`;
+  **Reply all** from the initial BCC copy must reach the customer; and AAA's response must
+  remain visibly from the booking address in the expected thread in the real mail client.
+- [ ] After the Brevo release is verified, delete obsolete `FORMSPREE_FORM_ID` secrets and
+  remove/close Formspree data in line with the retention policy and account terms.
 
 ## Resolved transactional deployment work (PR #12 onward)
 
@@ -58,8 +85,8 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
   `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
 - [x] Add the paired private **Secret key** to the deployed Worker's encrypted runtime secret
   `TURNSTILE_SECRET_KEY`. Never give it a `NEXT_PUBLIC_` name or commit it.
-- [x] Confirm the deployed Worker has the encrypted `FORMSPREE_FORM_ID` secret containing
-  only the Formspree form ID.
+- [ ] Confirm the deployed production Worker has the encrypted `BREVO_API_KEY` secret and
+  no browser-visible Brevo credential.
 - [x] Confirm GitHub builds with `npm run build:production` and deploys the Worker plus
   static assets with the pinned Wrangler CLI (run `29450382754`).
 - [x] Deploy the current changes, then run `npm run smoke:production`.
@@ -71,13 +98,13 @@ Do not place key values, secrets, deploy-hook URLs, or personal data in this fil
 ## Privacy facts and operational work
 
 - [ ] Ask Paul to confirm the official privacy email. Replace `PRIVACY_EMAIL` in
-  `config/site.js`; `booking@aaaevents.com` is only the current fallback.
+  `config/site.js`; `bookings@aaaartists.co` is the current booking-address fallback.
 - [ ] Confirm whether enquiry information is used for marketing, newsletters, or future
   promotions, and record the answer in `config/privacy.js`.
 - [ ] Confirm whether AAA Artists actively targets or regularly accepts EU/EEA business and
   whether EU GDPR or an EU representative applies.
 - [ ] Confirm the complete data flow: recipients, processors, storage systems, access,
-  transfer countries, and deletion locations, including Formspree, email, WhatsApp, CRM,
+  transfer countries, and deletion locations, including Brevo, email, WhatsApp, CRM,
   spreadsheets, cloud drives, artists/managers, accountants, and backups as applicable.
 - [ ] Assign the person responsible for privacy requests and complaints. Ensure complaints
   are acknowledged within 30 days, investigated, and answered with an outcome.
