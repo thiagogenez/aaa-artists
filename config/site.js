@@ -8,9 +8,11 @@ export const SITE_DESCRIPTION =
   "AAA Artists is the booking and artist management agency from the team behind AAA Events. A trance-first roster reaching into techno, melodic techno, progressive and hard techno. Book our artists for your event.";
 export const SOCIAL_IMAGE = "/og.png";
 
-// This is the verified operational booking address currently used by the site.
-// Replace PRIVACY_EMAIL after Paul confirms the official privacy contact.
-export const BOOKING_EMAIL = "booking@aaaevents.com";
+// Public booking identity. Incoming mail must be routed to the authorised AAA inbox,
+// and staff must configure this address as their outbound alias so replies stay in
+// the same customer-facing thread. Replace PRIVACY_EMAIL after Paul confirms the
+// official privacy contact.
+export const BOOKING_EMAIL = "bookings@aaaartists.co";
 export const PRIVACY_EMAIL = BOOKING_EMAIL;
 
 export const SOCIAL_LINKS = Object.freeze([

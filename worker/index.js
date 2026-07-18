@@ -15,7 +15,7 @@ import {
   durationBetween,
   formatDuration,
 } from "../config/booking.js";
-import { BOOKING_EMAIL, SITE_HOSTNAME } from "../config/site.js";
+import { BOOKING_EMAIL, SITE_HOSTNAME, SITE_NAME } from "../config/site.js";
 
 const JSON_HEADERS = {
   "Cache-Control": "no-store",
@@ -192,7 +192,7 @@ async function verifyTurnstile(request, env, token) {
 function productionConfigurationIssue(env) {
   if (env.ENVIRONMENT !== "production") return "";
   const missing = [
-    !env.FORMSPREE_FORM_ID && "FORMSPREE_FORM_ID",
+    !env.BREVO_API_KEY && "BREVO_API_KEY",
     !env.TURNSTILE_SECRET_KEY && "TURNSTILE_SECRET_KEY",
     !env.CONTACT_ACTOR_RATE_LIMIT && "CONTACT_ACTOR_RATE_LIMIT",
     !env.CONTACT_EMAIL_RATE_LIMIT && "CONTACT_EMAIL_RATE_LIMIT",
@@ -200,11 +200,15 @@ function productionConfigurationIssue(env) {
   return missing.join(",");
 }
 
-function formspreePayload(payload) {
+function enquirySubject(payload) {
   const artistNames = payload.bookings.map((booking) => booking.artist);
   const subjectArtists = artistNames.length > 2
     ? `${artistNames.slice(0, 2).join(", ")} +${artistNames.length - 2}`
     : artistNames.join(", ");
+  return `Booking enquiry [${payload.submissionId.slice(0, 8).toUpperCase()}]${subjectArtists ? `: ${subjectArtists}` : ""}`;
+}
+
+function enquiryDetails(payload) {
   const schedule = payload.bookings.map((booking, index) => {
     if (booking.timingMode === "duration") {
       return `${index + 1}. ${booking.artist} — ${formatDuration(booking.durationMinutes)} set · times TBC`;
@@ -218,9 +222,7 @@ function formspreePayload(payload) {
     : "";
 
   return {
-    _subject: `Booking Enquiry${subjectArtists ? `: ${subjectArtists}` : ""} from ${payload.name}`,
     "Submission reference": payload.submissionId,
-    email: payload.email,
     Name: payload.name,
     Email: payload.email,
     ...(payload.company && { "Company / promoter": payload.company }),
@@ -237,7 +239,64 @@ function formspreePayload(payload) {
     ...(budget && { "Budget / fee offer": budget }),
     ...(payload.lineup && { "Other artists on the bill": payload.lineup }),
     ...(payload.hearAbout && { "How they heard about us": payload.hearAbout }),
-    Message: payload.message,
+    ...(payload.message && { Message: payload.message }),
+  };
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function enquiryEmail(payload) {
+  const details = enquiryDetails(payload);
+  const detailLines = Object.entries(details).map(([label, value]) => `${label}: ${value}`);
+  const textBody = [
+    `Hi ${payload.name},`,
+    "",
+    "We have received your booking enquiry. This acknowledgement is not confirmation that an artist or date is available.",
+    "",
+    ...detailLines,
+    "",
+    `Reply to this email to update your enquiry. We aim to respond within 48 hours.`,
+    "",
+    SITE_NAME,
+  ].join("\n");
+  const rows = Object.entries(details).map(([label, value]) => `
+    <tr>
+      <th align="left" valign="top" style="padding:8px 12px 8px 0;font-size:13px;color:#666;font-weight:600;white-space:nowrap">${escapeHtml(label)}</th>
+      <td style="padding:8px 0;font-size:14px;color:#111;line-height:1.5">${escapeHtml(value).replaceAll("\n", "<br>")}</td>
+    </tr>`).join("");
+  const htmlBody = `<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#f5f5f5;color:#111;font-family:Arial,sans-serif">
+    <div style="max-width:680px;margin:0 auto;padding:32px 16px">
+      <div style="background:#fff;border:1px solid #ddd;padding:32px">
+        <p style="margin:0 0 16px;font-size:16px">Hi ${escapeHtml(payload.name)},</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.6">We have received your booking enquiry.</p>
+        <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#555"><strong>This acknowledgement is not confirmation</strong> that an artist or date is available.</p>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:1px solid #ddd;border-bottom:1px solid #ddd">${rows}
+        </table>
+        <p style="margin:24px 0 0;font-size:14px;line-height:1.6">Reply to this email to update your enquiry. We aim to respond within 48 hours.</p>
+        <p style="margin:24px 0 0;font-size:14px;font-weight:700">${SITE_NAME}</p>
+      </div>
+    </div>
+  </body>
+</html>`;
+
+  return {
+    sender: { name: SITE_NAME, email: BOOKING_EMAIL },
+    to: [{ email: payload.email, name: payload.name }],
+    bcc: [{ email: BOOKING_EMAIL }],
+    replyTo: { email: BOOKING_EMAIL },
+    subject: enquirySubject(payload),
+    textContent: textBody,
+    htmlContent: htmlBody,
+    tags: ["booking_enquiry"],
   };
 }
 
@@ -286,15 +345,22 @@ async function handleEnquiry(request, env) {
       console.warn(JSON.stringify({ event: "enquiry_rate_limited", scope: "email", requestId }));
       return json(429, { error: "Too many enquiries were sent for this email address. Please wait and try again.", requestId }, { "Retry-After": "60" });
     }
-    if (!env.FORMSPREE_FORM_ID || !/^[A-Za-z0-9]+$/.test(env.FORMSPREE_FORM_ID)) {
+    if (!env.BREVO_API_KEY) {
       console.error(JSON.stringify({ event: "enquiry_delivery_unconfigured", requestId }));
       return json(503, { error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.` });
     }
 
-    const response = await fetch(`https://formspree.io/f/${env.FORMSPREE_FORM_ID}`, {
+    // Brevo deduplicates on a UUID Idempotency-Key for 30 minutes, which covers
+    // client retries of the same submission without double-emailing anyone.
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(formspreePayload(payload)),
+      headers: {
+        "api-key": env.BREVO_API_KEY,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "Idempotency-Key": payload.submissionId,
+      },
+      body: JSON.stringify(enquiryEmail(payload)),
       signal: AbortSignal.timeout(10_000),
     });
     if (response.status === 429) {
@@ -303,7 +369,7 @@ async function handleEnquiry(request, env) {
         "Retry-After": response.headers.get("Retry-After") || "60",
       });
     }
-    if (!response.ok) throw new Error(`Form delivery returned ${response.status}`);
+    if (!response.ok) throw new Error(`Email delivery returned ${response.status}`);
     console.log(JSON.stringify({ event: "enquiry_delivered", requestId }));
     return json(200, { ok: true, requestId });
   } catch (error) {

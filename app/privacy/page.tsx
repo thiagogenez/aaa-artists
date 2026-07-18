@@ -164,7 +164,7 @@ export default function PrivacyPage() {
             <p>Access is limited to people and providers who need it to handle the enquiry or protect the service:</p>
             <ul className={list}>
               <li>Cloudflare provides website delivery, security, rate limiting, and Turnstile bot protection;</li>
-              <li>Formspree processes and delivers the booking form submission;</li>
+              <li>Brevo, an EU-based email provider, processes and delivers the booking acknowledgement to you and a private copy to the booking mailbox;</li>
               <li>the relevant email provider stores and delivers booking correspondence; and</li>
               <li>relevant artists, authorised representatives, and professional advisers may receive the information when necessary to assess or administer a booking.</li>
             </ul>
@@ -177,7 +177,8 @@ export default function PrivacyPage() {
           <section>
             <h2 className={sectionHeading} style={{ color: "var(--text)" }}>International processing</h2>
             <p>
-              Cloudflare, Formspree, email providers, artists, or their representatives may process information outside
+              Brevo processes booking emails within the EU. Cloudflare, other email providers, artists, or their
+              representatives may process information outside
               the UK or EEA. Where data-protection law requires it, transfers must use a recognised adequacy decision,
               contractual safeguards, or another lawful transfer mechanism. Final recipient countries will be recorded
               after the controller confirms the complete operational data flow.

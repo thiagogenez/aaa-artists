@@ -32,11 +32,11 @@
       "vars": {
         "ENVIRONMENT": "staging"
       },
-      // Staging uses Cloudflare's always-pass Turnstile test key pair and may point
-      // FORMSPREE_FORM_ID at a dedicated staging form. Both must still be set so a
-      // misconfigured staging deploy fails at publish time, like production.
+      // Staging uses Cloudflare's always-pass Turnstile test key pair. Outbound email
+      // remains disabled unless a deliberately restricted staging BREVO_API_KEY is
+      // added, preventing the public test-key form from emailing arbitrary recipients.
       "secrets": {
-        "required": ["FORMSPREE_FORM_ID", "TURNSTILE_SECRET_KEY"]
+        "required": ["TURNSTILE_SECRET_KEY"]
       },
       "ratelimits": [
         {
@@ -76,7 +76,7 @@
         "ENVIRONMENT": "production"
       },
       "secrets": {
-        "required": ["FORMSPREE_FORM_ID", "TURNSTILE_SECRET_KEY"]
+        "required": ["BREVO_API_KEY", "TURNSTILE_SECRET_KEY"]
       },
       "ratelimits": [
         {

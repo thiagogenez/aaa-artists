@@ -961,7 +961,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         </div>
         <h2 ref={successHeadingRef} tabIndex={-1} className="mb-3 text-2xl font-bold outline-none" style={{ color: "var(--text)" }}>Enquiry sent</h2>
         <p className="mb-8 max-w-sm text-sm" style={{ color: "var(--text-40)" }}>
-          Your enquiry has been sent. We aim to respond within 48 hours.
+          Your enquiry has been sent, and a copy has been emailed to {form.email}. Reply to that email if you need to add or correct anything. We aim to respond within 48 hours.
         </p>
         <button
           onClick={() => resetForm(false)}
@@ -1549,7 +1549,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           <p className="mt-4 text-xs" role="alert" aria-live="assertive" style={{ color: "var(--error)" }}>{sendError}</p>
         )}
         <p className="mt-4 text-xs" style={{ color: "var(--text-30)" }}>
-          AAA Artists uses your details to respond to and manage this booking enquiry. Delivery is handled by Formspree. Read our{" "}
+          AAA Artists uses your details to respond to and manage this booking enquiry. We will email you a copy so you can reply in the same booking thread. Delivery is handled by Brevo. Read our{" "}
           <Link href="/privacy" className="underline underline-offset-4">privacy notice</Link>. We aim to respond within 48 hours.
         </p>
       </div>
