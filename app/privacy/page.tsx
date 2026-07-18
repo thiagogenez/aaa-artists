@@ -163,14 +163,21 @@ export default function PrivacyPage() {
             <h2 className={sectionHeading} style={{ color: "var(--text)" }}>Who receives the information</h2>
             <p>Access is limited to people and providers who need it to handle the enquiry or protect the service:</p>
             <ul className={list}>
-              <li>Cloudflare provides website delivery, security, rate limiting, and Turnstile bot protection;</li>
-              <li>Brevo, an EU-based email provider, processes and delivers the booking acknowledgement to you and a private copy to the booking mailbox;</li>
+              <li>
+                <a className="underline underline-offset-4" href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare</a>{" "}
+                provides website delivery, security, rate limiting, and Turnstile bot protection;
+              </li>
+              <li>
+                <a className="underline underline-offset-4" href="https://www.brevo.com/legal/privacypolicy/" target="_blank" rel="noopener noreferrer">Brevo</a>,
+                an EU-based email provider, delivers the booking acknowledgement to you and a private copy to the booking mailbox;
+              </li>
               <li>the relevant email provider stores and delivers booking correspondence; and</li>
               <li>relevant artists, authorised representatives, and professional advisers may receive the information when necessary to assess or administer a booking.</li>
             </ul>
             <p className="mt-3">
-              These providers process information under their contractual terms and data-protection obligations. We do
-              not sell booking-enquiry information.
+              Cloudflare and Brevo act as our processors: they handle booking-enquiry information only on our
+              instructions and under their data-processing terms, and their own privacy policies cover the services
+              they provide directly. We do not sell booking-enquiry information.
             </p>
           </section>
 
@@ -201,7 +208,11 @@ export default function PrivacyPage() {
             <h2 className={sectionHeading} style={{ color: "var(--text)" }}>Cookies, local storage, and embedded media</h2>
             <p>
               The site stores your light or dark theme preference in your browser. Cloudflare Turnstile is loaded on the
-              booking form as a security service. Spotify, SoundCloud, and YouTube players are not loaded until you
+              booking form as a security service.{" "}
+              <a className="underline underline-offset-4" href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Spotify</a>,{" "}
+              <a className="underline underline-offset-4" href="https://soundcloud.com/pages/privacy" target="_blank" rel="noopener noreferrer">SoundCloud</a>, and{" "}
+              <a className="underline underline-offset-4" href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">YouTube</a>{" "}
+              players are not loaded until you
               choose to load them; doing so connects your browser to that provider, which may process your IP address
               and use cookies under its own terms.
             </p>
