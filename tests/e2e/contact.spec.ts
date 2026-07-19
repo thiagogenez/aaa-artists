@@ -1,4 +1,15 @@
-import { expect, test } from "playwright/test";
+import { expect, test, type Page } from "playwright/test";
+
+/** Waits for the Turnstile token before submitting, but only when the build
+ *  actually renders a widget. Hermetic CI builds use the literal test-site-key
+ *  (no widget, no token needed); local builds with the always-pass key make a
+ *  real network round-trip that must finish before Send is clicked. The mode
+ *  marker is baked into the prerendered form, so this check cannot race. */
+async function waitForTurnstileToken(page: Page) {
+  if (await page.locator('form[data-turnstile="widget"]').count()) {
+    await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue("", { timeout: 15_000 });
+  }
+}
 
 test.describe("booking form regression coverage", () => {
   test("keeps the mobile form inside the viewport and resets safely", async ({ page }) => {
@@ -120,6 +131,9 @@ test.describe("booking form regression coverage", () => {
     await page.locator('input[name="email"]').fill("jane@example.com");
     await page.locator('input[name="date"]').fill("2026-12-01");
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
+    // Submitting before the widget's token arrives is refused client-side, so
+    // wait for the token like a real visitor effectively does.
+    await waitForTurnstileToken(page);
     await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
 
     // Mobile WebKit on busy CI runners regularly needs more than the global 5s
@@ -182,8 +196,10 @@ test.describe("booking form regression coverage", () => {
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
     await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"))).not.toBeNull();
 
+    // Same Turnstile token wait as the submit test above: never race the widget.
+    await waitForTurnstileToken(page);
     await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible({ timeout: 15_000 });
     await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"))).toBeNull();
   });
 
