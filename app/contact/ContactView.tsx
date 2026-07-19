@@ -990,7 +990,14 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-8">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="space-y-8"
+      // Build-time marker: e2e tests wait for a Turnstile token only when a
+      // widget is actually rendered (hermetic CI builds use test-site-key).
+      data-turnstile={TURNSTILE_SITE_KEY && TURNSTILE_SITE_KEY !== "test-site-key" ? "widget" : "disabled"}
+    >
       <div className="sr-only" aria-hidden="true">
         <label htmlFor="website">Website</label>
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
