@@ -120,6 +120,10 @@ test.describe("booking form regression coverage", () => {
     await page.locator('input[name="email"]').fill("jane@example.com");
     await page.locator('input[name="date"]').fill("2026-12-01");
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
+    // The always-pass Turnstile widget still makes a real network round-trip
+    // before issuing its token; submitting earlier is refused client-side, so
+    // wait for the token like a real visitor effectively does.
+    await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue("", { timeout: 15_000 });
     await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
 
     // Mobile WebKit on busy CI runners regularly needs more than the global 5s
@@ -182,8 +186,10 @@ test.describe("booking form regression coverage", () => {
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
     await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"))).not.toBeNull();
 
+    // Same Turnstile token wait as the submit test above: never race the widget.
+    await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue("", { timeout: 15_000 });
     await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible({ timeout: 15_000 });
     await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"))).toBeNull();
   });
 
