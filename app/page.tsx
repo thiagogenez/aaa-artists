@@ -25,7 +25,9 @@ export default function HomePage() {
         <div className="relative z-10 max-w-4xl">
           {/* Logo with a targeting cross — four rays, each fading out at the logo
               edge and at its far end, sitting behind the text (-z-10). */}
-          <div className="relative mx-auto mb-3 w-24 md:w-32">
+          {/* mb-28 (112px) + the headline's half-leading ≈ the 120px gap between the
+              navbar and the logo above, so the logo sits with symmetric breathing room. */}
+          <div className="relative mx-auto mb-28 w-24 md:w-32">
             {/* Background grid — anchored to the logo and phase-shifted half a cell so a
                 grid line runs through the logo centre, aligning the crosshair to the grid.
                 Hidden below md (elements are fluid there, so grid alignment can't hold) and
