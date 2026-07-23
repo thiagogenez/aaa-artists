@@ -36,14 +36,19 @@ are needed for it.
 
 - [ ] Create the Brevo account under the business owner, enable MFA, accept/review its
   data-processing terms, and create a dedicated production API key used only by the Worker.
-- [ ] Authenticate `aaaartists.co` in Brevo using the exact DNS records it provides
-  (Brevo code, DKIM, and DMARC as offered). Keep open and click tracking disabled for
-  transactional email.
-- [ ] Enable Cloudflare Email Routing for `bookings@aaaartists.co`, forward it to the
-  authorised booking inbox, and verify the destination address.
-- [ ] Configure the booking mailbox to send as `bookings@aaaartists.co` using Brevo's SMTP
-  relay (or the mailbox provider), so staff replies do not expose another address. Brevo
-  SMTP credentials are separate from API keys; do not reuse the Worker key.
+- [x] Authenticate `aaaartists.co` in Brevo using the exact DNS records it provides
+  (Brevo code, DKIM, and DMARC). The existing `_dmarc` record was kept at `p=quarantine`
+  and Brevo's `rua` report address merged into it rather than adding a second record.
+- [ ] Brevo cannot fully disable tracking on transactional email, so set anonymized tracking
+  and per-contact tracking consent to on. Click tracking has nothing to rewrite (the email
+  has no links); only an anonymized open pixel remains.
+- [x] Receiving for `bookings@aaaartists.co` is the existing **Microsoft 365** mailbox
+  (domain runs M365 via GoDaddy — MX `aaaartists-co.mail.protection.outlook.com`). Paul
+  administers it and confirmed the address receives mail. **Never enable Cloudflare Email
+  Routing on this domain** — it would replace the MX records and break Microsoft 365.
+- [ ] Configure the booking mailbox to send as `bookings@aaaartists.co` so staff replies do
+  not expose another address. Microsoft 365 does this natively (shared mailbox or Send As
+  permission); no separate SMTP credential is needed. Do not reuse the Worker's Brevo key.
 - [ ] Add `BREVO_API_KEY` as an encrypted secret on the production Worker. Do not use a
   `NEXT_PUBLIC_` name and do not add the production key to staging.
 - [ ] Test one real enquiry: the customer and the BCC booking inbox must receive the same

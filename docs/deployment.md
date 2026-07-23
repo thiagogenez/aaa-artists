@@ -68,8 +68,11 @@ npx wrangler secret put TURNSTILE_SECRET_KEY --env production
 ```
 
 Before adding the key, authenticate `aaaartists.co` in Brevo with the exact DNS records it
-generates (Brevo code, DKIM, and DMARC as offered) and leave open/click tracking disabled
-for transactional email. Configure Cloudflare Email Routing so incoming mail for
+generates (Brevo code, DKIM, and DMARC as offered). Brevo cannot fully disable tracking on
+transactional email, so enable anonymized tracking (its CNIL-aligned setting) and per-contact
+tracking consent. Click tracking is inert regardless, because the booking acknowledgement
+contains no links for Brevo to rewrite; only an anonymized open pixel remains. Configure
+Cloudflare Email Routing so incoming mail for
 `bookings@aaaartists.co` reaches the authorised booking inbox. To keep staff replies
 visibly within the same thread and identity, configure that mailbox to send as
 `bookings@aaaartists.co` using Brevo's SMTP relay or another authenticated outbound
