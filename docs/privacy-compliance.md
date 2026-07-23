@@ -42,7 +42,7 @@ The Worker hashes the lower-cased email address before using it as a rate-limit 
 ## Processor and transfer record
 
 - Cloudflare: confirm the customer DPA, account region/settings, Turnstile configuration, log retention, and authorised administrators.
-- Brevo: confirm the account plan, DPA, EU data-hosting terms, transactional-email content retention, deletion/export workflow, authenticated sending domain, and authorised administrators. Keep open and click tracking disabled because it is unnecessary for booking acknowledgements.
+- Brevo: confirm the account plan, DPA, EU data-hosting terms, transactional-email content retention, deletion/export workflow, authenticated sending domain, and authorised administrators. Brevo cannot fully disable tracking on transactional email; anonymized tracking and per-contact tracking consent are enabled instead. Click tracking is inert because the booking acknowledgement contains no links to rewrite, leaving only an anonymized open pixel.
 - Email provider: identify the provider, account owner, MFA, administrators, retention/deletion settings, and international-processing terms.
 - Artists and representatives: document when enquiry details are shared, the minimum fields needed, locations, and whether each recipient acts as an independent controller or processor.
 - Other systems: Paul must identify WhatsApp, CRM, accounting, spreadsheets, cloud drives, backups, and any other enquiry stores.
@@ -96,7 +96,7 @@ The controller-designated privacy owner must complete this check monthly. Store 
 
 | Check | Evidence to record |
 | --- | --- |
-| Brevo | Oldest retained booking email, deletion/export action, account administrators, tracking disabled |
+| Brevo | Oldest retained booking email, deletion/export action, account administrators, anonymized tracking + per-contact consent enabled |
 | Booking mailbox | Search date, oldest unsuccessful enquiry, deletion action, retention-rule exceptions |
 | WhatsApp/CRM/spreadsheets/cloud drives | Systems checked, records deleted, records converted to confirmed bookings |
 | Backups | Backup retention window and next expiry date; document why immediate deletion is not technically possible |

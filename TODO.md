@@ -36,9 +36,12 @@ are needed for it.
 
 - [ ] Create the Brevo account under the business owner, enable MFA, accept/review its
   data-processing terms, and create a dedicated production API key used only by the Worker.
-- [ ] Authenticate `aaaartists.co` in Brevo using the exact DNS records it provides
-  (Brevo code, DKIM, and DMARC as offered). Keep open and click tracking disabled for
-  transactional email.
+- [x] Authenticate `aaaartists.co` in Brevo using the exact DNS records it provides
+  (Brevo code, DKIM, and DMARC). The existing `_dmarc` record was kept at `p=quarantine`
+  and Brevo's `rua` report address merged into it rather than adding a second record.
+- [ ] Brevo cannot fully disable tracking on transactional email, so set anonymized tracking
+  and per-contact tracking consent to on. Click tracking has nothing to rewrite (the email
+  has no links); only an anonymized open pixel remains.
 - [ ] Enable Cloudflare Email Routing for `bookings@aaaartists.co`, forward it to the
   authorised booking inbox, and verify the destination address.
 - [ ] Configure the booking mailbox to send as `bookings@aaaartists.co` using Brevo's SMTP
