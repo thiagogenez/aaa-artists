@@ -1,6 +1,6 @@
 # AAA Artists release TODO
 
-Updated: 2026-07-17
+Updated: 2026-07-23
 
 Do not place key values, secrets, deploy-hook URLs, or personal data in this file.
 
@@ -34,12 +34,12 @@ Brevo is a French provider with EU data centres and a free 300-emails/day tier; 
 GDPR the EEA is covered by the UK adequacy regulations, so no extra transfer safeguards
 are needed for it.
 
-- [ ] Create the Brevo account under the business owner, enable MFA, accept/review its
+- [x] Create the Brevo account under the business owner, enable MFA, accept/review its
   data-processing terms, and create a dedicated production API key used only by the Worker.
 - [x] Authenticate `aaaartists.co` in Brevo using the exact DNS records it provides
   (Brevo code, DKIM, and DMARC). The existing `_dmarc` record was kept at `p=quarantine`
   and Brevo's `rua` report address merged into it rather than adding a second record.
-- [ ] Brevo cannot fully disable tracking on transactional email, so set anonymized tracking
+- [x] Brevo cannot fully disable tracking on transactional email, so set anonymized tracking
   and per-contact tracking consent to on. Click tracking has nothing to rewrite (the email
   has no links); only an anonymized open pixel remains.
 - [x] Receiving for `bookings@aaaartists.co` is the existing **Microsoft 365** mailbox
@@ -49,14 +49,17 @@ are needed for it.
 - [ ] Configure the booking mailbox to send as `bookings@aaaartists.co` so staff replies do
   not expose another address. Microsoft 365 does this natively (shared mailbox or Send As
   permission); no separate SMTP credential is needed. Do not reuse the Worker's Brevo key.
-- [ ] Add `BREVO_API_KEY` as an encrypted secret on the production Worker. Do not use a
-  `NEXT_PUBLIC_` name and do not add the production key to staging.
-- [ ] Test one real enquiry: the customer and the BCC booking inbox must receive the same
-  reference and details; the customer's reply must arrive at `bookings@aaaartists.co`;
-  **Reply all** from the initial BCC copy must reach the customer; and AAA's response must
-  remain visibly from the booking address in the expected thread in the real mail client.
-- [ ] After the Brevo release is verified, delete obsolete `FORMSPREE_FORM_ID` secrets and
-  remove/close Formspree data in line with the retention policy and account terms.
+- [x] Add `BREVO_API_KEY` as an encrypted secret on the production Worker (added, and the
+  production deploy `github-62468d6c1f84` promoted 2026-07-23). Not `NEXT_PUBLIC_`; not on
+  staging.
+- [x] Tested one real production enquiry: the customer received the acknowledgement from
+  `bookings@aaaartists.co` and the BCC copy arrived in the M365 `bookings@` inbox (Paul
+  confirmed), same `[B3EDCB7D]` reference. Reply-To is `bookings@`, which receives, so
+  customer replies thread back. **Still to observe once in real use:** staff **Reply all**
+  from the BCC copy reaching the customer, and the thread/identity in the real mail client.
+- [x] Deleted the obsolete `FORMSPREE_FORM_ID` secret from both the production and staging
+  Workers. **Still Paul's task:** remove/close the Formspree form and its stored
+  submissions in line with the retention policy and account terms.
 
 ## Resolved transactional deployment work (PR #12 onward)
 
@@ -90,7 +93,7 @@ are needed for it.
   `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
 - [x] Add the paired private **Secret key** to the deployed Worker's encrypted runtime secret
   `TURNSTILE_SECRET_KEY`. Never give it a `NEXT_PUBLIC_` name or commit it.
-- [ ] Confirm the deployed production Worker has the encrypted `BREVO_API_KEY` secret and
+- [x] Confirm the deployed production Worker has the encrypted `BREVO_API_KEY` secret and
   no browser-visible Brevo credential.
 - [x] Confirm GitHub builds with `npm run build:production` and deploys the Worker plus
   static assets with the pinned Wrangler CLI (run `29450382754`).
@@ -98,7 +101,8 @@ are needed for it.
 - [ ] Manually verify the contact form and Turnstile on a real phone and desktop browser.
 - [ ] Verify one-hop permanent redirects from HTTP apex and HTTPS `www` to HTTPS apex,
   preserving paths and query strings.
-- [ ] Verify `/api/enquiries` returns JSON and that a real valid enquiry is delivered once.
+- [x] Verify `/api/enquiries` returns JSON and that a real valid enquiry is delivered once
+  (verified on production 2026-07-23: enquiry `[B3EDCB7D]` delivered via Brevo; smoke green).
 
 ## Privacy facts and operational work
 
