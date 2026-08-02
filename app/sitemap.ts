@@ -10,7 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const pages: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "monthly", priority: 1 },
     { url: `${SITE_URL}/artists`, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${SITE_URL}/events`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/about`, changeFrequency: "yearly", priority: 0.6 },
     { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.7 },
     ...(PRIVACY_DETAILS_READY
@@ -18,9 +17,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       : []),
   ];
 
+  // Artist pages now carry the upcoming dates, so they change with the roster's
+  // gig calendar rather than with the bio copy.
   const artistPages: MetadataRoute.Sitemap = artists.map((a) => ({
     url: `${SITE_URL}/artist/${a.slug}`,
-    changeFrequency: "monthly",
+    changeFrequency: "weekly",
     priority: 0.8,
   }));
 

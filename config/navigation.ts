@@ -1,7 +1,6 @@
 export const PRIMARY_NAV_LINKS = Object.freeze([
   { href: "/", label: "Home" },
   { href: "/artists", label: "Artists" },
-  { href: "/events", label: "Events" },
   { href: "/about", label: "About" },
 ]);
 

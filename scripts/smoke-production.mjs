@@ -52,7 +52,7 @@ await check(smokeTarget === "canonical" ? "apex homepage" : `${smokeTarget} home
 });
 
 if (smokeTarget === "canonical") {
-  const redirectPath = "/events?source=production-smoke";
+  const redirectPath = "/artists?source=production-smoke";
   for (const source of ["http://aaaartists.co", "https://www.aaaartists.co"]) {
     await check(`${source} redirect`, async () => {
       const response = await fetch(`${source}${redirectPath}`, requestOptions({ redirect: "manual" }));
