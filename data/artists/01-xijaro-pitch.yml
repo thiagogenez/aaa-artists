@@ -80,13 +80,16 @@ gigs:
     country: Netherlands
     ticketLink: https://shop.weeztix.com/5bff1280-a0c9-4f0a-b4f2-4877aec6f021/tickets
     flyer: /flyers/in-trance-we-trust-ade-2026.webp
-  # ADE — Amsterdam Trance Event, b2b Alex M.O.R.P.H.; date announced as 24 Oct,
-  # reconfirm when tickets go live (source article's weekday didn't match).
+  # ADE 2026 — Nocturnal Knights pres. Amsterdam Trance Event, 14:30–21:30,
+  # mainroom b2b with Alex M.O.R.P.H. Date and venue confirmed against the
+  # ticket shop and the line-up poster.
   - date: '2026-10-24'
     eventId: ade-2026-xijaro-pitch
     venue: Club Panama
     city: Amsterdam
     country: Netherlands
+    ticketLink: https://shop.weeztix.com/ff5f2df9-47ac-11f1-a9cb-7e126431635e/
+    flyer: /flyers/amsterdam-trance-event-ade-2026.webp
   - date: '2026-10-31' # Seriously Uplifting 8
     eventId: seriously-uplifting-8-2026
     venue: The Globe
