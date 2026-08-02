@@ -14,6 +14,9 @@ socials:
   soundcloud: https://soundcloud.com/user-555399327 # FROGR's real account (soundcloud.com/frogr is someone else)
   # Add FROGR's real Spotify URL here to show a live player, e.g.
   # spotify: https://open.spotify.com/artist/REAL_ID
+sources:
+  skiddle: 123614121       # verified: returns their XOYO date
+
 # Verified gigs only (AAA pres. Fusion circuit). Oldest first — the site shows newest first.
 gigs:
   - date: '2025-01-18'
@@ -43,3 +46,12 @@ gigs:
     country: UK
     ticketLink: https://www.skiddle.com/e/42326656
     flyer: /flyers/fusion-daxson-xoyo.webp
+  # ADE 2026 — AAA Events pres. High Voltage Recordings x Critical Sounds label
+  # showcase. 14:00–22:00, free event, RSVP via AAA socials.
+  - date: "2026-10-23"
+    eventId: aaa-high-voltage-critical-sounds-ade-2026
+    venue: The Tequila Club
+    city: Amsterdam
+    country: Netherlands
+    freeEntry: true
+    flyer: /flyers/high-voltage-critical-sounds-ade-2026.webp

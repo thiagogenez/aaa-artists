@@ -13,6 +13,9 @@ socials:
   instagram: https://instagram.com/sagomusic
   soundcloud: https://soundcloud.com/daniel-huckett # SAGO's real account (soundcloud.com/sago is someone else)
   facebook: https://facebook.com/sagoofficial
+sources:
+  skiddle: 123607599       # verified: returns Basing House + Egg London AAA nights
+
 # Verified gigs only (AAA pres. Fusion circuit). Oldest first — the site shows newest first.
 gigs:
   - date: '2025-01-18'
@@ -27,6 +30,11 @@ gigs:
     venue: Grand Café Eighty-Four
     city: Amsterdam
     country: Netherlands
+  # Bringthenoise x Rite2Rave pres. The Office Christmas Party
+  - date: "2025-12-20"
+    venue: Sawan
+    city: Plymouth
+    country: UK
   - date: '2026-01-17'
     venue: Basing House
     city: London
@@ -42,3 +50,12 @@ gigs:
     country: UK
     ticketLink: https://www.skiddle.com/e/42326656
     flyer: /flyers/fusion-daxson-xoyo.webp
+  # ADE 2026 — AAA Events pres. Chasing Dreams, fundraiser for the Norrie Disease
+  # Foundation. 14:00–21:00, free entry, donations on the door.
+  - date: "2026-10-21"
+    eventId: aaa-chasing-dreams-ade-2026
+    venue: Café Restaurant De Kroon
+    city: Amsterdam
+    country: Netherlands
+    freeEntry: true
+    flyer: /flyers/chasing-dreams-ade-2026.webp

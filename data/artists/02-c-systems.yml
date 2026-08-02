@@ -15,9 +15,18 @@ socials:
   soundcloud: https://soundcloud.com/c-systems
   facebook: https://facebook.com/csystems
   spotify: https://open.spotify.com/artist/23u5Z7BfuCPFLl4JE1uacp
-  beatport: https://www.beatport.com/artist/c-systems/
+  beatport: https://www.beatport.com/artist/csystems/92662
+sources:
+  bandsintown: id_394624   # bandsintown.com/a/394624-c-systems
+  skiddle: 123605928       # verified: returns Timescape + XOYO
+
 # Verified gigs only. Oldest first — the site shows newest first.
 gigs:
+  # Trance Sanctuary meets Peach NYD — w/ Signum, Edele Andaya, Mark Landragin, Chris Bayne
+  - date: "2024-01-01"
+    venue: Ministry of Sound
+    city: London
+    country: UK
   - date: '2025-01-18'
     venue: Basing House
     city: London
@@ -28,6 +37,36 @@ gigs:
     country: UK
   - date: '2025-08-30'
     venue: Egg London
+    city: London
+    country: UK
+  # Fusion meets High Voltage — w/ Allen Watts, Artento Divini, 0Gravity, Daniel Skyver
+  - date: "2026-01-17"
+    venue: Basing House
+    city: London
+    country: UK
+  # Black Hole pres. In Trance We Trust — w/ Misja Helsloot. Mezz is in Breda.
+  - date: "2026-03-14"
+    venue: Mezz
+    city: Breda
+    country: Netherlands
+  # Oblivion Trance UK
+  - date: "2026-03-28"
+    venue: Egg London
+    city: London
+    country: UK
+  # Ruben de Ronde Extended Set
+  - date: "2026-04-11"
+    venue: Egg London
+    city: London
+    country: UK
+  # Euphoria Weekender Malta
+  - date: "2026-05-28"
+    venue: Gianpula Village
+    city: Rabat
+    country: Malta
+  # Mondo — w/ Darren Tate, Simon Gregory, Nitrous Oxide, nümind
+  - date: "2026-06-13"
+    venue: Brixton Jamm
     city: London
     country: UK
   # Timescape runs 7–9 Aug 2026; C-Systems confirmed on the lineup, exact day TBC.
@@ -45,3 +84,21 @@ gigs:
     country: UK
     ticketLink: https://www.skiddle.com/e/42326656
     flyer: /flyers/fusion-daxson-xoyo.webp
+  # DS:30YRS — Dan Stone's 30-year celebration, 14:00–21:00, w/ Dan Stone
+  # (extended 2hr set), Bryn Whiting, Marcos, NUMIND and PARTS.
+  - date: "2026-09-12"
+    eventId: ds-30yrs-2026
+    venue: Basing House
+    city: London
+    country: UK
+    ticketLink: https://www.linesapp.co/event/ds30yrs-2026-09-12-basing-house-shoreditch-london
+    flyer: /flyers/ds-30yrs-2026.webp
+  # ADE 2026 — AAA Events pres. Chasing Dreams, fundraiser for the Norrie Disease
+  # Foundation. 14:00–21:00, free entry, donations on the door.
+  - date: "2026-10-21"
+    eventId: aaa-chasing-dreams-ade-2026
+    venue: Café Restaurant De Kroon
+    city: Amsterdam
+    country: Netherlands
+    freeEntry: true
+    flyer: /flyers/chasing-dreams-ade-2026.webp
