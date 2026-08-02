@@ -34,7 +34,6 @@ app/
   artists/page.tsx       # Artist grid (/artists)
   artist/[slug]/page.tsx # Individual artist detail (media boxes + upcoming flyers)
   contact/page.tsx       # Booking enquiry form (/contact)
-  events/page.tsx        # Deduplicated upcoming event listing (/events)
   privacy/page.tsx       # Privacy notice and complaints route (/privacy)
   about/page.tsx         # About page
   layout.tsx             # Root layout (navbar + footer)
@@ -43,7 +42,9 @@ components/
   Navbar.tsx             # Fixed top navigation — Home, Artists, About, Book Now
   Footer.tsx             # Site footer (links to AAA Events socials)
   Breadcrumbs.tsx        # Visible navigation trail + matching JSON-LD
-  ThirdPartyConsent.tsx  # Shared click-to-load privacy facade for external media
+  ThirdPartyConsent.tsx  # Per-embed gate: auto-loads once consent is granted
+  MediaConsentBanner.tsx # One-time accept/decline prompt for third-party players
+  useMediaConsent.ts     # Reads the stored choice (lib/media-consent.ts)
 config/
   booking.js             # Shared enquiry limits, enums, and validation constants
   navigation.ts          # Shared header/footer navigation definitions
@@ -94,10 +95,9 @@ socials:                      # all optional
   soundcloud: https://…       # if set, a SoundCloud player appears on the artist page
   facebook: https://…
   spotify: https://…          # shown as a link "box" on the artist page
-  youtube: https://…          # shown as a link "box" on the artist page
+  youtube: https://…          # accepted but NOT displayed — see "Media boxes" below
   beatport: https://…
 # spotifyEmbed: https://…     # optional — a Spotify URL renders a live player box
-# youtubeEmbed: https://…     # optional — a YouTube URL renders a live player box
 gigs:                         # ONE list, oldest → newest; the date decides past vs upcoming
   - date: "2025-10-18"        # past date → shown dimmed in the history list
     venue: Privilege
@@ -123,12 +123,42 @@ artist, ordered oldest to newest; the date decides whether an entry shows as upc
 past, so finished gigs need no editing. To add a new artist, copy an existing file with
 the next number prefix.
 
-### Media boxes ("Listen & Watch")
+### Media boxes ("Listen")
 
-The artist page shows a grid of media boxes. SoundCloud renders a live embed from
-`socials.soundcloud`. Spotify and YouTube render a live player when `spotifyEmbed` /
-`youtubeEmbed` are set; otherwise they fall back to a clickable link card built from
-`socials.spotify` / `socials.youtube`.
+The artist page shows a grid of media boxes, and it is **audio-only**. SoundCloud renders a
+live embed from `socials.soundcloud`; Spotify renders a live player from `spotifyEmbed` or
+`socials.spotify`, falling back to a clickable link card. Both boxes are 450px tall — that
+height is what decides how many tracks are visible, and SoundCloud uses `visual=false` (the
+list player) because `visual=true` spends most of its height on artwork and fits only ~3
+rows.
+
+The section is a centred `max-w-4xl` block with players stacked in one column, so the
+heading and every player share a left edge regardless of how many players an artist has.
+Five of the seven artists have SoundCloud only. A side-by-side grid was tried and reverted
+twice: at full width the lone player stranded a dead half-column, and centring it left the
+"Listen" heading hanging out to the left of its own content. Keep one column.
+
+**Two players is the deliberate limit** — SoundCloud and Spotify. `socials.beatport` is a
+link icon only; there is no Beatport player, and adding one was tried and rejected
+(2026-08-02). If it comes up again, the constraints are:
+
+- Beatport has no artist-level embed. `type=artist` and `type=label` both return "that item
+  can't be displayed"; only `type=track` and `type=chart` render.
+- Its artist pages return **403** to curl *and* to a real headless browser (Cloudflare bot
+  protection). A scraper would pass locally and fail in CI, exactly as Cloudflare already
+  blocks GitHub runners on our own domain.
+- The v4 API does expose `/catalog/artists/<id>/tracks/`, but returns **401** without
+  partner OAuth credentials. Do not work around that with borrowed client keys.
+
+That leaves hand-copied track IDs, which freeze into a stale "top 10" and cost a third-party
+frame each. Not worth it for a third player.
+
+YouTube is not shown anywhere on the artist page: no player, no link card, and no icon in
+the social strip. `socials.youtube` is still accepted in YAML (nothing is lost) but is
+filtered out by `HIDDEN_SOCIAL_PLATFORMS` in `app/artist/[slug]/page.tsx` — delete the entry
+there to bring it back. `youtubeEmbed` is rejected by `npm run check` so it cannot be set in
+the belief that it renders. The footer still links to the AAA Events YouTube account, which
+is the company's channel and separate from artist media.
 
 ### Upcoming events (flyer boxes)
 
@@ -173,15 +203,59 @@ See `docs/deployment.md` for the exact variables, secrets, and smoke tests.
 
 ## Events and structured data
 
+There is no site-wide events page. Dates are shown on each artist's page (`Upcoming Events`
+and `Past Dates` in `app/artist/[slug]/EventsSection.tsx`), and the Worker permanently
+redirects the retired `/events` URL to `/artists`.
+
 Every future-dated gig requires a stable `eventId`. Reuse the same ID for every artist on a
-shared event so `/events` can merge the performers into one listing. Dates accept exact
+shared event: each performer's page emits its own `MusicEvent`, and the shared ID travels as
+the schema `identifier` so consumers can tell it is one real event. Dates accept exact
 `YYYY-MM-DD` values or month-only `YYYY-MM` values when the day is TBC. Month-only events
 stay visible but do not produce exact-date `MusicEvent` schema. A ticket URL does not imply
 availability; add `ticketStatus: available` only when it has been verified.
 
-Structured event data is emitted once on `/events`, not duplicated across artist pages.
-Nested artist pages use visible breadcrumbs with matching JSON-LD. Spotify, YouTube, and
-other third-party frames remain click-to-load so they make no provider request beforehand.
+Each flyer card carries `id="event-<eventId>"`, which is the fragment its JSON-LD `@id` and
+`url` point at — keep the two in sync. Nested artist pages use visible breadcrumbs with
+matching JSON-LD. Spotify, YouTube, and SoundCloud frames make no provider request until the
+visitor has consented — see below.
+
+## Media consent
+
+Embedding a third-party player hands the visitor's IP to that provider and sets storage on
+their device, which under UK GDPR/PECR needs consent first. `MediaConsentBanner` asks once
+and stores the answer in `localStorage` under `aaa-media-consent-v1` (never sent to a
+server). `granted` embeds players automatically site-wide; `denied` or unanswered keeps
+`ThirdPartyConsent`'s per-player "Load … player" button, which is a one-off and does not
+become site-wide consent. `/privacy` carries a control to switch or reset the answer,
+because withdrawing consent must be as easy as giving it.
+
+E2E specs that are not about consent call `seedMediaConsent(page)` from
+`tests/e2e/helpers.ts`; it answers "denied", which keeps the banner hidden and stops any
+test reaching a real provider.
+
+## Artist events automation
+
+`npm run fetch:events` proposes upcoming gigs from Skiddle and Bandsintown and, in the
+workflow, opens a **draft** pull request. It never merges, never deploys, and never rewrites a
+gig a human verified — proposals are additive only.
+
+Artists are matched by explicit id in an optional `sources:` block per YAML file
+(`skiddle`, `bandsintown`, `ra`), never by name search: the roster has real name collisions,
+and a guessed match would attribute a stranger's gig to an artist. No id for a source means
+that source is skipped. `gen-artists.mjs` validates the block and strips it from the generated
+JSON.
+
+RA.co is a **review link only** — `ra.co/dj/<slug>` returns an outright Cloudflare block to
+scripts and headless browsers alike, so it cannot be fetched from CI. Do not add an RA
+scraper; it would pass locally and fail in Actions. Ticketmaster is supported by the adapter
+pattern but deliberately unused.
+
+`propose-yaml.mjs` edits YAML as text because `js-yaml` cannot round-trip the comments that
+carry the verification trail. Never swap it for a load/dump cycle. Every write must leave the
+file parseable, the gig order intact, and every existing gig byte-identical.
+
+See `docs/artist-events-automation.md`. The schedule stays off until the API keys exist and
+one manual run has been reviewed.
 
 ## Privacy release gate
 
@@ -273,8 +347,9 @@ process; the Node version controls dependency installation, generation, tests, a
 
 - Contact security, same-origin delivery, Turnstile recovery, streaming size limits,
   privacy-safe request IDs, retry semantics, and canonical redirects are implemented.
-- Events are normalized and deduplicated, TBC month dates are supported, and structured
-  data no longer makes unverified availability or exact-date claims.
+- Events live on the artist pages only (the `/events` page was removed 2026-08-02 and now
+  301s to `/artists`). TBC month dates are supported, and structured data no longer makes
+  unverified availability or exact-date claims.
 - Navigation definitions and third-party consent UI are shared; the footer is compact and
   aligned with the header across phone and desktop widths.
 - Privacy controller/address/ICO/retention/complaints facts are recorded, but the notice

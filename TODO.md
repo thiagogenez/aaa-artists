@@ -140,6 +140,29 @@ are needed for it.
 - [x] Confirm the PR and protected-`main` `verify` and `browser` jobs pass. The
   inactive-candidate preview issue is resolved; the transactional deployment path is live.
 
+### Artist events automation
+
+- [x] Built Phase 1: Skiddle + Bandsintown adapters, merge/dedupe, comment-preserving YAML
+  insertion, draft-PR workflow, and 29 fixture-based unit tests
+  (`docs/artist-events-automation.md`).
+- [x] Obtained a Skiddle API key and verified the adapter against the live API. Two
+  false-positive duplicates found and fixed (qualified venue names, and month-only "TBC"
+  dates); both are now regression-tested.
+- [x] Filled in the verified `sources:` blocks. Every Skiddle id was confirmed by matching
+  the artist's own gig history, never by name alone.
+- [ ] Add `SKIDDLE_API_KEY` as a GitHub Actions secret:
+  `gh secret set SKIDDLE_API_KEY --repo thiagogenez/webpage`
+- [ ] Contact dev@skiddle.com for **commercial use approval** before the workflow runs on a
+  schedule — the key was issued with that condition attached.
+- [ ] Bandsintown: email API@bandsintown.com for agency/roster access. Their self-serve keys
+  are tied to a single artist, which does not fit a roster. Artist ids are already recorded
+  for XiJaro & Pitch, C-Systems and Krevix; the adapter stays dormant until the app id exists.
+- [ ] No Skiddle artist exists for Krevix or Mr. B — recheck when they next play a
+  Skiddle-ticketed date.
+- [ ] Dispatch `.github/workflows/fetch-artist-events.yml` manually once, review the draft PR,
+  and only then let the Mon/Wed/Fri schedule run. The adapters have not been exercised against
+  a live key yet.
+
 ## Follow-up maintenance
 
 - [ ] Monitor the moderate nested PostCSS advisory and upgrade through a patched stable
