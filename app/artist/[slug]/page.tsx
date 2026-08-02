@@ -1,18 +1,29 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import SpotifyPlayer from "@/components/SpotifyPlayer";
 import SocialIcon from "@/components/SocialIcons";
 import { artists, getArtistBySlug } from "@/data/artists";
 import type { Metadata } from "next";
 import { SITE_URL, createPageMetadata, sentenceDescription, serializeJsonLd } from "@/lib/site";
+import { isExactEventDate, isUpcomingEventDate } from "@/lib/events";
 import EventsSection from "./EventsSection";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import ThirdPartyEmbed from "@/components/ThirdPartyEmbed";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
+
+// Platforms accepted in `data/artists/*.yml` but not surfaced on the artist page.
+// The roster's material is audio, and no artist has YouTube content worth
+// featuring right now, so the URLs stay in the data (nothing is lost) while the
+// page stays audio-only. Delete an entry here to bring a platform back.
+const HIDDEN_SOCIAL_PLATFORMS = new Set(["youtube"]);
+
+const EVENT_AVAILABILITY = {
+  available: "https://schema.org/InStock",
+  "sold-out": "https://schema.org/SoldOut",
+  unavailable: "https://schema.org/Discontinued",
+} as const;
 
 export async function generateStaticParams() {
   return artists.map((a) => ({ slug: a.slug }));
@@ -42,51 +53,6 @@ function spotifyEmbedSrc(url: string): string | null {
   return `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator`;
 }
 
-/** Convert a YouTube video or playlist URL into its embed equivalent. */
-function youtubeEmbedSrc(url: string): string | null {
-  const playlist = url.match(/[?&]list=([A-Za-z0-9_-]+)/);
-  if (playlist) return `https://www.youtube-nocookie.com/embed/videoseries?list=${playlist[1]}`;
-  const video =
-    url.match(/[?&]v=([A-Za-z0-9_-]{11})/) ?? url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
-  if (video) return `https://www.youtube-nocookie.com/embed/${video[1]}`;
-  return null;
-}
-
-/** A bordered box wrapping an embedded player. */
-function MediaBox({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="overflow-hidden border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
-      <div className="border-b px-4 py-3" style={{ borderColor: "var(--border)" }}>
-        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-40)" }}>
-          {label}
-        </p>
-      </div>
-      <div>{children}</div>
-    </div>
-  );
-}
-
-/** A clickable card for platforms that only have a profile link (no embed). */
-function MediaLinkCard({ platform, label, href }: { platform: string; label: string; href: string }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="btn-outline group flex items-center justify-between gap-4 px-5 py-4"
-      style={{ backgroundColor: "var(--surface)" }}
-    >
-      <span className="flex items-center gap-3">
-        <SocialIcon platform={platform} />
-        <span className="text-sm font-semibold uppercase tracking-widest">{label}</span>
-      </span>
-      <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-      </svg>
-    </a>
-  );
-}
-
 export default async function ArtistPage({ params }: Props) {
   const { slug } = await params;
   const artist = getArtistBySlug(slug);
@@ -105,16 +71,9 @@ export default async function ArtistPage({ params }: Props) {
     : artist.socials.spotify
       ? spotifyEmbedSrc(artist.socials.spotify)
       : null;
-  const youtubeSrc = artist.youtubeEmbed ? youtubeEmbedSrc(artist.youtubeEmbed) : null;
-  const linkCards = [
-    !spotifySrc && artist.socials.spotify ? { platform: "spotify", label: "Spotify", href: artist.socials.spotify } : null,
-    !youtubeSrc && artist.socials.youtube ? { platform: "youtube", label: "YouTube", href: artist.socials.youtube } : null,
-  ].filter((c): c is { platform: string; label: string; href: string } => c !== null);
-
-  const hasMedia =
-    Boolean(artist.socials.soundcloud) || Boolean(spotifySrc) || Boolean(youtubeSrc) || linkCards.length > 0;
-  // "Watch" only applies when there's an actual video player.
-  const mediaHeading = youtubeSrc ? "Listen & Watch" : "Listen";
+  const socialLinks = Object.entries(artist.socials).filter(
+    ([platform]) => !HIDDEN_SOCIAL_PLATFORMS.has(platform),
+  );
 
   // Per-artist structured data for richer search results.
   const artistLd = {
@@ -127,12 +86,65 @@ export default async function ArtistPage({ params }: Props) {
     image: `${SITE_URL}${artist.image}`,
     sameAs: Object.values(artist.socials).filter(Boolean),
   };
+
+  // Event structured data lives on the artist pages (there is no /events page).
+  // Month-only dates are skipped: MusicEvent.startDate must be an exact date, and
+  // a guessed day would be an unverified claim. When several roster artists play
+  // the same event, each page emits its own node; the shared `identifier` (the
+  // gig's eventId) marks them as the same real-world event.
+  const eventLd = artist.gigs
+    .filter((gig) => isUpcomingEventDate(gig.date, buildNow) && isExactEventDate(gig.date) && gig.eventId)
+    .map((gig) => ({
+      "@context": "https://schema.org",
+      "@type": "MusicEvent",
+      "@id": `${SITE_URL}/artist/${artist.slug}#event-${gig.eventId}`,
+      identifier: gig.eventId,
+      name: `${artist.name} at ${gig.venue}`,
+      startDate: gig.date,
+      eventStatus: "https://schema.org/EventScheduled",
+      eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+      url: `${SITE_URL}/artist/${artist.slug}#event-${gig.eventId}`,
+      image: `${SITE_URL}${gig.flyer ?? artist.image}`,
+      location: {
+        "@type": "Place",
+        name: gig.venue,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: gig.city,
+          addressCountry: gig.country,
+        },
+      },
+      performer: {
+        "@type": artist.artistType === "group" ? "MusicGroup" : "Person",
+        name: artist.name,
+        url: `${SITE_URL}/artist/${artist.slug}`,
+      },
+      // schema.org's own boolean for free events — states the fact without
+      // inventing a price or a currency the flyer never gave us.
+      ...(gig.freeEntry && { isAccessibleForFree: true }),
+      // A ticket URL alone is not proof of availability, so offers are emitted
+      // only once ticketStatus has been verified.
+      ...(gig.ticketLink && gig.ticketStatus && {
+        offers: {
+          "@type": "Offer",
+          url: gig.ticketLink,
+          availability: EVENT_AVAILABILITY[gig.ticketStatus],
+        },
+      }),
+    }));
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(artistLd) }}
       />
+      {eventLd.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(eventLd) }}
+        />
+      )}
       {/* Artist hero */}
       <div className="relative border-b px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-7xl">
@@ -161,9 +173,9 @@ export default async function ArtistPage({ params }: Props) {
               </div>
 
               {/* Socials */}
-              {Object.keys(artist.socials).length > 0 && (
+              {socialLinks.length > 0 && (
                 <div className="flex flex-wrap justify-center gap-3">
-                  {Object.entries(artist.socials).map(([platform, url]) =>
+                  {socialLinks.map(([platform, url]) =>
                     url ? (
                       <a
                         key={platform}
@@ -203,66 +215,8 @@ export default async function ArtistPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Media — Listen & Watch */}
-      {hasMedia && (
-        <div className="border-t px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
-          <div className="mx-auto max-w-7xl">
-            <h2 className="mb-8 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>{mediaHeading}</h2>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {/* SoundCloud */}
-              {artist.socials.soundcloud && (
-                <MediaBox label="SoundCloud">
-                  {/* visual=true uses the track artwork as a (usually dark) full-bleed
-                      background — SoundCloud's own dark-looking player, with artwork shown
-                      correctly. It renders dark once a real track/profile URL is set; with
-                      placeholder URLs it falls back to the light "can't load" state. */}
-                  <ThirdPartyEmbed
-                    provider="SoundCloud"
-                    title={`${artist.name} on SoundCloud`}
-                    src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(artist.socials.soundcloud)}&color=%23888888&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`}
-                    allow="autoplay"
-                    className="h-[352px]"
-                  />
-                </MediaBox>
-              )}
-
-              {/* Spotify — player follows the site theme (light/dark) */}
-              {spotifySrc && (
-                <MediaBox label="Spotify">
-                  <SpotifyPlayer src={spotifySrc} title={`${artist.name} on Spotify`} />
-                </MediaBox>
-              )}
-
-              {/* YouTube */}
-              {youtubeSrc && (
-                <MediaBox label="YouTube">
-                  <ThirdPartyEmbed
-                    provider="YouTube"
-                    src={youtubeSrc}
-                    title={`${artist.name} on YouTube`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="aspect-video"
-                  />
-                </MediaBox>
-              )}
-            </div>
-
-            {/* Link-only platforms */}
-            {linkCards.length > 0 && (
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {linkCards.map((c) => (
-                  <MediaLinkCard key={c.platform} platform={c.platform} label={c.label} href={c.href} />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Events — Upcoming & Past, split by the viewer's current date (client) */}
-      <EventsSection artist={artist} buildNow={buildNow} />
+      {/* Activity — upcoming dates, players and progressively disclosed history */}
+      <EventsSection artist={artist} buildNow={buildNow} spotifySrc={spotifySrc} />
 
       {/* Other artists */}
       <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
