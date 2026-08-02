@@ -376,6 +376,18 @@ type DraftShape = {
   currencyTouched: boolean;
 };
 
+// Dropdown fields the Worker validates against a fixed list. A draft written
+// before one of those lists changed can hold a value that no longer exists — the
+// select would render blank while still holding the stale value, and the Worker
+// would reject the submission. Restore only values that are still offered.
+const DRAFT_ENUM_FIELDS: Record<string, readonly string[]> = {
+  eventType: EVENT_TYPES,
+  capacity: CAPACITY_RANGES,
+  ticketing: TICKETING_OPTIONS,
+  budgetRange: BUDGET_RANGES,
+  hearAbout: HEAR_ABOUT_OPTIONS,
+};
+
 function readDraft(validArtists: Set<string>): DraftShape | null {
   try {
     const raw = window.sessionStorage.getItem(DRAFT_STORAGE_KEY);
@@ -384,7 +396,10 @@ function readDraft(validArtists: Set<string>): DraftShape | null {
     if (parsed.version !== 1 || typeof parsed.form !== "object" || !parsed.form) return null;
     const form: Record<string, string> = {};
     for (const [key, value] of Object.entries(parsed.form)) {
-      if (typeof value === "string") form[key] = value.slice(0, 2000);
+      if (typeof value !== "string") continue;
+      const allowed = DRAFT_ENUM_FIELDS[key];
+      if (allowed && value !== "" && !allowed.includes(value)) continue;
+      form[key] = value.slice(0, 2000);
     }
     const bookings = (Array.isArray(parsed.artistBookings) ? parsed.artistBookings : [])
       .filter((booking) => booking && typeof booking === "object")
