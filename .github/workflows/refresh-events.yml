@@ -10,7 +10,7 @@ on:
   schedule:
     # 01:11 UTC — AAA o'clock (A is the 1st letter: 1-1-1). Early morning across
     # Europe (02:11 London / 03:11 Amsterdam in summer), shortly after the UTC
-    # date change so yesterday's events drop off /events promptly, and off the
+    # date change so yesterday's events drop off the artist pages promptly, and off the
     # congested :00/:30 marks GitHub advises avoiding for schedules.
     - cron: "11 1 * * *"
   workflow_dispatch:

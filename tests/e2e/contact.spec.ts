@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "playwright/test";
+import { seedMediaConsent } from "./helpers";
 
 /** Waits for the Turnstile token before submitting, but only when the build
  *  actually renders a widget. Hermetic CI builds use the literal test-site-key
@@ -12,6 +13,12 @@ async function waitForTurnstileToken(page: Page) {
 }
 
 test.describe("booking form regression coverage", () => {
+  // The consent banner is a fixed bottom bar; answering it up front keeps it
+  // from overlapping the form controls these tests click.
+  test.beforeEach(async ({ page }) => {
+    await seedMediaConsent(page);
+  });
+
   test("keeps the mobile form inside the viewport and resets safely", async ({ page }) => {
     await page.goto("/contact");
 

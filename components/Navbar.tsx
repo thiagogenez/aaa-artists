@@ -72,7 +72,10 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <ul className="hidden items-center gap-8 md:flex">
+        {/* lg, not md: the rest of the site switches layout at 1024, so switching
+            the nav at 768 put a desktop header on top of a tablet-width page.
+            iPad portrait now gets the hamburger. */}
+        <ul className="hidden items-center gap-8 lg:flex">
           {PRIMARY_NAV_LINKS.map(({ href, label }) => {
             const active = isActive(href);
             return (
@@ -118,7 +121,7 @@ export default function Navbar() {
         </ul>
 
         {/* Mobile: theme toggle + hamburger */}
-        <div className="flex items-center gap-3 md:hidden">
+        <div className="flex items-center gap-3 lg:hidden">
           <button
             onClick={toggle}
             aria-label={themeLabel}
@@ -153,7 +156,7 @@ export default function Navbar() {
       {open && (
         <div
           id="mobile-menu"
-          className="border-t px-6 py-6 md:hidden"
+          className="border-t px-6 py-6 lg:hidden"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
         >
           <ul className="flex flex-col gap-2">

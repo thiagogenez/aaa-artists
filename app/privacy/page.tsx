@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PRIVACY_CONFIG, PRIVACY_DETAILS_READY } from "@/config/privacy";
 import { PRIVACY_EMAIL, createPageMetadata } from "@/lib/site";
+import MediaConsentControl from "./MediaConsentControl";
 
 const description = "How AAA Artists handles personal information submitted through booking enquiries and this website.";
 
@@ -213,9 +214,15 @@ export default function PrivacyPage() {
               <a className="underline underline-offset-4" href="https://soundcloud.com/pages/privacy" target="_blank" rel="noopener noreferrer">SoundCloud</a>, and{" "}
               <a className="underline underline-offset-4" href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">YouTube</a>{" "}
               players are not loaded until you
-              choose to load them; doing so connects your browser to that provider, which may process your IP address
+              agree to them; doing so connects your browser to that provider, which may process your IP address
               and use cookies under its own terms.
             </p>
+            <p>
+              We ask for that agreement once, in a banner, before any player is requested. Your answer is kept in your
+              own browser&apos;s local storage and is never sent to us. If you decline, or have not answered, you can
+              still load an individual player by clicking it. You can change your answer at any time below.
+            </p>
+            <MediaConsentControl />
           </section>
 
           <section>

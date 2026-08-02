@@ -390,6 +390,12 @@ const worker = {
       url.hostname = SITE_HOSTNAME;
       return Response.redirect(url, 308);
     }
+    // /events was retired — dates now live on each artist page. The URL was
+    // indexed and linked, so send it to the roster instead of a 404.
+    if (url.pathname === "/events" || url.pathname === "/events/") {
+      url.pathname = "/artists";
+      return Response.redirect(url, 301);
+    }
     if (url.pathname === "/api/enquiries") {
       if (request.method !== "POST") {
         return new Response(null, { status: 405, headers: { Allow: "POST", ...JSON_HEADERS } });

@@ -1,144 +1,164 @@
-# Artist events automation (design)
+# Artist events automation
 
-Status: **proposed** — this document describes the intended design. No code is built yet.
+Status: **built (Phase 1)** — runnable locally today. The scheduled workflow stays disabled
+until the API keys exist and one manual run has been reviewed.
 
 ## Goal
 
-Reduce the manual work of keeping each artist's `gigs:` list current by fetching gig
-information from external sources on a schedule, and **proposing** changes as a draft pull
-request for human review. The automation never publishes anything on its own: a person
-reviews and merges, and merging follows the normal staging-first deploy flow.
+Keep each artist's `gigs:` list current by fetching gig information from external sources on a
+schedule and **proposing** the result as a draft pull request. The automation never publishes
+anything itself: a person reviews and merges, and merging follows the normal staging-first
+deploy flow.
 
 This preserves the site's "verified gigs only" principle — a machine suggests, a human
 confirms.
 
 ## Non-goals
 
-- No automatic merging, no automatic production deploy. The bot only opens **draft PRs**.
-- No deletion or overwriting of existing hand-verified gigs. Proposals are **additive**;
-  anything that looks like a change to an existing entry is surfaced for a human to judge,
-  not applied silently.
-- No fabricated data. Every proposed gig cites its source and (where available) a ticket
-  link, so it can be verified before merge, consistent with `feedback_site_copy` rules.
+- No automatic merging and no automatic production deploy. The bot opens **draft PRs** only.
+- No deletion or rewriting of hand-verified gigs. Proposals are **additive**; anything that
+  looks like a change to an existing entry is reported for a human to judge, never applied.
+- No fabricated data. Every proposal cites its source, so it can be checked before merge.
 
 ## Source reality
 
-The sources differ enormously in how automatable they are. This is the single most
-important constraint on the design.
+Verified by probing each source, not assumed:
 
 | Source | Automatable | Notes |
 | --- | --- | --- |
-| **Skiddle** | ✅ Official API | Free API key (application form), JSON event search, UK-focused. Directly exposes "tickets on sale", which is a strong signal that a gig is confirmed. |
-| **Bandsintown** | ✅ Official API | Free `app_id`, purpose-built for artist tour dates. Covers whatever the artist maintains on their Bandsintown profile. |
-| **Songkick** | ⚠️ Gated | API requires partner approval; not instant or guaranteed free. Treated as optional/later. |
-| **RA.co** | ❌ No public API | The site runs on a private GraphQL endpoint; RA's terms prohibit automated collection, it is bot-protected, and scraping is brittle. Used as a **review link**, not an automated source. |
-| **Social media** | ❌ Locked down | Instagram/Facebook have no clean gig API. Manual enrichment only. |
+| **Skiddle** | ✅ Official API | Free key. Ticket-led, so an event on sale there is a confirmed booking — the one source that can legitimately propose `ticketStatus`. Where the roster's tickets actually live. |
+| **Bandsintown** | ✅ Official API | Free `app_id`. Artist tour dates, but only what the artist maintains on their own profile. Not every roster artist has one. |
+| **RA.co** | ❌ Hard blocked | `ra.co/dj/<slug>/tour-dates` returns **403 "Sorry, you have been blocked"** to curl *and* to real headless Chromium. Its `/graphql` endpoint responds, but it is private, undocumented, sits behind the surface `robots.txt` marks off, and would be queried from GitHub datacenter IPs — the class Cloudflare already blocks against our own domain. **Review link only.** |
+| **Ticketmaster** | ✅ Available, not used | Free Discovery API key, 5k calls/day; would add festival coverage. Deliberately skipped: the roster's ticketing is Skiddle and RA, so a third key earns nothing today. Adding it is one file in `scripts/sources/` plus an entry in `ADAPTERS` and `SOURCE_FIELDS`. |
+| **Songkick** | ⚠️ Gated | Partner approval required. Optional, later. |
+| **Social media** | ❌ Locked down | No clean gig API. Manual enrichment only. |
 
-**Decision:** automated fetching uses **Skiddle + Bandsintown** (real APIs). RA.co and the
-artist's socials are included in the draft PR as **review links** so the human reviewer can
-quickly eyeball anything the APIs missed — without a fragile scraper in CI. Songkick can be
-added later if partner access is granted.
+## Per-artist source ids
+
+Artists are matched by **explicit id**, never by name search. The roster has real name
+collisions — `soundcloud.com/krevix` is a different act (noted in that artist's own file), and
+C-Systems is `csystems` on Beatport. A name search would quietly attribute strangers' gigs to
+the roster, which is exactly the fabricated-data failure the site's rules exist to prevent.
+
+```yaml
+# data/artists/<artist>.yml — all keys optional
+sources:
+  skiddle: 1234567       # Skiddle artist id
+  bandsintown: Krevix    # Bandsintown artist name/slug
+  ra: krevix             # slug for the review link only; never fetched
+```
+
+An artist with no id for a source is **skipped for that source**. `scripts/gen-artists.mjs`
+validates the block and strips it from `data/artists.data.json`, so none of it ships to the
+browser.
 
 ## Architecture
 
-```
+```text
 scripts/
-  fetch-artist-events.mjs        # orchestrator: per artist, run adapters, merge, diff, write proposals
+  fetch-artist-events.mjs      # orchestrator; dry run unless --write
   sources/
-    skiddle.mjs                  # adapter — needs SKIDDLE_API_KEY
-    bandsintown.mjs              # adapter — needs BANDSINTOWN_APP_ID
+    skiddle.mjs                # SKIDDLE_API_KEY
+    bandsintown.mjs            # BANDSINTOWN_APP_ID
   lib/
-    merge-events.mjs             # combine + dedupe adapter output into candidate gigs
-    propose-yaml.mjs             # diff candidates vs data/artists/*.yml; produce additive proposals
+    source-http.mjs            # bounded fetch; failures never end the run
+    merge-events.mjs           # normalize, dedupe, diff against existing gigs
+    propose-yaml.mjs           # ordered, comment-preserving insertion
+tests/events/                  # fixtures only, no network
 .github/workflows/
-  refresh-artist-events.yml      # scheduled: run orchestrator, open a draft PR if anything changed
-docs/
-  artist-events-automation.md    # this document
+  fetch-artist-events.yml
 ```
 
-### Adapter interface
+Adapter contract: `fetchEvents(artist, env)` returns normalized candidates, or `[]` when its
+credential or the artist's id is absent. A missing key narrows a run; it never fails one.
 
-Each source adapter exports one function with a common shape, so sources are pluggable and
-independently testable:
+### Merge and dedupe
 
-```js
-// returns normalized candidate gigs for one artist, or [] if unknown/unconfigured
-export async function fetchEvents(artist, env) { /* ... */ }
-```
+- Keyed on date + normalized venue, so "XOYO" and "Xoyo, London" collapse to one gig.
+- The richer record wins; a ticket link beats a bare listing.
+- `ticketStatus` only when a source explicitly reports sale status. Free entry becomes
+  `freeEntry: true` — never both, because `npm run check` rejects a gig carrying both.
+- Future-or-today only; month-only `YYYY-MM` dates stay upcoming for their whole month.
+- `eventId` is generated as `<venue>-<date>` and **flagged for the reviewer**: artists sharing
+  a line-up must reuse one id, which the script cannot know.
+- Flyer artwork is **linked in the PR body, never downloaded** — promoter artwork is
+  copyrighted, and committing it is a human's licensing decision.
 
-A candidate gig is normalized to the site's existing `gigs:` shape
-(`date`, `venue`, `city`, `country`, optional `ticketLink`, `ticketStatus`, `eventId`),
-plus internal metadata (`source`, `sourceUrl`, `confidence`) used only for the PR body, not
-written to YAML.
+### Writing YAML
 
-Adapters **skip gracefully** when their credential is absent (return `[]`), so a missing key
-never breaks the run — it just narrows the sources.
+`js-yaml` cannot round-trip comments, and the artist files are full of them — they are the
+human verification trail. So `propose-yaml.mjs` parses only to decide *where* a gig belongs in
+the oldest-to-newest order, then splices the block in as text and leaves every other byte
+alone. Never replace this with a load/dump cycle.
 
-### Merge and dedupe (`merge-events.mjs`)
+Every write is checked before it is kept: the file still parses, the gig count grew by exactly
+the number applied, every pre-existing gig is unchanged, and the order still holds. A
+malformed candidate is dropped rather than written, and a file whose gigs are *already* out of
+order is refused rather than edited.
 
-- Combine candidates from all adapters for an artist.
-- Dedupe by `(date, normalized venue)` — the same gig seen on Skiddle and Bandsintown
-  collapses to one candidate.
-- Prefer the richer/confirmed record when duplicates differ (e.g. a Skiddle entry with
-  tickets on sale outranks a bare Bandsintown listing).
-- Only future-or-today dates are proposed as upcoming; the existing date-driven schema then
-  decides past vs upcoming at build time (see `CLAUDE.md`).
+## Workflow
 
-### Diff to YAML (`propose-yaml.mjs`)
+`.github/workflows/fetch-artist-events.yml` — Mon/Wed/Fri at 02:37 UTC, plus
+`workflow_dispatch`. Clear of the 01:11 date-rollover rebuild, which is a *rebuild* and
+unrelated to this fetch.
 
-- Compare merged candidates against the artist's current `gigs:` list.
-- **New** gigs (no matching date+venue in the file) → propose adding.
-- **Potential updates** (same gig, new detail such as a ticket link) → surface in the PR
-  body as a suggestion, applied only if unambiguous and non-destructive.
-- **Never** remove or rewrite an existing verified gig automatically.
-- `eventId` for a genuinely new future gig is proposed but flagged for the reviewer to
-  confirm/adjust (shared events must reuse one id across artists — a judgement call).
-- YAML is edited conservatively to preserve comments and ordering as far as the tooling
-  allows; where clean comment-preserving edits are not possible, the proposal is described
-  in the PR body for the reviewer to apply.
+1. Run the orchestrator with `--write --pr-body proposal.md`.
+2. If nothing changed, stop — no empty pull requests.
+3. Otherwise run `npm run check`, then open a **draft** PR on `bot/artist-events-<date>`.
 
-## GitHub Actions workflow
-
-`refresh-artist-events.yml`, scheduled (proposed: weekly, off the congested cron marks like
-the existing refresh):
-
-1. Check out, set up Node 24, `npm ci`.
-2. Run `node scripts/fetch-artist-events.mjs` with `SKIDDLE_API_KEY` / `BANDSINTOWN_APP_ID`
-   from GitHub Actions secrets.
-3. If it produced changes to any `data/artists/*.yml`, create a branch
-   `bot/artist-events-<date>` and open a **draft PR** whose body lists, per artist: each
-   proposed gig, its source, ticket link, and the RA.co + social review links.
-4. If nothing changed, do nothing (no empty PRs).
-
-The draft PR then runs the normal `checks / verify` (`npm run check` validates the artist
-YAML) and `checks / browser`. The reviewer edits if needed and merges; merging to `main`
-auto-deploys to **staging** only, exactly like every other change. Production stays on the
-manual dispatch. No Brevo email is used — the draft PR plus GitHub's own notifications are
-the review surface, per the agreed flow.
+This is the only workflow with write access (`contents: write`, `pull-requests: write`),
+scoped to pushing a branch and opening a PR. It never deploys, so `DEPLOYMENT_AUTHORITY=github`
+is unaffected: the draft PR runs the normal `checks / verify` and `checks / browser`, merging
+deploys **staging** only, and production still requires the manual dispatch.
 
 ## Secrets
 
-GitHub Actions secrets (never `NEXT_PUBLIC_`, never committed):
+GitHub Actions secrets, never `NEXT_PUBLIC_`:
 
-- `SKIDDLE_API_KEY` — free Skiddle API key (application at skiddle.com/api/join.php).
-- `BANDSINTOWN_APP_ID` — Bandsintown application id.
+- `SKIDDLE_API_KEY` — apply at `skiddle.com/api/join.php`
+- `BANDSINTOWN_APP_ID` — Bandsintown developer portal
 
-Adapters run only when their secret is present, so the workflow degrades gracefully.
+## Running it
 
-## Phasing
+```bash
+npm run fetch:events             # dry run — prints proposals, writes nothing
+npm run fetch:events -- --write  # edits data/artists/*.yml locally
+npm test                         # Worker + event-automation unit tests
+```
 
-- **Phase 1** — framework + Skiddle + Bandsintown adapters + merge/diff + workflow, runnable
-  in `--dry-run` (prints proposed diffs, opens no PR) so we can validate against the real
-  roster locally before wiring keys or enabling the schedule.
-- **Phase 2** — RA.co review links refined; optionally a best-effort RA adapter if a
-  low-risk access path proves stable.
-- **Phase 3** — Songkick adapter if partner API access is granted; richer social review
-  links.
+With no keys set the dry run queries nothing and exits 0 — that is the safe first run.
 
-## Open questions
+## Live-run findings (2026-08-02)
 
-- Cadence: weekly vs twice-weekly. Weekly is proposed to start.
-- How aggressively to propose `ticketStatus: available` — only when a source explicitly
-  reports tickets on sale, to avoid unverified availability claims (see `CLAUDE.md`).
-- Whether one combined draft PR per run (all artists) or one per artist. One combined PR is
-  proposed, to keep review in a single place.
+The Skiddle adapter **has** been exercised against a live key. It worked, and the first real
+run immediately exposed two false positives that fixture tests had not:
+
+1. **Qualified venue names.** Skiddle returns "The Globe Newcastle" where the site says "The
+   Globe", and "The Egg   London" for "Egg London" — so both were reported as brand-new gigs
+   that already existed. Fixed by `sameVenue()`: one name's words being a subset of the
+   other's counts as a match, and the date must be identical too.
+2. **Month-only "TBC" dates.** C-Systems' Timescape gig is recorded as `2026-08` with the
+   exact day TBC; Skiddle knows it is `2026-08-07` but names the site ("Abbots Ripton
+   Cambridgeshire") rather than the festival. That was proposed as a duplicate. Now reported
+   as a **date confirmation** — offered to the reviewer, never merged or added.
+
+Skiddle also reports the UK as `GB`, which would have introduced a second spelling into the
+YAML; `normalizeCountry()` maps the unambiguous aliases onto the site's own.
+
+Both are regression-tested. The lesson generalises: fixtures prove the logic, only a live run
+proves the assumptions about a source's data.
+
+## Before enabling the schedule
+
+- The **Bandsintown adapter has still not been run against a live key** — its field mapping is
+  from documentation only, and may need the same kind of correction.
+- Skiddle issued the key with a condition: *"for any commercial use of this API, please
+  contact us on dev@skiddle.com … for approval before use."* Get that approval before the
+  schedule runs.
+- Trigger the workflow manually once and read the draft PR before letting the cron run.
+
+## Later
+
+- Ticketmaster adapter if festival coverage is wanted.
+- Songkick if partner access is granted.
+- An RA path would have to be local-only, never CI, and remains inadvisable.

@@ -267,10 +267,19 @@ test("marks non-production asset responses noindex and leaves production untouch
 });
 
 test("redirects HTTP apex and www to the HTTPS canonical origin", async () => {
-  const http = await worker.fetch(new Request("http://aaaartists.co/events?source=test"), env());
+  const http = await worker.fetch(new Request("http://aaaartists.co/artists?source=test"), env());
   const www = await worker.fetch(new Request("https://www.aaaartists.co/privacy"), env());
   assert.equal(http.status, 308);
-  assert.equal(http.headers.get("Location"), "https://aaaartists.co/events?source=test");
+  assert.equal(http.headers.get("Location"), "https://aaaartists.co/artists?source=test");
   assert.equal(www.status, 308);
   assert.equal(www.headers.get("Location"), "https://aaaartists.co/privacy");
+});
+
+test("permanently redirects the retired /events page to the roster", async () => {
+  const bare = await worker.fetch(new Request("https://aaaartists.co/events"), env());
+  const trailing = await worker.fetch(new Request("https://aaaartists.co/events/?ref=flyer"), env());
+  assert.equal(bare.status, 301);
+  assert.equal(bare.headers.get("Location"), "https://aaaartists.co/artists");
+  assert.equal(trailing.status, 301);
+  assert.equal(trailing.headers.get("Location"), "https://aaaartists.co/artists?ref=flyer");
 });

@@ -92,22 +92,25 @@ export default function HomePage() {
           {/* CTAs — from md up, sized to the grid: 4 cells wide, 1 cell tall, 2-cell gap,
               so their edges sit on grid lines (fluid below md, where the grid-locked
               widths would overflow the viewport). Both opaque so no grid line cuts through. */}
+          {/* The leading slot (left on desktop, top on mobile) always carries the
+              solid treatment, so the emphasis stays with the position rather than
+              travelling with either link. */}
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6 md:gap-[120px]">
             <Link
-              href="/contact"
-              className="btn-cta inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
-            >
-              Book Artists
-            </Link>
-            <Link
               href="/artists"
-              className="btn-outline group inline-flex h-[60px] w-full items-center justify-center gap-2 text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
-              style={{ backgroundColor: "var(--bg)" }}
+              className="btn-cta group inline-flex h-[60px] w-full items-center justify-center gap-2 text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
             >
               See Our Roster
               <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
+            </Link>
+            <Link
+              href="/contact"
+              className="btn-outline inline-flex h-[60px] w-full items-center justify-center text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
+              style={{ backgroundColor: "var(--bg)" }}
+            >
+              Book Artists
             </Link>
           </div>
 
@@ -266,7 +269,7 @@ export default function HomePage() {
             Bring the right artist to your event
           </h2>
           <p className="mb-10 text-base leading-relaxed" style={{ color: "var(--text-40)" }}>
-            Running a club night, a festival, or a private party? Tell us what you're planning and
+            Running a club night, a festival, or a warehouse party? Tell us what you're planning and
             we'll help you find the right artist for the crowd.
           </p>
           <Link

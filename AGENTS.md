@@ -36,13 +36,17 @@
 - Exact dates use `YYYY-MM-DD`; `YYYY-MM` means the exact day is TBC and must not generate
   exact-date `MusicEvent` structured data.
 - Ticket URLs do not imply availability; assert it only through explicit `ticketStatus`.
-- Event JSON-LD is centralized on `/events`. Artist pages use visible breadcrumbs with
-  matching breadcrumb JSON-LD.
-- Third-party media stays click-to-load and uses `referrerPolicy="no-referrer"`.
+- There is no `/events` page; dates live on each artist page and `/events` permanently
+  redirects to `/artists`. Event JSON-LD is emitted per artist page, with the shared
+  `eventId` carried as `identifier` so a shared line-up resolves to one real event.
+  Artist pages use visible breadcrumbs with matching breadcrumb JSON-LD.
+- Third-party media never loads before consent and uses `referrerPolicy="no-referrer"`.
+  `MediaConsentBanner` asks once; `granted` auto-embeds site-wide, `denied`/unanswered keeps
+  the per-player click-to-load fallback. The choice lives in `localStorage` only.
 - Keep `config/privacy.js` `detailsConfirmed: false` until every item in `TODO.md` is
   factually confirmed and the final notice is reviewed. Never invent legal information.
-- Do not add a generic cookie banner unless non-essential storage, analytics, or advertising
-  is introduced.
+- The only consent prompt is the media-embed banner. Do not add a generic cookie banner, and
+  do not extend this one to analytics or advertising without a decision from the controller.
 
 ## Current state (2026-07-17)
 

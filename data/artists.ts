@@ -15,6 +15,10 @@ export interface Gig {
   country: string;
   ticketLink?: string;
   ticketStatus?: "available" | "sold-out" | "unavailable";
+  /** No ticket needed — the card says "Free entry" instead of "Tickets soon".
+   *  Mutually exclusive with ticketStatus: a free event has no ticket
+   *  availability to report. A ticketLink may still be set for an RSVP page. */
+  freeEntry?: boolean;
   /** Optional flyer artwork for the event — e.g. "/flyers/xijaro-utrecht.jpg".
    *  When omitted, a generated poster card is shown from the gig details. */
   flyer?: string;
@@ -36,14 +40,13 @@ export interface Artist {
     youtube?: string;
     beatport?: string;
   };
-  /** Optional live-player embeds shown as media boxes on the artist page.
-   *  spotifyEmbed: a Spotify artist/album/track/playlist URL.
-   *  youtubeEmbed: a single YouTube video or playlist URL. */
+  /** Optional live-player embed shown as a media box on the artist page:
+   *  a Spotify artist/album/track/playlist URL. The "Listen" section is
+   *  audio-only, so there is no YouTube equivalent. */
   spotifyEmbed?: string;
-  youtubeEmbed?: string;
   /** All gigs, oldest to newest. The date decides past vs upcoming at render
-   *  time; future-dated entries carry an eventId so /events can merge shared
-   *  line-ups. */
+   *  time; future-dated entries carry a stable eventId, reused across artists
+   *  sharing an event. */
   gigs: Gig[];
 }
 

@@ -16,7 +16,11 @@ socials:
   soundcloud: https://soundcloud.com/xijaroandpitch
   facebook: https://facebook.com/xijaroandpitch
   spotify: https://open.spotify.com/artist/0CcmU1Eun8Nwb3VlOAeJUK
-  beatport: https://www.beatport.com/artist/xijaro-pitch/
+  beatport: https://www.beatport.com/artist/xijaro-pitch/471769
+sources:
+  bandsintown: id_11111903   # bandsintown.com/a/11111903-xijaro-and-pitch
+  skiddle: 123563424       # verified: returns their Globe Newcastle date
+
 # Verified gigs only. Oldest first — the site shows newest first.
 gigs:
   - date: '2025-08-24'
@@ -35,8 +39,10 @@ gigs:
     venue: The Globe
     city: Newcastle upon Tyne
     country: UK
-  - date: '2026-03-21' # Trance Sanctuary pres. FSOE w/ Aly & Fila
-    venue: The Lower Third
+  # Trance Sanctuary pres. FSOE w/ Aly & Fila. Venue corrected from "The Lower
+  # Third" after Skiddle and the artist's own listing both gave HERE at Outernet.
+  - date: '2026-03-21'
+    venue: HERE at Outernet
     city: London
     country: UK
   - date: '2026-04-05' # Trancecoda — Paul van Dyk Returns to the Emporium
@@ -55,13 +61,35 @@ gigs:
     country: Belgium
     ticketLink: https://www.tomorrowland.com/
     flyer: /flyers/tomorrowland-2026.webp # official Consciencia lineup poster (XiJaro & Pitch listed)
-  # ADE — Amsterdam Trance Event, b2b Alex M.O.R.P.H.; date announced as 24 Oct,
-  # reconfirm when tickets go live (source article's weekday didn't match).
+  # ADE 2026 — AAA Events pres. Chasing Dreams, fundraiser for the Norrie Disease
+  # Foundation, w/ Ruben de Ronde. 14:00–21:00, free entry, donations on the door.
+  - date: "2026-10-21"
+    eventId: aaa-chasing-dreams-ade-2026
+    venue: Café Restaurant De Kroon
+    city: Amsterdam
+    country: Netherlands
+    freeEntry: true
+    flyer: /flyers/chasing-dreams-ade-2026.webp
+  # ADE 2026 — In Trance We Trust, 21:00–04:00, w/ BT, Ciaran McAuley, Craig
+  # Connelly, Maria Healy, Sneijder, Virtual Vault. Same night as Chasing Dreams
+  # above: that one finishes at 21:00, this one starts then.
+  - date: "2026-10-21"
+    eventId: in-trance-we-trust-ade-2026
+    venue: Thuishaven
+    city: Amsterdam
+    country: Netherlands
+    ticketLink: https://shop.weeztix.com/5bff1280-a0c9-4f0a-b4f2-4877aec6f021/tickets
+    flyer: /flyers/in-trance-we-trust-ade-2026.webp
+  # ADE 2026 — Nocturnal Knights pres. Amsterdam Trance Event, 14:30–21:30,
+  # mainroom b2b with Alex M.O.R.P.H. Date and venue confirmed against the
+  # ticket shop and the line-up poster.
   - date: '2026-10-24'
     eventId: ade-2026-xijaro-pitch
     venue: Club Panama
     city: Amsterdam
     country: Netherlands
+    ticketLink: https://shop.weeztix.com/ff5f2df9-47ac-11f1-a9cb-7e126431635e/
+    flyer: /flyers/amsterdam-trance-event-ade-2026.webp
   - date: '2026-10-31' # Seriously Uplifting 8
     eventId: seriously-uplifting-8-2026
     venue: The Globe
@@ -69,3 +97,12 @@ gigs:
     country: UK
     ticketLink: https://www.skiddle.com/whats-on/Newcastle-on-Tyne/The-Globe-Newcastle/Seriously-Uplifting-8/42497718/
     flyer: /flyers/seriously-uplifting-8.webp
+  # Ablazing Sense X Chasing Dreams — their own night w/ Rene Ablaze & Claas Inc.
+  # Same venue as their Nov 2025 date above, a year on.
+  - date: "2026-11-07"
+    eventId: ablazing-sense-chasing-dreams-2026
+    venue: Club Merlijn
+    city: Hengelo
+    country: Netherlands
+    ticketLink: https://shop.weeztix.com/92918835-5ab1-4ae3-ad8e-4f56c82f9993/tickets
+    flyer: /flyers/ablazing-sense-chasing-dreams-2026.webp

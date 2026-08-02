@@ -31,15 +31,13 @@ export const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const E164_PATTERN = /^\+[1-9]\d{6,14}$/;
 
+// Electronic-music contexts only — the roster plays club, festival and rave
+// bookings, so social-function types (weddings, corporate, bar/lounge) are not
+// offered.
 export const EVENT_TYPES = Object.freeze([
   "Club Night",
   "Festival",
-  "Private Party",
-  "Corporate / Brand",
-  "Wedding",
-  "Bar / Lounge",
-  "Livestream",
-  "Tour",
+  "Open Air / Day Party",
   "Other",
 ]);
 export const TICKETING_OPTIONS = Object.freeze(["Ticketed", "Free entry", "Private / guestlist"]);

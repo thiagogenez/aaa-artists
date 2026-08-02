@@ -14,7 +14,10 @@ image: /artists/krevix.webp
 socials:
   instagram: https://instagram.com/krevix
   soundcloud: https://soundcloud.com/krevix_official # his real account (soundcloud.com/krevix is someone else)
-  beatport: https://www.beatport.com/artist/krevix/
+  beatport: https://www.beatport.com/artist/krevix/975896
+sources:
+  bandsintown: id_15633494   # bandsintown.com/a/15633494-krevix
+
 # No verifiable past gigs found (2024+) — leave empty rather than invent;
 # the site shows "No past dates on record yet."
 gigs:
@@ -33,3 +36,12 @@ gigs:
     country: UK
     ticketLink: https://www.skiddle.com/e/42326656
     flyer: /flyers/fusion-daxson-xoyo.webp
+  # ADE 2026 — AAA Events pres. High Voltage Recordings x Critical Sounds label
+  # showcase. 14:00–22:00, free event, RSVP via AAA socials.
+  - date: "2026-10-23"
+    eventId: aaa-high-voltage-critical-sounds-ade-2026
+    venue: The Tequila Club
+    city: Amsterdam
+    country: Netherlands
+    freeEntry: true
+    flyer: /flyers/high-voltage-critical-sounds-ade-2026.webp

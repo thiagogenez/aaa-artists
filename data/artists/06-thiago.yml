@@ -15,6 +15,10 @@ socials:
   soundcloud: https://soundcloud.com/thiagogenez
   youtube: https://youtube.com/thiagogenez
   instagram: https://instagram.com/thiagogenez
+sources:
+  skiddle: 123607601       # verified: returns Basing House + Egg London AAA nights
+  ra: thiagogenez          # review link only — ra.co blocks automated reads
+
 # Verified gigs only. Oldest first — the site shows newest first.
 gigs:
   - date: '2023-08-09'

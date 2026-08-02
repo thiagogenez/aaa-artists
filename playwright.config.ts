@@ -21,6 +21,19 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
     {
+      // iPad portrait. Without this the suite only saw 375 and 1280, so the
+      // 768–1023 band — where the artist page used to be half-phone,
+      // half-desktop — was invisible to CI.
+      name: "tablet-webkit",
+      use: {
+        browserName: "webkit",
+        viewport: { width: 768, height: 1024 },
+        deviceScaleFactor: 2,
+        isMobile: false,
+        hasTouch: true,
+      },
+    },
+    {
       name: "mobile-webkit",
       use: {
         browserName: "webkit",

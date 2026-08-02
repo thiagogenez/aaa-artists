@@ -11,6 +11,10 @@ const OUT = "data/artists.data.json";
 const REQUIRED = ["name", "artistType", "slug", "genre", "tagline", "bio", "image"];
 const GIG_REQUIRED = ["date", "venue", "city", "country"];
 const SOCIAL_FIELDS = new Set(["instagram", "soundcloud", "facebook", "spotify", "youtube", "beatport"]);
+// Ids used by scripts/fetch-artist-events.mjs to look this artist up on each
+// gig source. Build tooling only — stripped from the generated JSON below, so
+// none of it ships to the browser. "ra" is a review link, never fetched.
+const SOURCE_FIELDS = new Set(["skiddle", "bandsintown", "ra"]);
 
 const errors = [];
 const seenSlugs = new Map();
@@ -80,6 +84,14 @@ function checkGigs(gigs, file, listName) {
       errors.push(`${where}: "ticketStatus" must be "available", "sold-out", or "unavailable"`);
     }
     if (gig?.ticketStatus && !gig?.ticketLink) errors.push(`${where}: "ticketStatus" requires "ticketLink"`);
+    if (gig?.freeEntry !== undefined && typeof gig.freeEntry !== "boolean") {
+      errors.push(`${where}: "freeEntry" must be true or false`);
+    }
+    // A free event has no ticket availability to report; claiming both would be
+    // contradictory on the card and in the event schema.
+    if (gig?.freeEntry && gig?.ticketStatus) {
+      errors.push(`${where}: "freeEntry" cannot be combined with "ticketStatus"`);
+    }
     if (gig?.flyer && !isLocalAsset(gig.flyer)) errors.push(`${where}: "flyer" must be a local /path image`);
     return { ...gig, date };
   });
@@ -140,14 +152,34 @@ for (const file of files) {
     if (!SOCIAL_FIELDS.has(platform)) errors.push(`${file}: unsupported social platform "${platform}"`);
     if (url && !isHttpsUrl(url)) errors.push(`${file}: social "${platform}" must be an https URL`);
   }
-  for (const embedField of ["spotifyEmbed", "youtubeEmbed"]) {
-    if (doc[embedField] && !isHttpsUrl(doc[embedField])) errors.push(`${file}: "${embedField}" must be an https URL`);
+  if (doc.spotifyEmbed && !isHttpsUrl(doc.spotifyEmbed)) {
+    errors.push(`${file}: "spotifyEmbed" must be an https URL`);
+  }
+  // The artist page is audio-only, so a youtubeEmbed would silently do nothing.
+  if (doc.youtubeEmbed) {
+    errors.push(`${file}: "youtubeEmbed" is no longer rendered — the "Listen" section is audio-only`);
   }
   for (const legacyKey of ["pastGigs", "upcomingGigs"]) {
     if (legacyKey in doc) {
       errors.push(`${file}: "${legacyKey}" was merged into a single "gigs" list (ordered oldest to newest; the date decides past vs upcoming) — see data/artists/README.md`);
     }
   }
+  if (doc.sources !== undefined) {
+    if (typeof doc.sources !== "object" || doc.sources === null || Array.isArray(doc.sources)) {
+      errors.push(`${file}: "sources" must be an object of platform ids`);
+      doc.sources = {};
+    } else {
+      for (const [platform, value] of Object.entries(doc.sources)) {
+        if (!SOURCE_FIELDS.has(platform)) {
+          errors.push(`${file}: unsupported event source "${platform}" (expected ${[...SOURCE_FIELDS].join(", ")})`);
+        }
+        if (value === null || value === undefined || String(value).trim() === "") {
+          errors.push(`${file}: event source "${platform}" needs the artist's id on that platform, or remove the line`);
+        }
+      }
+    }
+  }
+
   doc.gigs = checkGigs(doc.gigs, file, "gigs");
   artists.push(doc);
 }
@@ -189,5 +221,9 @@ if (process.argv.includes("--check")) {
   process.exit(0);
 }
 
-writeFileSync(OUT, JSON.stringify(artists, null, 2) + "\n");
+// `sources` is lookup data for the event fetcher, not page content — keep it
+// out of the bundle the browser downloads.
+const published = artists.map(({ sources, ...artist }) => artist);
+
+writeFileSync(OUT, JSON.stringify(published, null, 2) + "\n");
 console.log(`✓ Built ${OUT} from ${artists.length} artist files.${skippedNote}`);
