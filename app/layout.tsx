@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import MediaConsentBanner from "@/components/MediaConsentBanner";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SOCIAL_IMAGE, SOCIAL_LINKS, serializeJsonLd } from "@/lib/site";
 
 export const viewport: Viewport = {
@@ -92,6 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* --nav-h (globals.css) = fixed navbar height; keeps content clear of it */}
           <main id="main" className="pt-[var(--nav-h)]">{children}</main>
           <Footer />
+          <MediaConsentBanner />
         </ThemeProvider>
       </body>
     </html>
