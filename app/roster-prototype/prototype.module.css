@@ -1,0 +1,677 @@
+.prototype {
+  --prototype-line: color-mix(in srgb, var(--text) 15%, transparent);
+  position: relative;
+  min-height: calc(100vh - var(--nav-h));
+  overflow: hidden;
+  padding: clamp(3.5rem, 7vw, 7rem) 1.5rem 8rem;
+  background: var(--bg);
+}
+
+.ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.6;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: linear-gradient(to bottom, black, transparent 68%);
+}
+
+.shell {
+  position: relative;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.55fr);
+  align-items: end;
+  gap: clamp(2rem, 7vw, 8rem);
+  margin-bottom: clamp(3rem, 6vw, 6rem);
+}
+
+.eyebrow,
+.detailEyebrow {
+  margin-bottom: 1rem;
+  color: var(--text-30);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.heading {
+  max-width: 13ch;
+  color: var(--text);
+  font-size: clamp(3.25rem, 7.1vw, 7.4rem);
+  font-weight: 780;
+  letter-spacing: -0.065em;
+  line-height: 0.86;
+}
+
+.heading span {
+  display: block;
+  color: var(--text-30);
+}
+
+.intro {
+  max-width: 31rem;
+  padding-bottom: 0.45rem;
+  color: var(--text-60);
+  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  line-height: 1.6;
+}
+
+.soundPicker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--prototype-line);
+}
+
+.soundButton {
+  --cluster-accent: var(--text);
+  --cluster-accent-text: var(--bg);
+  position: relative;
+  isolation: isolate;
+  min-height: 15rem;
+  overflow: hidden;
+  border-right: 1px solid var(--prototype-line);
+  padding: 1.35rem;
+  color: var(--text);
+  text-align: left;
+  touch-action: manipulation;
+  transition: color 280ms ease, border-color 280ms ease;
+  animation: sound-intro 560ms both cubic-bezier(0.22, 1, 0.36, 1);
+  animation-delay: calc(var(--cluster-index) * 65ms);
+}
+
+.soundButton:last-child {
+  border-right: 0;
+}
+
+.soundButton::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--cluster-accent);
+  content: "";
+  transform: translateY(101%);
+  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.soundButton:hover::before,
+.soundButton:focus-visible::before,
+.soundButton[aria-pressed="true"]::before {
+  transform: translateY(0);
+}
+
+.soundButton:hover,
+.soundButton:focus-visible,
+.soundButton[aria-pressed="true"] {
+  color: var(--cluster-accent-text);
+}
+
+.soundTopline,
+.soundAction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.soundTopline {
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.bpm {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.65rem;
+  font-size: clamp(2rem, 3.4vw, 3.7rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 760;
+  letter-spacing: -0.075em;
+  line-height: 0.95;
+}
+
+.bpm small {
+  margin-top: 0.65rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+}
+
+.soundAction {
+  position: absolute;
+  right: 1.35rem;
+  bottom: 1.35rem;
+  left: 1.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.soundAction span {
+  font-size: 1.15rem;
+  transition: transform 220ms ease;
+}
+
+.soundButton:hover .soundAction span,
+.soundButton:focus-visible .soundAction span {
+  transform: translate(0.15rem, -0.15rem);
+}
+
+.rosterBar {
+  display: flex;
+  min-height: 5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--prototype-line);
+}
+
+.result {
+  color: var(--text-60);
+  font-size: 0.9rem;
+}
+
+.result strong {
+  color: var(--text);
+  font-size: 1.15rem;
+}
+
+.reset {
+  min-height: 44px;
+  color: var(--text-60);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-decoration: underline;
+  text-underline-offset: 0.35rem;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  transition: color 180ms ease;
+}
+
+.reset:hover,
+.reset:focus-visible {
+  color: var(--text);
+}
+
+.discoveryLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(18rem, 1fr);
+  align-items: start;
+  gap: 1px;
+  background: var(--prototype-line);
+}
+
+.rosterGrid {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 1px;
+  background: var(--prototype-line);
+}
+
+.rosterGroup {
+  display: block;
+  background: var(--bg);
+}
+
+.rosterGroupGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--prototype-line);
+}
+
+.groupLabel {
+  display: flex;
+  min-height: 4rem;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 1.25rem;
+  background: var(--bg);
+  color: var(--text-60);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.groupLabel::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.8rem;
+  border-radius: 50%;
+  background: var(--active-accent);
+  content: "";
+}
+
+.groupLabel span {
+  margin-right: auto;
+}
+
+.groupLabel strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.otherLabel {
+  color: var(--text-40);
+}
+
+.otherLabel::before {
+  background: var(--text-20);
+}
+
+.artistCard {
+  --artist-index: 0;
+  position: relative;
+  aspect-ratio: 4 / 5;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface-2);
+  color: #fff;
+  text-align: left;
+  touch-action: manipulation;
+  transition: filter 320ms ease, opacity 320ms ease;
+  animation: artist-intro 600ms both cubic-bezier(0.22, 1, 0.36, 1);
+  animation-delay: calc(180ms + var(--artist-index) * 55ms);
+}
+
+.artistCard[data-match="false"] {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.artistCard[data-match="false"]:hover,
+.artistCard[data-match="false"]:focus-visible {
+  opacity: 0.72;
+}
+
+.artistImage {
+  object-fit: cover;
+  filter: var(--artist-photo-filter);
+  transform: scale(1.001);
+  transition: filter 420ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.artistCard:hover .artistImage,
+.artistCard:focus-visible .artistImage,
+.artistCard[data-selected="true"] .artistImage {
+  filter: var(--artist-card-back-photo-filter);
+  transform: scale(1.045);
+}
+
+.imageWash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.05) 72%);
+  transition: background 260ms ease;
+}
+
+.artistCard::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--text);
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.artistCard:hover::after,
+.artistCard:focus-visible::after,
+.artistCard[data-selected="true"]::after,
+.artistCard[data-filtered="true"][data-match="true"]::after {
+  transform: scaleX(1);
+}
+
+.artistCard[data-filtered="true"][data-match="true"]::after {
+  background: var(--active-accent);
+}
+
+.artistNumber {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.artistCopy {
+  position: absolute;
+  right: 1rem;
+  bottom: 1.15rem;
+  left: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.artistClusters {
+  margin-bottom: 0.42rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.58rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.artistCopy strong {
+  max-width: 12ch;
+  font-size: clamp(1.3rem, 2vw, 2rem);
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.artistPrompt {
+  display: flex;
+  width: 100%;
+  max-height: 0;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  opacity: 0;
+  text-transform: uppercase;
+  transform: translateY(0.5rem);
+  transition: max-height 260ms ease, margin-top 260ms ease, opacity 260ms ease, transform 260ms ease;
+}
+
+.artistCard:hover .artistPrompt,
+.artistCard:focus-visible .artistPrompt,
+.artistCard[data-selected="true"] .artistPrompt {
+  max-height: 2rem;
+  margin-top: 0.85rem;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.artistDetail {
+  position: sticky;
+  top: calc(var(--nav-h) + 1rem);
+  min-height: 31rem;
+  background: var(--bg-subtle);
+  border-top: 4px solid var(--active-accent);
+  transition: border-color 280ms ease;
+}
+
+.detailEmpty,
+.detailContent {
+  min-height: 31rem;
+  padding: clamp(1.5rem, 3vw, 3rem);
+}
+
+.detailEmpty {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: var(--text-40);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.detailEmpty > div {
+  max-width: 17rem;
+}
+
+.detailEmpty > span {
+  font-size: 2rem;
+}
+
+.detailEmpty p {
+  max-width: 15rem;
+}
+
+.detailEmpty strong {
+  color: var(--text);
+}
+
+.detailContent {
+  animation: detail-enter 360ms both cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.detailContent h2 {
+  margin-bottom: 0.85rem;
+  color: var(--text);
+  font-size: clamp(2rem, 3vw, 3.5rem);
+  font-weight: 780;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+.detailTagline {
+  max-width: 24rem;
+  color: var(--text-60);
+  line-height: 1.55;
+}
+
+.profileLabel {
+  margin-top: 2.5rem;
+  color: var(--text-30);
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.detailSounds {
+  margin-top: 0.8rem;
+  border-top: 1px solid var(--prototype-line);
+}
+
+.bookingNote {
+  margin-top: 1.5rem;
+  color: var(--text-40);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.detailSounds div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--prototype-line);
+  padding-block: 0.9rem;
+  color: var(--text-60);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.detailSounds strong {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 0.68rem;
+}
+
+.detailActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-top: 2.5rem;
+}
+
+.detailActions a {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 0.8rem;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@keyframes sound-intro {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes artist-intro {
+  from { opacity: 0; transform: translateY(1.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes detail-enter {
+  from { opacity: 0; transform: translateY(0.75rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1100px) {
+  .header {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .soundPicker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .soundButton:nth-child(2) {
+    border-right: 0;
+  }
+
+  .soundButton:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--prototype-line);
+  }
+
+  .soundButton {
+    min-height: 12.5rem;
+  }
+
+  .discoveryLayout {
+    grid-template-columns: minmax(0, 2fr) minmax(17rem, 1fr);
+  }
+
+  .rosterGrid {
+    display: flex;
+  }
+
+  .rosterGroupGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .prototype {
+    padding: 3.5rem 1rem 5rem;
+  }
+
+  .heading {
+    font-size: clamp(3.1rem, 16vw, 5.25rem);
+  }
+
+  .soundButton {
+    min-height: 10.75rem;
+    padding: 1rem;
+  }
+
+  .bpm {
+    margin-top: 1.15rem;
+    font-size: clamp(1.45rem, 6.8vw, 2.35rem);
+  }
+
+  .soundAction {
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+  }
+
+  .rosterBar {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 1rem;
+  }
+
+  .discoveryLayout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rosterGrid {
+    width: 100%;
+  }
+
+  .artistDetail {
+    position: static;
+    order: -1;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .detailEmpty,
+  .detailContent {
+    min-height: 18rem;
+  }
+}
+
+@media (max-width: 460px) {
+  .rosterGroupGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .soundPicker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .soundButton:nth-child(odd) {
+    border-right: 1px solid var(--prototype-line);
+  }
+
+  .soundButton {
+    min-height: 10.5rem;
+    border-bottom: 1px solid var(--prototype-line);
+  }
+
+  .soundButton:nth-child(even) {
+    border-right: 0;
+  }
+
+  .soundButton:nth-child(n + 3) {
+    border-bottom: 0;
+  }
+
+  .soundTopline {
+    gap: 0.45rem;
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+  }
+
+  .bpm {
+    margin-top: 1rem;
+    font-size: clamp(1.35rem, 6.5vw, 1.8rem);
+  }
+
+  .soundAction {
+    font-size: 0.58rem;
+  }
+
+  .artistCard {
+    aspect-ratio: 5 / 4;
+  }
+
+  .detailActions {
+    grid-template-columns: 1fr;
+  }
+}
