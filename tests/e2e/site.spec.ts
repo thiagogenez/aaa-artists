@@ -79,8 +79,9 @@ test("shows visible nested breadcrumbs and a compact, non-duplicated footer", as
   expect(width.content).toBeLessThanOrEqual(width.viewport);
 });
 
-test("balances artist activity and reveals past dates one year at a time", async ({ page }) => {
+test("pairs upcoming dates with the player in one row and keeps past shows behind a dialog", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
+  // FROGR is the sparse case the layout exists for: two dates, one player.
   await page.goto("/artist/frogr");
 
   const activity = page.getByTestId("artist-activity");
@@ -97,22 +98,47 @@ test("balances artist activity and reveals past dates one year at a time", async
     listen.boundingBox(),
     past.boundingBox(),
   ]);
-  expect(upcomingBox).not.toBeNull();
-  expect(listenBox).not.toBeNull();
-  expect(pastBox).not.toBeNull();
-  expect(pastBox!.x).toBeGreaterThan(upcomingBox!.x);
-  expect(listenBox!.y).toBeGreaterThan(upcomingBox!.y + upcomingBox!.height);
-  expect(listenBox!.y).toBeGreaterThan(pastBox!.y + pastBox!.height);
+  // Dates and media sit side by side, tops level; past shows drop below both.
+  expect(listenBox!.x).toBeGreaterThan(upcomingBox!.x + upcomingBox!.width - 4);
+  expect(Math.abs(listenBox!.y - upcomingBox!.y)).toBeLessThan(4);
+  expect(pastBox!.y).toBeGreaterThan(upcomingBox!.y + upcomingBox!.height - 4);
+  expect(Math.abs(pastBox!.x - upcomingBox!.x)).toBeLessThan(4);
+  // The player takes whatever the flyer track leaves, so the row is full.
+  expect(upcomingBox!.width + listenBox!.width).toBeGreaterThan(1150);
 
-  await expect(past.getByText("2026", { exact: true })).toBeVisible();
-  await expect(past.getByText("Grand Café Eighty-Four", { exact: true })).toHaveCount(0);
-  const earlierDates = past.getByRole("button", { name: "Show 2025 dates (3)" });
-  await earlierDates.click();
-  await expect(past.getByText("Grand Café Eighty-Four", { exact: true })).toBeVisible();
-  const showFewer = past.getByRole("button", { name: "Show fewer" });
-  await expect(showFewer).toBeVisible();
-  await showFewer.click();
-  await expect(past.getByText("Grand Café Eighty-Four", { exact: true })).toHaveCount(0);
+  // The point of the row: the player ends level with the flyers rather than
+  // leaving a short column beside them.
+  const [cardBox, playerBox] = await Promise.all([
+    page.locator("#event-aaa-fusion-xoyo-2026-08-22").boundingBox(),
+    page.getByTestId("media-player").boundingBox(),
+  ]);
+  expect(Math.abs((playerBox!.y + playerBox!.height) - (cardBox!.y + cardBox!.height))).toBeLessThan(8);
+
+  // History stays reachable, but only on request.
+  // A closed <dialog> keeps its content in the DOM, so this asserts on
+  // visibility rather than presence.
+  const dialog = page.getByTestId("past-shows-dialog");
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Grand Café Eighty-Four", { exact: true })).toBeHidden();
+
+  await page.getByTestId("past-shows-trigger").click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("Grand Café Eighty-Four", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("2025", { exact: true })).toBeVisible();
+
+  // Tailwind's preflight zeroes the `margin: auto` a modal <dialog> relies on,
+  // so centring has to be asserted, not assumed.
+  const dialogBox = (await dialog.boundingBox())!;
+  const viewport = await page.evaluate(() => ({
+    width: document.documentElement.clientWidth,
+    height: window.innerHeight,
+  }));
+  expect(Math.abs(dialogBox.x + dialogBox.width / 2 - viewport.width / 2)).toBeLessThan(4);
+  expect(Math.abs(dialogBox.y + dialogBox.height / 2 - viewport.height / 2)).toBeLessThan(4);
+
+  // A native <dialog> must close on Escape without any extra wiring.
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
 
   const eventCard = page.locator("#event-aaa-fusion-xoyo-2026-08-22");
   const flyer = eventCard.getByRole("img", { name: "FROGR at XOYO" });
@@ -131,8 +157,9 @@ test("balances artist activity and reveals past dates one year at a time", async
   expect(mobileUpcomingBox).not.toBeNull();
   expect(mobileListenBox).not.toBeNull();
   expect(mobilePastBox).not.toBeNull();
-  expect(mobilePastBox!.y).toBeGreaterThan(mobileUpcomingBox!.y);
-  expect(mobileListenBox!.y).toBeGreaterThan(mobilePastBox!.y);
+  // The two-column row collapses: dates, then media, then past shows.
+  expect(mobileListenBox!.y).toBeGreaterThan(mobileUpcomingBox!.y);
+  expect(mobilePastBox!.y).toBeGreaterThan(mobileListenBox!.y);
 
   await page.goto("/artist/c-systems");
   // On mobile every upcoming card stacks into the page: no paging controls, and
@@ -156,12 +183,23 @@ test("balances artist activity and reveals past dates one year at a time", async
   // Two-up, so they share a row and use the width available.
   expect(Math.abs(tabletBoxes[0]!.y - tabletBoxes[1]!.y)).toBeLessThan(4);
   expect(tabletBoxes[0]!.width).toBeGreaterThan(330);
-  // Players stay stacked below lg, matching the single-column events above.
-  const tabletPlayers = await page.getByTestId("listen").locator("iframe, [class*='flex-col']").first().boundingBox();
-  expect(tabletPlayers).not.toBeNull();
-  const listenLabels = await page.getByTestId("listen").getByText(/^(SoundCloud|Spotify)$/i).all();
-  const labelYs = await Promise.all(listenLabels.map(async (l) => (await l.boundingBox())!.y));
-  expect(new Set(labelYs).size, "players must stack on tablet, not sit side by side").toBe(labelYs.length);
+  // C-Systems has both providers. Only one occupies the column at a time, so
+  // the media side can never grow to twice the height of the dates beside it.
+  await expect(page.getByTestId("media-player")).toHaveCount(1);
+  const playerLabel = page.getByTestId("player-label");
+  await expect(playerLabel).toContainText("SoundCloud");
+  await expect(playerLabel).toContainText("1 of 2");
+  await page.getByRole("button", { name: "Next player" }).click();
+  await expect(playerLabel).toContainText("Spotify");
+  await expect(playerLabel).toContainText("2 of 2");
+  // Two items, so the arrows wrap rather than leaving one permanently dead.
+  await page.getByRole("button", { name: "Next player" }).click();
+  await expect(playerLabel).toContainText("SoundCloud");
+
+  // A single-player artist gets no controls at all.
+  await page.goto("/artist/frogr");
+  await expect(page.getByTestId("player-label")).toContainText("SoundCloud");
+  await expect(page.getByRole("button", { name: "Next player" })).toHaveCount(0);
 });
 
 test("opens the mobile menu and preserves footer contrast in dark mode", async ({ page }) => {

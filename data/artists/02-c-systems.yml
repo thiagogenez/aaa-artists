@@ -69,7 +69,10 @@ gigs:
     venue: Brixton Jamm
     city: London
     country: UK
-  # Timescape runs 7–9 Aug 2026; C-Systems confirmed on the lineup, exact day TBC.
+  # Timescape runs 7–9 Aug 2026; C-Systems confirmed on the lineup but the
+  # festival has published no timetable, so the set day is genuinely unknown.
+  # Keep the month-only date. Skiddle reports 2026-08-07 — that is the festival's
+  # opening day, not this set; do not "correct" the date to it.
   - date: "2026-08"
     eventId: timescape-festival-2026
     venue: Timescape Festival
