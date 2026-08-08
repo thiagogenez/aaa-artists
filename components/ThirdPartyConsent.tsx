@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import MediaConsentSettings from "@/components/MediaConsentSettings";
 import { useMediaConsent } from "@/components/useMediaConsent";
 
 /** Gate around a third-party iframe.
  *
  *  With site-wide consent granted the player is embedded straight away. Without
- *  it nothing is requested from the provider, and this per-player button acts as
- *  a one-off consent for anyone who declined the banner or never answered it. */
+ *  it nothing is requested from the provider. The parent media column normally
+ *  provides the visible preference control; this fallback keeps the iframe safe
+ *  if the component is reused elsewhere. */
 export default function ThirdPartyConsent({
   provider,
   className,
@@ -18,18 +19,18 @@ export default function ThirdPartyConsent({
   children: React.ReactNode;
 }) {
   const consent = useMediaConsent();
-  const [loadedOnce, setLoadedOnce] = useState(false);
 
-  if (consent === "granted" || loadedOnce) return children;
+  if (consent === "granted") return children;
 
   return (
-    <div className={`flex flex-col items-center justify-center gap-3 px-6 text-center ${className}`} style={{ backgroundColor: "var(--surface)" }}>
-      <button type="button" onClick={() => setLoadedOnce(true)} className="btn-cta min-h-[44px] px-6 py-3 text-xs font-semibold uppercase tracking-widest">
-        Load {provider} player
-      </button>
-      <p className="max-w-sm text-xs" style={{ color: "var(--text-40)" }}>
-        Loads media from {provider} and shares your IP address with {provider}.
-      </p>
+    <div className={`flex items-center gap-2 px-4 text-xs ${className}`} style={{ backgroundColor: "var(--surface)", color: "var(--text-40)" }}>
+      <span>{provider} media disabled.</span>
+      {consent === "denied" && (
+        <MediaConsentSettings
+          label="Change media preferences"
+          className="link-quiet inline-flex min-h-[44px] cursor-pointer items-center font-semibold underline underline-offset-4"
+        />
+      )}
     </div>
   );
 }

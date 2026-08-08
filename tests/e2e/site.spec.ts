@@ -1,10 +1,11 @@
 import { expect, test } from "playwright/test";
-import { seedMediaConsent } from "./helpers";
+import { blockMediaProviders, seedMediaConsent } from "./helpers";
 
 // These specs assert on page structure, not on the consent flow (which has its
 // own spec), so the banner is answered before they run.
 test.beforeEach(async ({ page }) => {
-  await seedMediaConsent(page);
+  await blockMediaProviders(page);
+  await seedMediaConsent(page, "granted");
 });
 
 test("uses the production canonical origin and keeps the pending privacy notice out of search", async ({ page }) => {
@@ -75,6 +76,9 @@ test("shows visible nested breadcrumbs and a compact, non-duplicated footer", as
 
   const footer = page.locator("footer");
   await expect(footer.getByRole("link", { name: "Instagram", exact: true })).toHaveCount(1);
+  await expect(
+    footer.getByRole("navigation", { name: "Navigation" }).getByRole("button", { name: "Media preferences" }),
+  ).toBeVisible();
   const width = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
   expect(width.content).toBeLessThanOrEqual(width.viewport);
 });
@@ -98,11 +102,13 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     listen.boundingBox(),
     past.boundingBox(),
   ]);
-  // Dates and media sit side by side, tops level; past shows drop below both.
+  expect(upcomingBox!.x).toBeLessThan(40);
+  // Dates and media sit side by side with Past shows in the dates heading row.
   expect(listenBox!.x).toBeGreaterThan(upcomingBox!.x + upcomingBox!.width - 4);
+  expect(listenBox!.x - (upcomingBox!.x + upcomingBox!.width)).toBeGreaterThanOrEqual(64);
   expect(Math.abs(listenBox!.y - upcomingBox!.y)).toBeLessThan(4);
-  expect(pastBox!.y).toBeGreaterThan(upcomingBox!.y + upcomingBox!.height - 4);
-  expect(Math.abs(pastBox!.x - upcomingBox!.x)).toBeLessThan(4);
+  expect(Math.abs(pastBox!.y - upcomingBox!.y)).toBeLessThan(4);
+  expect(pastBox!.x).toBeGreaterThan(upcomingBox!.x + upcomingBox!.width / 2);
   // The player takes whatever the flyer track leaves, so the row is full.
   expect(upcomingBox!.width + listenBox!.width).toBeGreaterThan(1150);
 
@@ -112,6 +118,7 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     page.locator("#event-aaa-fusion-xoyo-2026-08-22").boundingBox(),
     page.getByTestId("media-player").boundingBox(),
   ]);
+  expect(playerBox!.x - (upcomingBox!.x + upcomingBox!.width)).toBeGreaterThanOrEqual(64);
   expect(Math.abs((playerBox!.y + playerBox!.height) - (cardBox!.y + cardBox!.height))).toBeLessThan(8);
 
   // History stays reachable, but only on request.
@@ -148,6 +155,75 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(detailsBox).not.toBeNull();
   expect(detailsBox!.y).toBeGreaterThan(flyerBox!.y + flyerBox!.height);
 
+  // A longer list makes its continuation visible on the flyer area itself,
+  // with both edge controls and page-position dots.
+  await page.goto("/artist/c-systems");
+  const eventControls = page.getByRole("group", { name: "Upcoming event controls" });
+  await expect(eventControls.getByRole("button", { name: "Next upcoming events" })).toBeVisible();
+  await expect(page.getByText(/More dates|Earlier dates/)).toHaveCount(0);
+  await expect(page.getByTestId("upcoming-pagination").locator("span")).toHaveCount(2);
+  const [rangeBox, playerLabelBox] = await Promise.all([
+    page.getByTestId("upcoming-range").boundingBox(),
+    page.getByTestId("player-label").boundingBox(),
+  ]);
+  expect(Math.abs(rangeBox!.y + rangeBox!.height / 2 - (playerLabelBox!.y + playerLabelBox!.height / 2))).toBeLessThan(2);
+  const paginationBox = await page.getByTestId("upcoming-pagination").boundingBox();
+  expect(paginationBox!.x - (rangeBox!.x + rangeBox!.width)).toBeLessThanOrEqual(16);
+  await expect(page.getByTestId("media-player")).toHaveCSS("border-top-width", "0px");
+  await expect(page.getByTestId("media-player")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  const [carouselCardBox, carouselPlayerBox] = await Promise.all([
+    page.locator("#event-timescape-festival-2026").boundingBox(),
+    page.getByTestId("media-player").boundingBox(),
+  ]);
+  expect(Math.abs(carouselCardBox!.y + carouselCardBox!.height - (carouselPlayerBox!.y + carouselPlayerBox!.height))).toBeLessThan(8);
+  const [desktopSliderBox, desktopNextFlyerBox] = await Promise.all([
+    page.getByTestId("upcoming-slider").boundingBox(),
+    page.locator("#event-ds-30yrs-2026").boundingBox(),
+  ]);
+  const desktopPeek = desktopSliderBox!.x + desktopSliderBox!.width - desktopNextFlyerBox!.x;
+  expect(desktopPeek).toBeGreaterThan(20);
+  expect(desktopPeek).toBeLessThan(desktopNextFlyerBox!.width);
+  await eventControls.getByRole("button", { name: "Next upcoming events" }).click();
+  await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 4");
+  await expect.poll(() => page.getByTestId("upcoming-slider").evaluate(
+    (slider) => Math.abs(slider.scrollWidth - slider.clientWidth - slider.scrollLeft),
+  )).toBeLessThan(2);
+  const [desktopLaterSliderBox, desktopPreviousFlyerBox] = await Promise.all([
+    page.getByTestId("upcoming-slider").boundingBox(),
+    page.locator("#event-aaa-fusion-xoyo-2026-08-22").boundingBox(),
+  ]);
+  const desktopPreviousPeek = desktopPreviousFlyerBox!.x + desktopPreviousFlyerBox!.width - desktopLaterSliderBox!.x;
+  expect(desktopPreviousPeek).toBeGreaterThan(20);
+  expect(desktopPreviousPeek).toBeLessThan(desktopPreviousFlyerBox!.width);
+
+  // XiJaro & Pitch has three pages. Its middle page must expose both adjacent
+  // flyers at once, not replace the right cue when the left one appears.
+  await page.goto("/artist/xijaro-pitch");
+  await page.getByRole("button", { name: "Next upcoming events" }).click();
+  await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 5");
+  await expect.poll(async () => {
+    const [slider, previous, next] = await Promise.all([
+      page.getByTestId("upcoming-slider").boundingBox(),
+      page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
+      page.locator("#event-ablazing-sense-chasing-dreams-2026").boundingBox(),
+    ]);
+    return Math.min(
+      previous!.x + previous!.width - slider!.x,
+      slider!.x + slider!.width - next!.x,
+    );
+  }).toBeGreaterThan(20);
+  const [middleSliderBox, middlePreviousBox, middleNextBox] = await Promise.all([
+    page.getByTestId("upcoming-slider").boundingBox(),
+    page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
+    page.locator("#event-ablazing-sense-chasing-dreams-2026").boundingBox(),
+  ]);
+  const middlePreviousPeek = middlePreviousBox!.x + middlePreviousBox!.width - middleSliderBox!.x;
+  const middleNextPeek = middleSliderBox!.x + middleSliderBox!.width - middleNextBox!.x;
+  expect(middlePreviousPeek).toBeGreaterThan(20);
+  expect(middlePreviousPeek).toBeLessThan(middlePreviousBox!.width);
+  expect(middleNextPeek).toBeGreaterThan(20);
+  expect(middleNextPeek).toBeLessThan(middleNextBox!.width);
+
   await page.setViewportSize({ width: 390, height: 844 });
   const [mobileUpcomingBox, mobileListenBox, mobilePastBox] = await Promise.all([
     upcoming.boundingBox(),
@@ -157,9 +233,9 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(mobileUpcomingBox).not.toBeNull();
   expect(mobileListenBox).not.toBeNull();
   expect(mobilePastBox).not.toBeNull();
-  // The two-column row collapses: dates, then media, then past shows.
+  // The row collapses: dates (including its Past shows action), then media.
   expect(mobileListenBox!.y).toBeGreaterThan(mobileUpcomingBox!.y);
-  expect(mobilePastBox!.y).toBeGreaterThan(mobileListenBox!.y);
+  expect(Math.abs(mobilePastBox!.y - mobileUpcomingBox!.y)).toBeLessThan(4);
 
   await page.goto("/artist/c-systems");
   // On mobile every upcoming card stacks into the page: no paging controls, and
@@ -182,24 +258,44 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(tabletBoxes).toHaveLength(2);
   // Two-up, so they share a row and use the width available.
   expect(Math.abs(tabletBoxes[0]!.y - tabletBoxes[1]!.y)).toBeLessThan(4);
-  expect(tabletBoxes[0]!.width).toBeGreaterThan(330);
+  expect(tabletBoxes[0]!.width).toBeGreaterThan(300);
+  const [tabletSliderBox, tabletNextFlyerBox] = await Promise.all([
+    page.getByTestId("upcoming-slider").boundingBox(),
+    page.locator("#event-ds-30yrs-2026").boundingBox(),
+  ]);
+  const tabletPeek = tabletSliderBox!.x + tabletSliderBox!.width - tabletNextFlyerBox!.x;
+  expect(tabletPeek).toBeGreaterThan(20);
+  expect(tabletPeek).toBeLessThan(tabletNextFlyerBox!.width);
+  const tabletControls = page.getByRole("group", { name: "Upcoming event controls" });
+  await tabletControls.getByRole("button", { name: "Next upcoming events" }).click();
+  await expect.poll(() => page.getByTestId("upcoming-slider").evaluate(
+    (slider) => Math.abs(slider.scrollWidth - slider.clientWidth - slider.scrollLeft),
+  )).toBeLessThan(2);
+  const [tabletLaterSliderBox, tabletPreviousFlyerBox] = await Promise.all([
+    page.getByTestId("upcoming-slider").boundingBox(),
+    page.locator("#event-aaa-fusion-xoyo-2026-08-22").boundingBox(),
+  ]);
+  const tabletPreviousPeek = tabletPreviousFlyerBox!.x + tabletPreviousFlyerBox!.width - tabletLaterSliderBox!.x;
+  expect(tabletPreviousPeek).toBeGreaterThan(20);
+  expect(tabletPreviousPeek).toBeLessThan(tabletPreviousFlyerBox!.width);
   // C-Systems has both providers. Only one occupies the column at a time, so
   // the media side can never grow to twice the height of the dates beside it.
   await expect(page.getByTestId("media-player")).toHaveCount(1);
   const playerLabel = page.getByTestId("player-label");
-  await expect(playerLabel).toContainText("SoundCloud");
-  await expect(playerLabel).toContainText("1 of 2");
-  await page.getByRole("button", { name: "Next player" }).click();
   await expect(playerLabel).toContainText("Spotify");
-  await expect(playerLabel).toContainText("2 of 2");
-  // Two items, so the arrows wrap rather than leaving one permanently dead.
-  await page.getByRole("button", { name: "Next player" }).click();
+  await expect(playerLabel).not.toContainText("1 of 2");
+  await expect(page.getByTestId("player-pagination").locator("span")).toHaveCount(2);
+  await page.getByRole("button", { name: "Switch to SoundCloud player" }).click();
   await expect(playerLabel).toContainText("SoundCloud");
+  await expect(page.getByTestId("player-pagination")).toHaveAttribute("aria-label", "Player 2 of 2");
+  await page.getByRole("button", { name: "Switch to Spotify player" }).click();
+  await expect(playerLabel).toContainText("Spotify");
 
   // A single-player artist gets no controls at all.
   await page.goto("/artist/frogr");
   await expect(page.getByTestId("player-label")).toContainText("SoundCloud");
-  await expect(page.getByRole("button", { name: "Next player" })).toHaveCount(0);
+  await expect(page.getByTestId("player-pagination")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Switch to .* player/ })).toHaveCount(0);
 });
 
 test("opens the mobile menu and preserves footer contrast in dark mode", async ({ page }) => {

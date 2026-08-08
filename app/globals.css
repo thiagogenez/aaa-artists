@@ -19,6 +19,14 @@ html.light {
   --cta-bg: #0a0a0a;
   --cta-text: #f8f8f8;
   --cta-hover: #333333;
+  --media-banner-bg: #0a0a0a;
+  --media-banner-text: #f8f8f8;
+  --media-banner-muted: rgba(248, 248, 248, 0.78);
+  --media-banner-border: rgba(248, 248, 248, 0.42);
+  --media-banner-action-bg: #f8f8f8;
+  --media-banner-action-text: #0a0a0a;
+  --media-banner-action-hover: #dedede;
+  --media-banner-shadow: rgba(0, 0, 0, 0.24);
   --card-wash: rgba(0, 0, 0, 0.06);
   /* Hover highlight line — neutral grey so it reads on photos and on light/dark surfaces */
   --card-line: rgba(128, 128, 128, 0.7);
@@ -53,6 +61,14 @@ html.dark {
   --cta-bg: #ebebeb;
   --cta-text: #0a0a0a;
   --cta-hover: #d4d4d4;
+  --media-banner-bg: #f2f2f2;
+  --media-banner-text: #0a0a0a;
+  --media-banner-muted: rgba(10, 10, 10, 0.75);
+  --media-banner-border: rgba(10, 10, 10, 0.35);
+  --media-banner-action-bg: #0a0a0a;
+  --media-banner-action-text: #f8f8f8;
+  --media-banner-action-hover: #333333;
+  --media-banner-shadow: rgba(0, 0, 0, 0.55);
   --card-wash: rgba(255, 255, 255, 0.06);
   --card-line: rgba(128, 128, 128, 0.7);
   --error: #f87171;
@@ -72,6 +88,14 @@ html.dark {
      Used by <main> in layout.tsx to keep content clear of the navbar —
      update it if the navbar padding or logo size changes. */
   --nav-h: 73px;
+}
+
+/* Shared page edge. The previous 1280px cap made desktop layouts feel boxed
+   in and forced the artist carousel to inherit oversized outer gutters. */
+.site-shell {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
 }
 
 html {
@@ -127,6 +151,49 @@ button:not(:disabled) {
   border: 1px solid var(--border);
   color: var(--text-60);
   transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+/* The media decision is intentionally inverted against the page theme so it
+   reads as a temporary, self-contained choice rather than ordinary content. */
+.media-consent-banner {
+  background-color: var(--media-banner-bg);
+  color: var(--media-banner-text);
+  border-color: var(--media-banner-border);
+  box-shadow: 0 -10px 30px var(--media-banner-shadow);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.media-consent-link {
+  color: var(--media-banner-muted);
+  transition: color 0.2s ease;
+}
+.media-consent-link:hover,
+.media-consent-link:focus-visible {
+  color: var(--media-banner-text);
+}
+
+.media-consent-decline {
+  border: 1px solid var(--media-banner-border);
+  color: var(--media-banner-muted);
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.media-consent-decline:hover,
+.media-consent-decline:focus-visible {
+  border-color: var(--media-banner-text);
+  color: var(--media-banner-text);
+}
+
+.media-consent-accept {
+  background-color: var(--media-banner-action-bg);
+  color: var(--media-banner-action-text);
+  transition: background-color 0.2s ease;
+}
+.media-consent-accept:hover {
+  background-color: var(--media-banner-action-hover);
+}
+
+.media-consent-banner :focus-visible {
+  outline-color: var(--media-banner-text);
 }
 .btn-outline:hover,
 .btn-outline:focus-visible {

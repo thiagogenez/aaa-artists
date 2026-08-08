@@ -70,7 +70,7 @@ export default function AboutPage() {
 
       {/* Stats */}
       <section className="border-b px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
-        <div className="mx-auto max-w-7xl">
+        <div className="site-shell">
           <div className="grid grid-cols-2 gap-px sm:grid-cols-4" style={{ backgroundColor: "var(--border)" }}>
             {stats.map(({ value, label }) => (
               <div
@@ -96,7 +96,7 @@ export default function AboutPage() {
 
       {/* Story */}
       <section className="border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
-        <div className="mx-auto max-w-7xl">
+        <div className="site-shell">
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-start">
             <div>
               <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
@@ -163,7 +163,7 @@ export default function AboutPage() {
 
       {/* Values */}
       <section className="border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
-        <div className="mx-auto max-w-7xl">
+        <div className="site-shell">
           <p className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             How We Work
           </p>

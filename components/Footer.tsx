@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import MediaConsentSettings from "@/components/MediaConsentSettings";
 import SocialIcon from "@/components/SocialIcons";
 import { FOOTER_NAV_LINKS } from "@/config/navigation";
 import { SITE_NAME, SOCIAL_LINKS } from "@/lib/site";
@@ -7,7 +8,7 @@ import { SITE_NAME, SOCIAL_LINKS } from "@/lib/site";
 export default function Footer() {
   return (
     <footer className="border-t" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
-      <div className="mx-auto max-w-7xl px-6 py-10 sm:py-12">
+      <div className="site-shell px-6 py-10 sm:py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.35fr_1fr_1fr] md:gap-12">
           <div className="max-w-md">
             <Image
@@ -33,6 +34,9 @@ export default function Footer() {
                   <Link href={href} className="link-quiet inline-flex min-h-[44px] items-center text-sm">{label}</Link>
                 </li>
               ))}
+              <li>
+                <MediaConsentSettings className="link-quiet inline-flex min-h-[44px] cursor-pointer items-center text-sm" />
+              </li>
             </ul>
           </nav>
 

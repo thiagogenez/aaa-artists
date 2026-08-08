@@ -147,7 +147,7 @@ export default async function ArtistPage({ params }: Props) {
       )}
       {/* Artist hero */}
       <div className="relative border-b px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
-        <div className="mx-auto max-w-7xl">
+        <div className="site-shell">
           <Breadcrumbs
             className="mb-8"
             items={[
@@ -220,7 +220,7 @@ export default async function ArtistPage({ params }: Props) {
 
       {/* Other artists */}
       <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
-        <div className="mx-auto max-w-7xl">
+        <div className="site-shell">
           <h2 className="mb-10 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
             Also on the Roster
           </h2>

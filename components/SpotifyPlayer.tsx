@@ -1,7 +1,7 @@
 "use client";
 
-// Spotify is loaded only once media consent is granted (or the visitor loads
-// this one player). Until then no third-party request is made at all.
+// Spotify is loaded only once media consent is granted. Until then no
+// third-party request is made at all.
 import { useTheme } from "@/components/ThemeProvider";
 import ThirdPartyConsent from "@/components/ThirdPartyConsent";
 
