@@ -6,8 +6,11 @@ import Link from "next/link";
 import type { Artist, Gig } from "@/data/artists";
 import { eventDateBadge, formatEventDate, isUpcomingEventDate } from "@/lib/events";
 import SocialIcon from "@/components/SocialIcons";
+import MediaConsentBanner from "@/components/MediaConsentBanner";
+import MediaConsentSettings from "@/components/MediaConsentSettings";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import ThirdPartyEmbed from "@/components/ThirdPartyEmbed";
+import { useMediaConsent } from "@/components/useMediaConsent";
 import PastShowsDialog from "./PastShowsDialog";
 
 function currentDate() {
@@ -121,16 +124,63 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
   );
 }
 
-/** Card width at `lg`. These have to be literal class strings — Tailwind scans
+/** Card widths from iPad portrait upward. These have to be literal class
+ *  strings — Tailwind scans
  *  source text, so a template-built class name would never be generated. */
 const CARD_WIDTH: Record<number, string> = {
-  1: "lg:w-full",
-  2: "lg:w-[calc((100%-1.25rem)/2)]",
-  3: "lg:w-[calc((100%-2.5rem)/3)] lg:max-w-[320px]",
+  1: "md:w-full",
+  2: "md:w-[calc((100%-1.25rem)/2)]",
+  3: "md:w-[calc((100%-2.5rem)/3)] md:max-w-[320px]",
 };
 
-/** Upcoming events. On desktop this is a horizontal slider showing `perView`
- *  cards at a time; below `lg` the cards simply stack into the page.
+/** When more pages exist, reserve enough width for matching leading and
+ *  trailing peeks. A middle page can therefore expose both its previous and
+ *  next flyer instead of trading one continuity cue for the other. */
+const PEEK_CARD_WIDTH: Record<number, string> = {
+  1: "md:w-[calc(100%-7rem)]",
+  2: "md:w-[calc((100%-1.25rem-7rem)/2)]",
+  3: "md:w-[calc((100%-2.5rem-7rem)/3)] md:max-w-[320px]",
+};
+
+/** Compact, read-only carousel position. Navigation stays on the large arrows
+ *  or named provider switch, so these marks can remain visually tight without
+ *  creating undersized click targets. */
+function PaginationMarks({
+  count,
+  index,
+  label,
+  testId,
+}: {
+  count: number;
+  index: number;
+  label: string;
+  testId: string;
+}) {
+  return (
+    <div
+      data-testid={testId}
+      role="status"
+      aria-label={`${label} ${index + 1} of ${count}`}
+      className="flex h-11 items-center gap-2"
+    >
+      {Array.from({ length: count }, (_, mark) => (
+        <span
+          key={mark}
+          aria-hidden="true"
+          className="h-1.5 rounded-full transition-[width,background-color] duration-200"
+          style={{
+            width: mark === index ? "1.25rem" : "0.3125rem",
+            backgroundColor: mark === index ? "var(--text)" : "var(--text-30)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Upcoming events. From iPad portrait upward this is a horizontal slider
+ *  showing `perView` cards plus a peek of the next; smaller layouts keep every
+ *  card in the normal page flow.
  *
  *  Horizontal is the only axis worth rolling on: the page already owns vertical
  *  scrolling, so an inner vertical scroller would capture the same wheel and
@@ -138,6 +188,10 @@ const CARD_WIDTH: Record<number, string> = {
 function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]; perView: number }) {
   const PER_VIEW = perView;
   const desktopMaxIndex = Math.max(0, gigs.length - PER_VIEW);
+  const pageStarts = Array.from(
+    { length: Math.ceil(gigs.length / PER_VIEW) },
+    (_, page) => Math.min(page * PER_VIEW, desktopMaxIndex),
+  ).filter((start, page, starts) => page === 0 || start !== starts[page - 1]);
   const [desktopIndex, setDesktopIndex] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -147,13 +201,17 @@ function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]
     const item = itemRefs.current[nextIndex];
     if (!viewport || !item) return;
 
+    // Later pages stop one peek-width before the next card's leading edge.
+    // This leaves the previous flyer visible on the left, mirroring the next
+    // flyer that is visible on the right of the first page.
+    const previousPeek = nextIndex > 0 ? 56 : 0;
     viewport.scrollTo({
-      left: item.offsetLeft - viewport.offsetLeft,
+      left: item.offsetLeft - viewport.offsetLeft - previousPeek,
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     });
   }
 
-  // Only the desktop viewport scrolls, so the position always comes from scrollLeft.
+  // Only the tablet/desktop viewport scrolls, so position comes from scrollLeft.
   function syncIndexFromScroll() {
     const viewport = viewportRef.current;
     if (!viewport) return;
@@ -170,80 +228,100 @@ function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]
     setDesktopIndex(Math.min(closestIndex, desktopMaxIndex));
   }
 
+  const activePage = pageStarts.reduce((closestPage, start, page) =>
+    Math.abs(start - desktopIndex) < Math.abs(pageStarts[closestPage] - desktopIndex) ? page : closestPage, 0);
+
+  function moveByPage(delta: number) {
+    const nextPage = Math.max(0, Math.min(pageStarts.length - 1, activePage + delta));
+    const next = pageStarts[nextPage];
+    setDesktopIndex(next);
+    moveTo(next);
+  }
+
   return (
     <div>
-      {/* Controls are desktop-only. Below lg every card is simply stacked in the
+      {/* Controls start at iPad portrait. Below md every card stays in the
           page, so there is nothing to page through — and no inner scroll area to
           fight the page's own scroll. */}
-      <div className="mb-4 hidden min-h-11 lg:block">
-        {/* Desktop: three horizontal cards at a time, controlled left/right. */}
-        <div className="flex items-center justify-between gap-4">
+      <div className="mb-4 hidden min-h-11 items-center md:flex">
+        <div className="flex w-full items-center justify-end gap-4">
           {/* Only worth a counter when there is something to page through —
               "1–2 of 2" is noise. The bar keeps its height either way so the
               flyers and the player stay level. */}
-          <p className="text-xs" style={{ color: "var(--text-40)" }} aria-live="polite">
+          <p
+            data-testid="upcoming-range"
+            className="text-xs font-semibold uppercase tracking-widest"
+            style={{ color: "var(--text-40)" }}
+            aria-live="polite"
+          >
             {gigs.length > PER_VIEW && `${desktopIndex + 1}–${Math.min(gigs.length, desktopIndex + PER_VIEW)} of ${gigs.length}`}
           </p>
-          {gigs.length > PER_VIEW && (
-            <div className="flex gap-2" aria-label="Upcoming event controls">
-              <button
-                type="button"
-                onClick={() => {
-                  const next = Math.max(0, desktopIndex - PER_VIEW);
-                  setDesktopIndex(next);
-                  moveTo(next);
-                }}
-                disabled={desktopIndex === 0}
-                aria-label="Previous upcoming events"
-                className="btn-outline flex h-11 w-11 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const next = Math.min(desktopMaxIndex, desktopIndex + PER_VIEW);
-                  setDesktopIndex(next);
-                  moveTo(next);
-                }}
-                disabled={desktopIndex === desktopMaxIndex}
-                aria-label="Next upcoming events"
-                className="btn-outline flex h-11 w-11 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
+          {pageStarts.length > 1 && (
+            <PaginationMarks
+              count={pageStarts.length}
+              index={activePage}
+              label="Upcoming event page"
+              testId="upcoming-pagination"
+            />
           )}
         </div>
       </div>
 
-      <div
-        ref={viewportRef}
-        data-testid="upcoming-slider"
-        tabIndex={0}
-        aria-label="Upcoming events slider"
-        onScroll={syncIndexFromScroll}
-        /* Grid while the cards are stacked in the page (two-up once there is room
-           for it), switching to a horizontal flex slider at lg. */
-        className="grid grid-cols-1 gap-5 scroll-smooth motion-reduce:scroll-auto sm:grid-cols-2 lg:flex lg:flex-row lg:overflow-x-auto lg:snap-x lg:snap-mandatory [&::-webkit-scrollbar]:hidden lg:[scrollbar-width:none]"
-      >
-        {gigs.map((gig, index) => (
-          <div
-            key={gig.eventId ?? `${gig.date}-${gig.venue}`}
-            ref={(item) => { itemRefs.current[index] = item; }}
-            /* No width cap below lg: capping at 320px inside a ~790px tablet
-               column left most of the row empty. The cap only applies to the
-               slider, where card width has to stay predictable. */
-            className={`w-full flex-none snap-start ${CARD_WIDTH[PER_VIEW] ?? CARD_WIDTH[3]}`}
-          >
-            <FlyerCard artist={artist} gig={gig} />
+      <div className="relative">
+        <div
+          ref={viewportRef}
+          data-testid="upcoming-slider"
+          tabIndex={0}
+          aria-label="Upcoming events slider"
+          onScroll={syncIndexFromScroll}
+          /* Grid on smaller screens, switching to a swipeable row at md. */
+          className="grid grid-cols-1 gap-5 scroll-smooth motion-reduce:scroll-auto sm:grid-cols-2 md:flex md:flex-row md:overflow-x-auto md:snap-x md:snap-mandatory [&::-webkit-scrollbar]:hidden md:[scrollbar-width:none]"
+        >
+          {gigs.map((gig, index) => (
+            <div
+              key={gig.eventId ?? `${gig.date}-${gig.venue}`}
+              ref={(item) => { itemRefs.current[index] = item; }}
+              className={`w-full flex-none snap-start ${index > 0 ? "md:scroll-ml-14" : ""} ${
+                gigs.length > PER_VIEW
+                  ? PEEK_CARD_WIDTH[PER_VIEW] ?? PEEK_CARD_WIDTH[3]
+                  : CARD_WIDTH[PER_VIEW] ?? CARD_WIDTH[3]
+              }`}
+            >
+              <FlyerCard artist={artist} gig={gig} />
+            </div>
+          ))}
+        </div>
+
+        {gigs.length > PER_VIEW && (
+          <div role="group" className="pointer-events-none absolute inset-y-0 left-3 right-3 hidden items-center justify-between md:flex" aria-label="Upcoming event controls">
+            <button
+              type="button"
+              onClick={() => moveByPage(-1)}
+              disabled={activePage === 0}
+              aria-label="Previous upcoming events"
+              className="btn-outline pointer-events-auto flex h-12 w-12 cursor-pointer items-center justify-center rounded-full shadow-lg disabled:pointer-events-none disabled:opacity-0"
+              style={{ backgroundColor: "var(--bg-nav)" }}
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => moveByPage(1)}
+              disabled={activePage === pageStarts.length - 1}
+              aria-label="Next upcoming events"
+              className="btn-outline pointer-events-auto flex h-12 w-12 cursor-pointer items-center justify-center rounded-full shadow-lg disabled:pointer-events-none disabled:opacity-0"
+              style={{ backgroundColor: "var(--bg-nav)" }}
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
-        ))}
+        )}
       </div>
+
     </div>
   );
 }
@@ -260,17 +338,36 @@ function MediaColumn({
   players: Array<{ label: string; node: React.ReactNode }>;
   linkOnly: string | null;
 }) {
+  const consent = useMediaConsent();
   const [index, setIndex] = useState(0);
   const active = players[Math.min(index, players.length - 1)];
+  const otherIndex = index === 0 ? 1 : 0;
+  const other = players[otherIndex];
 
-  // Two items make "disabled at the ends" mean one arrow is always dead, so
-  // this wraps instead.
-  const step = (delta: number) => setIndex((i) => (i + delta + players.length) % players.length);
+  if (consent !== "granted") {
+    return (
+      <div className="flex flex-col gap-4">
+        <div
+          data-testid="media-player-disabled"
+          className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1 border px-4 py-2 text-xs"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--text-40)" }}
+        >
+          <span>{consent === "denied" ? "External media disabled." : "External media is waiting for your choice."}</span>
+          {consent === "denied" && (
+            <MediaConsentSettings
+              label="Change media preferences"
+              className="link-quiet inline-flex min-h-[44px] cursor-pointer items-center font-semibold underline underline-offset-4"
+            />
+          )}
+        </div>
+        {linkOnly && <MediaLinkCard platform="spotify" label="Spotify" href={linkOnly} />}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Mirrors the upcoming controls: label left, arrows right, same 44px row,
-          so the two columns line up at their tops on desktop. */}
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Mirrors the upcoming counter and continuation cue. */}
       <div className="mb-4 flex min-h-11 items-center justify-between gap-4">
         <p
           data-testid="player-label"
@@ -279,46 +376,37 @@ function MediaColumn({
           aria-live="polite"
         >
           {active.label}
-          {players.length > 1 && (
-            <span style={{ color: "var(--text-30)" }}> · {index + 1} of {players.length}</span>
-          )}
         </p>
         {players.length > 1 && (
-          <div className="flex gap-2" aria-label="Player controls">
+          <div className="flex items-center gap-4">
+            <PaginationMarks
+              count={players.length}
+              index={index}
+              label="Player"
+              testId="player-pagination"
+            />
             <button
               type="button"
-              onClick={() => step(-1)}
-              aria-label="Previous player"
-              className="btn-outline flex h-11 w-11 cursor-pointer items-center justify-center"
+              onClick={() => setIndex(otherIndex)}
+              aria-label={`Switch to ${other.label} player`}
+              className="link-quiet inline-flex min-h-11 cursor-pointer items-center text-xs font-semibold uppercase tracking-widest"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => step(1)}
-              aria-label="Next player"
-              className="btn-outline flex h-11 w-11 cursor-pointer items-center justify-center"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-              </svg>
+              {index === 0 ? `${other.label} →` : `← ${other.label}`}
             </button>
           </div>
         )}
       </div>
 
-      {/* min-h-0 lets the flex child actually shrink to the row height, which is
-          what makes the player end level with the flyer cards. */}
-      <div
-        data-testid="media-player"
-        className="min-h-0 flex-1 overflow-hidden border"
-        /* The floor only bites below lg, where nothing stretches the column —
-           it is what stops the stacked player collapsing to a few track rows. */
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", minHeight: "420px" }}
-      >
-        {active.node}
+      <div className="relative min-h-0 flex-1">
+        {/* min-h-0 lets the flex child actually shrink to the row height, which
+            makes the player end level with the flyer cards. */}
+        <div
+          data-testid="media-player"
+          className="h-full min-h-0 overflow-hidden"
+          style={{ minHeight: "420px" }}
+        >
+          {active.node}
+        </div>
       </div>
 
       {linkOnly && (
@@ -378,6 +466,12 @@ export default function EventsSection({
   const spotifyLinkOnly = (!spotifySrc && artist.socials.spotify) || null;
 
   const players: Array<{ label: string; node: React.ReactNode }> = [];
+  if (spotifySrc) {
+    players.push({
+      label: "Spotify",
+      node: <SpotifyPlayer src={spotifySrc} title={`${artist.name} on Spotify`} className="h-full" />,
+    });
+  }
   if (artist.socials.soundcloud) {
     players.push({
       label: "SoundCloud",
@@ -390,12 +484,6 @@ export default function EventsSection({
           className="h-full"
         />
       ),
-    });
-  }
-  if (spotifySrc) {
-    players.push({
-      label: "Spotify",
-      node: <SpotifyPlayer src={spotifySrc} title={`${artist.name} on Spotify`} className="h-full" />,
     });
   }
   const hasMedia = players.length > 0 || Boolean(spotifyLinkOnly);
@@ -413,17 +501,24 @@ export default function EventsSection({
       className="border-t px-6 py-16"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
     >
-      <div className="mx-auto max-w-7xl">
+      <div className="site-shell">
         {/* Dates and media share one row: the flyer track is sized in whole
             cards and the player absorbs the remainder, so a sparse artist gets
-            a wide player instead of a half-empty row. Below lg it all stacks —
+            a wide player instead of a half-empty row. Below xl it all stacks —
             the whole page commits to one breakpoint. */}
         <div
-          className="grid grid-cols-1 items-stretch gap-10 lg:grid-cols-[var(--flyer-track)_minmax(0,1fr)] lg:gap-6"
+          className="grid grid-cols-1 items-stretch gap-10 xl:grid-cols-[var(--flyer-track)_minmax(0,1fr)] xl:gap-16"
           style={{ "--flyer-track": `${trackWidth}px` } as React.CSSProperties}
         >
           <section data-testid="upcoming-events" className="flex min-w-0 flex-col">
-            <h2 className="mb-6 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</h2>
+            <div className="mb-6 flex min-h-11 items-center justify-between gap-4">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</h2>
+              {pastGigs.length > 0 && (
+                <div data-testid="past-dates" className="shrink-0">
+                  <PastShowsDialog gigs={pastGigs} />
+                </div>
+              )}
+            </div>
             {upcomingGigs.length === 0 ? (
               <div
                 className="flex flex-1 flex-col items-center justify-center gap-5 border border-dashed px-6 py-14 text-center"
@@ -444,7 +539,9 @@ export default function EventsSection({
 
           {hasMedia && (
             <section data-testid="listen" className="flex min-w-0 flex-col">
-              <h2 className="mb-6 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen</h2>
+              <div className="mb-6 flex min-h-11 items-center">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen</h2>
+              </div>
               {players.length > 0 ? (
                 <MediaColumn players={players} linkOnly={spotifyLinkOnly} />
               ) : (
@@ -454,16 +551,8 @@ export default function EventsSection({
           )}
         </div>
 
-        {/* Past — a link, not a column. Still on the page for credibility, but
-            it no longer competes with the dates someone can actually book. */}
-        <div data-testid="past-dates" className="mt-10 min-w-0">
-          {pastGigs.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--text-40)" }}>No past dates on record yet.</p>
-          ) : (
-            <PastShowsDialog gigs={pastGigs} />
-          )}
-        </div>
       </div>
+      {players.length > 0 && <MediaConsentBanner />}
     </div>
   );
 }

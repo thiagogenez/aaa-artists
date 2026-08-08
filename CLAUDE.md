@@ -75,6 +75,10 @@ public/
 | Text muted     | `white/30` – `white/60`|
 | CTA buttons    | `bg-white text-black`  |
 
+Full-width page sections, navigation, footer, and the media-consent banner share
+`.site-shell`, capped at 1440px. Keep their desktop edges aligned; individual sections
+provide their own `px-6` padding rather than narrowing the shared shell.
+
 ## Adding / updating an artist
 
 Artist content lives in **one YAML file per artist** in `data/artists/` (e.g.
@@ -132,11 +136,26 @@ height is what decides how many tracks are visible, and SoundCloud uses `visual=
 list player) because `visual=true` spends most of its height on artwork and fits only ~3
 rows.
 
-The section is a centred `max-w-4xl` block with players stacked in one column, so the
-heading and every player share a left edge regardless of how many players an artist has.
-Five of the seven artists have SoundCloud only. A side-by-side grid was tried and reverted
-twice: at full width the lone player stranded a dead half-column, and centring it left the
-"Listen" heading hanging out to the left of its own content. Keep one column.
+Upcoming dates and "Listen" share **one row** at `lg`: the flyer track is sized in whole
+cards (`flyerSlots = min(upcomingCount, 2)`, 340px each) and the player column takes
+`minmax(0,1fr)` of whatever is left. So a sparse artist gets a wide player rather than a
+half-empty row — one date leaves a ~900px player, two leave ~550px. The player is
+`h-full` inside a stretched grid item, so **the flyer card defines the row height and the
+player matches it**; there are no hard-coded player heights to keep in sync, and a taller
+row simply shows more SoundCloud tracks. Below `xl` the row stacks: dates, media, past
+shows. At `xl`, a clean 64px gutter separates dates and media; their own card/frame borders
+provide enough structure, so do not add a divider between the sections.
+
+Only **one player is mounted at a time** (`MediaColumn`). Two stacked players made the
+media column twice the height of the dates beside it. The bar names the active provider,
+shows "1 of 2", and provides one named switch to the other provider. Spotify is always
+first when both exist; SoundCloud follows. Five of the seven artists have SoundCloud only
+and get no controls at all.
+
+Earlier attempts, for context: an equal side-by-side grid stranded a dead half-column, and
+centring a lone player left the "Listen" heading hanging out to the left of its own
+content. Both were fixed by sizing the flyer track and letting the player absorb the
+remainder — do not go back to a fixed 50/50 or 8/4 split.
 
 **Two players is the deliberate limit** — SoundCloud and Spotify. `socials.beatport` is a
 link icon only; there is no Beatport player, and adding one was tried and rejected
@@ -165,6 +184,13 @@ is the company's channel and separate from artist media.
 Each future-dated entry in `gigs` renders as a flyer card. Set `flyer: "/flyers/<file>.jpg"`
 to show real artwork; if omitted, a clean text poster is generated from the gig details.
 Add `ticketLink` to show event details. Add `ticketStatus: available` only after availability is verified.
+From iPad portrait upward, longer lists show adjacent flyers at both edges of middle pages
+and have edge-mounted previous/next controls, a range counter, and page-position dots.
+Compact read-only progress marks live in the range row so they do not add height below the
+flyer cards. The player uses the same active-bar/inactive-dot language beside its named
+switch. Below `md`, all flyer cards remain in the normal page flow. The player matches the
+flyer-card viewport at `xl` and mounts only the active iframe. `Past shows` is a compact
+outlined button at the end of the Upcoming Events heading row.
 
 ## Adding artist photos
 
@@ -221,13 +247,13 @@ visitor has consented — see below.
 
 ## Media consent
 
-Embedding a third-party player hands the visitor's IP to that provider and sets storage on
-their device, which under UK GDPR/PECR needs consent first. `MediaConsentBanner` asks once
-and stores the answer in `localStorage` under `aaa-media-consent-v1` (never sent to a
-server). `granted` embeds players automatically site-wide; `denied` or unanswered keeps
-`ThirdPartyConsent`'s per-player "Load … player" button, which is a one-off and does not
-become site-wide consent. `/privacy` carries a control to switch or reset the answer,
-because withdrawing consent must be as easy as giving it.
+Embedding a third-party player hands the visitor's IP to that provider and may set storage
+on their device, which under UK GDPR/PECR needs consent first. `MediaConsentBanner` appears
+only on artist pages with an embeddable player and stores the answer in `localStorage` under
+`aaa-media-consent-v1` (never sent to a server). `granted` embeds players automatically
+site-wide; `denied` or unanswered keeps them disabled behind a compact preference control.
+There is no per-player click-to-load bypass. The footer and `/privacy` carry controls to
+reset or switch the answer, because withdrawing consent must be as easy as giving it.
 
 E2E specs that are not about consent call `seedMediaConsent(page)` from
 `tests/e2e/helpers.ts`; it answers "denied", which keeps the banner hidden and stops any

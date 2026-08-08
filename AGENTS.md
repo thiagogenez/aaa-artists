@@ -41,8 +41,9 @@
   `eventId` carried as `identifier` so a shared line-up resolves to one real event.
   Artist pages use visible breadcrumbs with matching breadcrumb JSON-LD.
 - Third-party media never loads before consent and uses `referrerPolicy="no-referrer"`.
-  `MediaConsentBanner` asks once; `granted` auto-embeds site-wide, `denied`/unanswered keeps
-  the per-player click-to-load fallback. The choice lives in `localStorage` only.
+  `MediaConsentBanner` appears only on artist pages with embeds; `granted` auto-embeds
+  site-wide, while `denied`/unanswered keeps players disabled behind a compact preference
+  control. The choice lives in `localStorage` only.
 - Keep `config/privacy.js` `detailsConfirmed: false` until every item in `TODO.md` is
   factually confirmed and the final notice is reviewed. Never invent legal information.
 - The only consent prompt is the media-embed banner. Do not add a generic cookie banner, and

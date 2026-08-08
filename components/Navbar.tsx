@@ -51,7 +51,7 @@ export default function Navbar() {
       className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-nav)" }}
     >
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+      <nav className="site-shell flex items-center justify-between px-6 py-4">
         {/* Logo = home link; same underline-sweep affordance as the nav links */}
         <Link
           href="/"

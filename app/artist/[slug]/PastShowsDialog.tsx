@@ -49,7 +49,7 @@ export default function PastShowsDialog({ gigs }: { gigs: Gig[] }) {
         type="button"
         data-testid="past-shows-trigger"
         onClick={() => setOpen(true)}
-        className="link-quiet inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-sm font-semibold uppercase tracking-widest underline underline-offset-8"
+        className="btn-outline inline-flex min-h-[44px] cursor-pointer items-center px-4 text-xs font-semibold uppercase tracking-widest"
       >
         Past shows
       </button>

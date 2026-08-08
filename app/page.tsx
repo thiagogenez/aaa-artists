@@ -148,7 +148,7 @@ export default function HomePage() {
 
       {/* About */}
       <section className="border-t px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
-        <div className="mx-auto max-w-7xl">
+        <div className="site-shell">
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
             <div>
               <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Who We Are</p>
@@ -224,7 +224,7 @@ export default function HomePage() {
 
       {/* Genres */}
       <section className="border-t px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
-        <div className="mx-auto max-w-7xl">
+        <div className="site-shell">
           <p className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Genres</p>
           <h2 className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
             Across the electronic spectrum

@@ -64,7 +64,7 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
 export default function ArtistsPage() {
   return (
     <div className="min-h-screen overscroll-contain px-6 pb-16 pt-20 sm:py-20" style={{ backgroundColor: "var(--bg)" }}>
-      <div className="mx-auto max-w-7xl">
+      <div className="site-shell">
         {/* Header */}
         <div className="mb-8 text-center sm:mb-16">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>

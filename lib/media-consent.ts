@@ -4,7 +4,8 @@
 // provider, which processes their IP address and sets storage on their device.
 // Under UK GDPR/PECR that needs consent BEFORE the request is made, so nothing
 // is embedded while the state is "unset" — the banner asks first, and only a
-// recorded "granted" lets players load on sight from then on.
+// recorded "granted" lets players load on sight from then on. The banner is
+// mounted only on artist pages that have an embeddable player.
 //
 // localStorage (not sessionStorage) so the answer survives across visits, and
 // the choice is never sent to a server.

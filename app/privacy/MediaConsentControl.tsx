@@ -5,7 +5,7 @@ import { clearMediaConsent, setMediaConsent } from "@/lib/media-consent";
 
 const STATE_LABEL = {
   granted: "Players load automatically.",
-  denied: "Players stay blocked until you load one individually.",
+  denied: "External media stays disabled.",
   unset: "You have not answered yet, so nothing is loaded automatically.",
 } as const;
 

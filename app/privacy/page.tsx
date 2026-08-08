@@ -218,9 +218,9 @@ export default function PrivacyPage() {
               and use cookies under its own terms.
             </p>
             <p>
-              We ask for that agreement once, in a banner, before any player is requested. Your answer is kept in your
-              own browser&apos;s local storage and is never sent to us. If you decline, or have not answered, you can
-              still load an individual player by clicking it. You can change your answer at any time below.
+              We ask for that agreement on an artist page before any player is requested. Your answer is kept in your
+              own browser&apos;s local storage and is never sent to us. If you decline, external players remain disabled.
+              You can change your answer at any time below or through Media preferences in the footer.
             </p>
             <MediaConsentControl />
           </section>
