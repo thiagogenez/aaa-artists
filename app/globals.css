@@ -32,6 +32,16 @@ html.light {
   --card-line: rgba(128, 128, 128, 0.7);
   --error: #c0341d;
 
+  /* Sound-discovery accents: vivid interaction signals with WCAG AA text pairs. */
+  --sound-progressive: #5b4bff;
+  --sound-progressive-ink: #ffffff;
+  --sound-uplifting: #ff4f91;
+  --sound-uplifting-ink: #16060c;
+  --sound-peak: #ff6a32;
+  --sound-peak-ink: #1b0902;
+  --sound-hard: #c9f23b;
+  --sound-hard-ink: #0b1000;
+
   --logo-filter: none;
   --artist-photo-filter: grayscale(1) contrast(1.02) brightness(1.14);
   --artist-photo-gradient: linear-gradient(to top,
@@ -73,6 +83,16 @@ html.dark {
   --card-line: rgba(128, 128, 128, 0.7);
   --error: #f87171;
 
+  /* Slightly brighter accents retain their energy against the dark surface. */
+  --sound-progressive: #8b7cff;
+  --sound-progressive-ink: #0a0a0a;
+  --sound-uplifting: #ff70a6;
+  --sound-uplifting-ink: #16060c;
+  --sound-peak: #ff8654;
+  --sound-peak-ink: #1b0902;
+  --sound-hard: #d7ff5f;
+  --sound-hard-ink: #0b1000;
+
   --logo-filter: invert(1) brightness(0.92);
   --artist-photo-filter: grayscale(1) contrast(1.12) brightness(0.86);
   --artist-photo-gradient: linear-gradient(to top,
@@ -88,6 +108,32 @@ html.dark {
      Used by <main> in layout.tsx to keep content clear of the navbar —
      update it if the navbar padding or logo size changes. */
   --nav-h: 73px;
+
+  /* Shared editorial type scale. Pages opt in; body copy stays neutral. */
+  --display-weight: 780;
+  --display-tracking: -0.065em;
+  --display-leading: 0.86;
+  --section-heading-tracking: -0.045em;
+  --section-heading-leading: 0.95;
+}
+
+.display-heading {
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: var(--display-leading);
+}
+
+.section-heading {
+  font-weight: var(--display-weight);
+  letter-spacing: var(--section-heading-tracking);
+  line-height: var(--section-heading-leading);
+}
+
+.eyebrow-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
 }
 
 /* Shared page edge. The previous 1280px cap made desktop layouts feel boxed
