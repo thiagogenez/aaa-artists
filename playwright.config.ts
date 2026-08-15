@@ -45,7 +45,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "node scripts/serve-static.mjs out 3100",
+    // SITE_DIR lets the same specs run against a different build, so the visual
+    // baseline can be captured from a clean build of `main` in a git worktree and
+    // then compared with the working tree. Recipe in docs/local-testing.md.
+    command: `node scripts/serve-static.mjs ${process.env.SITE_DIR ?? "out"} 3100`,
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
     timeout: 30_000,

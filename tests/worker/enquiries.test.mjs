@@ -84,6 +84,65 @@ test("validates and emails a clean enquiry with a stable threaded reference", as
   assert.match(result.requestId, /^[0-9a-f-]{36}$/i);
 });
 
+test("routes non-production delivery to the local catcher and optional test BCC", async (context) => {
+  const originalFetch = globalThis.fetch;
+  let deliveryUrl;
+  let forwarded;
+  globalThis.fetch = async (url, init) => {
+    deliveryUrl = String(url);
+    forwarded = JSON.parse(init.body);
+    return Response.json({ messageId: "<local@mail-catcher.test>" }, { status: 201 });
+  };
+  context.after(() => { globalThis.fetch = originalFetch; });
+
+  const response = await worker.fetch(
+    request(validPayload()),
+    env({
+      ENVIRONMENT: "development",
+      BREVO_API_BASE: "http://127.0.0.1:8025",
+      BOOKING_BCC_OVERRIDE: "tester@example.com",
+    }),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(deliveryUrl, "http://127.0.0.1:8025/v3/smtp/email");
+  assert.deepEqual(forwarded.bcc, [{ email: "tester@example.com" }]);
+  assert.deepEqual(forwarded.replyTo, { email: "bookings@aaaartists.co" });
+});
+
+test("ignores local email overrides in production", async (context) => {
+  const originalFetch = globalThis.fetch;
+  let deliveryUrl;
+  let forwarded;
+  globalThis.fetch = async (url, init) => {
+    if (String(url).includes("siteverify")) {
+      return Response.json({
+        success: true,
+        action: "booking_enquiry",
+        hostname: "aaaartists.co",
+      });
+    }
+    deliveryUrl = String(url);
+    forwarded = JSON.parse(init.body);
+    return Response.json({ messageId: "<production@smtp-relay.mailin.fr>" }, { status: 201 });
+  };
+  context.after(() => { globalThis.fetch = originalFetch; });
+
+  const response = await worker.fetch(
+    request(validPayload({ turnstileToken: "production-token" })),
+    env({
+      ENVIRONMENT: "production",
+      TURNSTILE_SECRET_KEY: "production-secret",
+      BREVO_API_BASE: "https://attacker.example",
+      BOOKING_BCC_OVERRIDE: "attacker@example.com",
+    }),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(deliveryUrl, "https://api.brevo.com/v3/smtp/email");
+  assert.deepEqual(forwarded.bcc, [{ email: "bookings@aaaartists.co" }]);
+});
+
 test("escapes customer content in the HTML confirmation", async (context) => {
   const originalFetch = globalThis.fetch;
   let forwarded;
