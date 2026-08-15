@@ -1,0 +1,72 @@
+name: New feature (Nova função)
+description: Something the site or tooling cannot do yet.
+title: "feat: "
+labels: ["type:feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open this **before** starting work. The pull request that closes it must reference
+        this issue number. See the "Issue and PR workflow" section of `CLAUDE.md`.
+  - type: textarea
+    id: goal
+    attributes:
+      label: What should exist
+      description: One paragraph. Describe the outcome, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The booking, roster, or maintenance problem this solves.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      value: |
+        **In scope**
+        -
+
+        **Out of scope**
+        -
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of done
+      value: |
+        - [ ]
+        - [ ] Tests: unit / integration / e2e as appropriate
+        - [ ] Docs updated (`CLAUDE.md`, `AGENTS.md`, or `docs/`)
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Does this touch the release path, the booking pipeline, or visitor data?
+      options:
+        - "No"
+        - "Yes — release path (workflows, wrangler, deploy scripts)"
+        - "Yes — booking pipeline (form, Worker, Turnstile, Brevo)"
+        - "Yes — visitor data, consent, or the privacy notice"
+    validations:
+      required: true
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Invariant check
+      options:
+        - label: The static export remains intact; this feature adds no server-side rendering or runtime page-content fetching.
+          required: true
+        - label: Third-party media stays behind consent, and this feature adds no analytics or cookies without a controller decision.
+          required: true
+        - label: This feature invents no stats, dates, legal, privacy, or company facts (see `TODO.md` and `config/privacy.js`).
+          required: true
+        - label: Production will still be released only through the manual "Deploy production" dispatch.
+          required: true
+        - label: I have not pasted any secret, token, or personal data into this issue.
+          required: true

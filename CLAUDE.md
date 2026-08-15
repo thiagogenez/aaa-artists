@@ -7,6 +7,86 @@ AAA Artists & Events is one company with two public-facing brands. This site cov
 separate website, so there are no event/Fusion pages here. The footer still links to the
 shared **AAA Events** social accounts until dedicated artist socials exist.
 
+## Issue and PR workflow (mandatory for every agent and every human)
+
+**Every unit of work starts as a GitHub issue and reaches `main` only through a pull request
+that references it.** This applies to any agent on any model, and to hand edits. There are no
+exceptions for "small" changes.
+
+Repository: **`thiagogenez/aaa-artists`** (the local checkout directory is `webpage`, so
+`--repo thiagogenez/webpage` will 404).
+
+1. **Open an issue first**, using one of the three templates in `.github/ISSUE_TEMPLATE/`:
+   - `fix:` — Correção. Something is broken or wrong.
+   - `improve:` — Melhoria. Something works but should be better.
+   - `feat:` — Nova função. Something does not exist yet.
+
+   ```bash
+   gh issue create --repo thiagogenez/aaa-artists \
+     --title "improve: <short imperative summary>" --body-file <path>.md
+   ```
+
+   Write the body to a file. Never pass a long inline `--body` string.
+
+   **Do not hard-wrap issue or pull request text.** Files in this repository wrap at 100
+   columns; text that lives on GitHub must not. GitHub renders a single newline inside an issue,
+   pull request or comment body as a real line break, so wrapped prose arrives as a ragged
+   staircase. Write each paragraph and each list item as one long line and let the browser wrap
+   it. The 100-column rule applies to `.md` files in the repo, not to anything posted through
+   `gh`.
+
+2. **One branch per issue**, named `<type>/<short-slug>` (`fix/`, `improve/`, `feat/`, `docs/`,
+   `chore/`). Branch from an up-to-date `main`.
+
+3. **Conventional Commits** for every commit message: `type(scope): summary`. Allowed types are
+   `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`, `ci`, `build`, `style`, `revert`.
+   `commitlint` enforces this on the PR title and on every commit in CI. Never add AI or
+   assistant attribution trailers.
+
+4. **Open a PR that references the issue.** `.github/pull_request_template.md` is filled in, not
+   deleted. **Every pull request must contain all five of these**, and
+   `.github/workflows/commit-style.yml` fails the PR when one is missing or left empty:
+
+   | Required | Section | What it must say |
+   | --- | --- | --- |
+   | The related issue | `Closes #N` / `Refs #N` | `Closes` when the PR finishes the issue, `Refs` for one step of it |
+   | What changed | `## Change` | What this PR actually does, including anything deliberately left out |
+   | How it was validated | `## Verification` | What was **actually run** and the result — not what should pass in theory. Hand checks count, and "not tested on a real phone" is a valid, useful entry |
+   | Risks and limitations | `## Risks and limitations` | What could break, what no test covers, what only fails in production (Cloudflare, Brevo, Turnstile, real devices), and how to undo it. "None known" only when true |
+   | Next steps | `## Next steps` | Follow-up work left out, each as an issue number where one exists; "none" if the issue is fully closed |
+
+   `## Problem` and `## Root cause` stay too — `Root cause` may be deleted for a pure feature.
+
+   ```bash
+   gh pr create --repo thiagogenez/aaa-artists --base main --body-file <path>.md
+   ```
+
+   Write the body to a file. Never pass a long inline `--body` string.
+
+5. **Deploys are managed through PRs.** Merging to `main` deploys **staging** automatically once
+   `checks / verify` and `checks / browser` pass. Production is released only by manually
+   dispatching **Deploy production**, and the issue stays open until that release is done when
+   the change needs one.
+
+6. **Close the loop.** The merged PR closes the issue. For anything *else* the work turns up —
+   and it always turns up something — apply this rule, which is not a judgement call:
+
+   | The finding was… | Where it goes |
+   | --- | --- |
+   | Fixed inside this change | `## Change`, plus a comment on the issue if it was not in the original scope |
+   | Found but **not** fixed | **Its own issue**, before the PR is opened |
+   | A limitation of what was built | `## Risks and limitations`, *and* an issue if someone could later mistake it for a guarantee |
+
+   Never leave a finding in prose only — not in a PR description, not in a chat message, not in
+   a `docs/` note. If it is not fixed and it is not an issue, it does not exist. A `TODO`
+   comment in the code is not a substitute for either.
+
+Agent-specific note: commits in this repository are **signed**, and signing only works in
+Thiago's own terminal. An agent stages the files and hands over the exact
+`git commit` / `git push` / `gh pr create` commands, grouped by logical block. Never bypass
+signing with `--no-gpg-sign`, and never use `git checkout -- .` or `git reset --hard` to undo a
+tool's edits — it silently discards unrelated work in the same tree.
+
 ## Tech stack
 
 - **Next.js 16** (App Router, static export)

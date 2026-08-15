@@ -1,0 +1,122 @@
+name: Commit style
+
+# Conventional Commits, checked on pull requests only.
+#
+# This deliberately does NOT exist as a local husky `commit-msg` hook: commits here are
+# signed from the maintainer's own terminal, and a hook in that path risks breaking the
+# one place where signing works. CI is the enforcement point instead.
+#
+# Two things are checked:
+#   1. every commit in the pull request, and
+#   2. the pull request title, because squash-merging uses the title as the commit
+#      message on main.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # commitlint needs the range between the base branch and the head commit.
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+      # commitlint is fetched here rather than installed as a project dependency: it is
+      # only ever run in CI, and keeping it out of package.json keeps `npm ci` for the
+      # build and the tests free of a tool that never runs there.
+      - name: Check every commit in the pull request
+        run: >-
+          npx --yes -p @commitlint/cli@21 -p @commitlint/config-conventional@21 commitlint
+          --extends @commitlint/config-conventional
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+          --verbose
+      - name: Check the pull request title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: >-
+          printf '%s' "$PR_TITLE" |
+          npx --yes -p @commitlint/cli@21 -p @commitlint/config-conventional@21 commitlint
+          --extends @commitlint/config-conventional
+          --verbose
+
+  description-standard:
+    # Every pull request must carry the five things the project standard requires:
+    # the related issue, what changed, how it was validated, the risks and limitations,
+    # and the next steps. See "Issue and PR workflow" in CLAUDE.md.
+    # Dependabot opens its own pull requests and has no issue to reference.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require an issue reference and the mandatory sections
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          fail=0
+
+          # Strip HTML comments first. The template's guidance is written in them, and
+          # without this a pull request that changed nothing but left the comments in
+          # place would look filled in.
+          BODY=$(printf '%s\n' "$PR_BODY" | perl -0pe 's/<!--.*?-->//gs')
+
+          if printf '%s' "$BODY" | grep -qiE '(closes|fixes|resolves|refs|part of)[[:space:]]+#[0-9]+'; then
+            echo "Issue reference: ok"
+          else
+            echo "::error::No issue reference. Add 'Closes #N' (or 'Refs #N' for partial work)."
+            echo "If no issue exists yet, open one first — see CLAUDE.md, 'Issue and PR workflow'."
+            fail=1
+          fi
+
+          require_section() {
+            heading="$1"
+            if ! printf '%s' "$BODY" | grep -qE "^##[[:space:]]+$heading"; then
+              echo "::error::Missing section: '## $heading'. Do not delete it from the template."
+              fail=1
+              return
+            fi
+            # A heading alone proves nothing, so require at least one line of real
+            # content under it before the next heading. Bare list bullets do not count.
+            content=$(printf '%s\n' "$BODY" \
+              | awk -v h="$heading" '
+                  BEGIN { inside = 0 }
+                  /^##[[:space:]]+/ { inside = ($0 ~ "^##[[:space:]]+" h) ? 1 : 0; next }
+                  inside && !/^[[:space:]]*$/ && !/^[[:space:]]*-[[:space:]]*$/ {
+                    if ($0 ~ /^[[:space:]]*\|/) {
+                      if ($0 ~ /\|[[:space:]]*\|[[:space:]]*$/) next
+                      if ($0 ~ /\|[[:space:]]*Result[[:space:]]*\|[[:space:]]*$/) next
+                      if ($0 ~ /^[[:space:]]*\|([[:space:]]*:?-+:?[[:space:]]*\|)+[[:space:]]*$/) next
+                    }
+                    print
+                  }
+                ')
+            if [ -z "$content" ]; then
+              echo "::error::Section '## $heading' is present but empty. Fill it in."
+              fail=1
+            else
+              echo "Section '$heading': ok"
+            fi
+          }
+
+          require_section "Change"
+          require_section "Verification"
+          require_section "Risks and limitations"
+          require_section "Next steps"
+
+          exit "$fail"
