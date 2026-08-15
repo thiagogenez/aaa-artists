@@ -1,5 +1,44 @@
 # Codex project memory
 
+## Issue and PR workflow (mandatory)
+
+- Every unit of work — fix (Correção), improvement (Melhoria), or new feature (Nova função) —
+  **starts as a GitHub issue** created from `.github/ISSUE_TEMPLATE/`, and reaches `main` only
+  through a pull request that references that issue (`Closes #N`, or `Refs #N` for partial
+  work). No issue-less PRs, no direct pushes to `main`, no exceptions for small changes.
+- The repository is `thiagogenez/aaa-artists`. `--repo thiagogenez/webpage` returns 404.
+- One branch per issue, `<type>/<short-slug>`. Conventional Commit messages
+  (`feat|fix|docs|chore|refactor|test|perf|ci|build|style|revert`), enforced by commitlint in
+  CI on the PR title and on every commit. No AI attribution trailers.
+- Fill in `.github/pull_request_template.md` rather than deleting it. Write issue and PR bodies
+  to a file and pass `--body-file`; never a long inline `--body`.
+- **Never hard-wrap text posted to GitHub.** Repository `.md` files wrap at 100 columns; issue,
+  pull request and comment bodies must not, because GitHub turns a single newline into a real
+  line break and wrapped prose renders as a staircase. One long line per paragraph and per list
+  item.
+- **Every pull request must contain all five of these**, and
+  `.github/workflows/commit-style.yml` fails the PR when one is missing or left empty:
+  1. the related issue (`Closes #N`, or `Refs #N` for partial work);
+  2. `## Change` — what changed, including anything deliberately left out;
+  3. `## Verification` — how it was validated, stating what was **actually run** and the
+     result, hand checks included ("not tested on a real phone" is a valid entry);
+  4. `## Risks and limitations` — what could break, what no test covers, what only fails in
+     production (Cloudflare, Brevo, Turnstile, real devices), and how to undo it;
+  5. `## Next steps` — follow-up work left out, as issue numbers where they exist, or "none".
+- Deploys are managed through PRs: merging to `main` deploys staging automatically after
+  `checks / verify` and `checks / browser`; production is a separate manual dispatch.
+- Commits are signed and signing only works in the maintainer's terminal. Stage the files, then
+  hand over exact `git commit` / `git push` / `gh pr create` commands grouped by logical block.
+  Never bypass with `--no-gpg-sign`. Never use `git checkout -- .` or `git reset --hard` to undo
+  a tool's edits; it discards unrelated work in the same tree.
+- **Findings discovered while working are not optional paperwork.** Fixed inside the change →
+  `## Change`, plus a comment on the issue when it was outside the original scope. Found but not
+  fixed → **its own issue, before the PR is opened**. A limitation of what was built →
+  `## Risks and limitations`, and an issue too if someone could later mistake it for a
+  guarantee. Never leave a finding in prose only; if it is not fixed and it is not an issue, it
+  does not exist. A `TODO` comment in the code is not a substitute for either.
+- The full version of this standard lives in `CLAUDE.md` under "Issue and PR workflow".
+
 ## Project architecture
 
 - AAA Artists is a Next.js 16 App Router static export deployed with a Cloudflare Worker.

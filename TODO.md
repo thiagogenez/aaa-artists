@@ -1,6 +1,29 @@
-# AAA Artists release TODO
+# AAA Artists release history
 
-Updated: 2026-07-23
+Updated: 2026-08-15
+
+> **GitHub issues are the live backlog. This file is history.**
+>
+> Every open task that used to live here is now an issue, so that work is visible before code
+> exists and traceable through the pull request that closes it. See "Issue and PR workflow" in
+> `CLAUDE.md`. Do not add new open items to this file — open an issue instead.
+>
+> | Was in this file | Now |
+> | --- | --- |
+> | ThemeProvider lint warning | [#46](https://github.com/thiagogenez/aaa-artists/issues/46) |
+> | Nested PostCSS advisory | [#47](https://github.com/thiagogenez/aaa-artists/issues/47) |
+> | Real-device form/Turnstile QA and redirect checks | [#48](https://github.com/thiagogenez/aaa-artists/issues/48) |
+> | Queued dependency batch | [#49](https://github.com/thiagogenez/aaa-artists/issues/49) |
+> | `SKIDDLE_API_KEY` + commercial approval + first review run | [#50](https://github.com/thiagogenez/aaa-artists/issues/50) |
+> | Bandsintown roster access | [#51](https://github.com/thiagogenez/aaa-artists/issues/51) |
+> | Skiddle ids for Krevix and Mr. B | [#52](https://github.com/thiagogenez/aaa-artists/issues/52) |
+> | Microsoft 365 Send As, and closing Formspree | [#53](https://github.com/thiagogenez/aaa-artists/issues/53) |
+> | The seven privacy decisions holding the release gate | [#54](https://github.com/thiagogenez/aaa-artists/issues/54) |
+> | Consent decision before analytics or advertising | [#68](https://github.com/thiagogenez/aaa-artists/issues/68) |
+>
+> The completed record below is kept deliberately: it is how the deployment pipeline, the Brevo
+> migration and the events automation were arrived at, and several decisions in it are still
+> load-bearing.
 
 Do not place key values, secrets, deploy-hook URLs, or personal data in this file.
 
@@ -46,9 +69,6 @@ are needed for it.
   (domain runs M365 via GoDaddy — MX `aaaartists-co.mail.protection.outlook.com`). Paul
   administers it and confirmed the address receives mail. **Never enable Cloudflare Email
   Routing on this domain** — it would replace the MX records and break Microsoft 365.
-- [ ] Configure the booking mailbox to send as `bookings@aaaartists.co` so staff replies do
-  not expose another address. Microsoft 365 does this natively (shared mailbox or Send As
-  permission); no separate SMTP credential is needed. Do not reuse the Worker's Brevo key.
 - [x] Add `BREVO_API_KEY` as an encrypted secret on the production Worker (added, and the
   production deploy `github-62468d6c1f84` promoted 2026-07-23). Not `NEXT_PUBLIC_`; not on
   staging.
@@ -58,8 +78,7 @@ are needed for it.
   customer replies thread back. **Still to observe once in real use:** staff **Reply all**
   from the BCC copy reaching the customer, and the thread/identity in the real mail client.
 - [x] Deleted the obsolete `FORMSPREE_FORM_ID` secret from both the production and staging
-  Workers. **Still Paul's task:** remove/close the Formspree form and its stored
-  submissions in line with the retention policy and account terms.
+  Workers. The Worker no longer depends on Formspree.
 
 ## Resolved transactional deployment work (PR #12 onward)
 
@@ -98,30 +117,8 @@ are needed for it.
 - [x] Confirm GitHub builds with `npm run build:production` and deploys the Worker plus
   static assets with the pinned Wrangler CLI (run `29450382754`).
 - [x] Deploy the current changes, then run `npm run smoke:production`.
-- [ ] Manually verify the contact form and Turnstile on a real phone and desktop browser.
-- [ ] Verify one-hop permanent redirects from HTTP apex and HTTPS `www` to HTTPS apex,
-  preserving paths and query strings.
 - [x] Verify `/api/enquiries` returns JSON and that a real valid enquiry is delivered once
   (verified on production 2026-07-23: enquiry `[B3EDCB7D]` delivered via Brevo; smoke green).
-
-## Privacy facts and operational work
-
-- [ ] Ask Paul to confirm the official privacy email. Replace `PRIVACY_EMAIL` in
-  `config/site.js`; `bookings@aaaartists.co` is the current booking-address fallback.
-- [ ] Confirm whether enquiry information is used for marketing, newsletters, or future
-  promotions, and record the answer in `config/privacy.js`.
-- [ ] Confirm whether AAA Artists actively targets or regularly accepts EU/EEA business and
-  whether EU GDPR or an EU representative applies.
-- [ ] Confirm the complete data flow: recipients, processors, storage systems, access,
-  transfer countries, and deletion locations, including Brevo, email, WhatsApp, CRM,
-  spreadsheets, cloud drives, artists/managers, accountants, and backups as applicable.
-- [ ] Assign the person responsible for privacy requests and complaints. Ensure complaints
-  are acknowledged within 30 days, investigated, and answered with an outcome.
-- [ ] Put the 3-month enquiry and 6-year successful-booking retention schedule into operation
-  using the monthly evidence checklist in `docs/privacy-compliance.md`.
-- [ ] After every fact is confirmed, update the notice, review it against the real data flow,
-  set `detailsConfirmed: true`, and run `npm run check:privacy` followed by
-  `npm run check:release`.
 
 ## Scheduled event refresh and repository automation
 
@@ -150,28 +147,6 @@ are needed for it.
   dates); both are now regression-tested.
 - [x] Filled in the verified `sources:` blocks. Every Skiddle id was confirmed by matching
   the artist's own gig history, never by name alone.
-- [ ] Add `SKIDDLE_API_KEY` as a GitHub Actions secret:
-  `gh secret set SKIDDLE_API_KEY --repo thiagogenez/webpage`
-- [ ] Contact dev@skiddle.com for **commercial use approval** before the workflow runs on a
-  schedule — the key was issued with that condition attached.
-- [ ] Bandsintown: email API@bandsintown.com for agency/roster access. Their self-serve keys
-  are tied to a single artist, which does not fit a roster. Artist ids are already recorded
-  for XiJaro & Pitch, C-Systems and Krevix; the adapter stays dormant until the app id exists.
-- [ ] No Skiddle artist exists for Krevix or Mr. B — recheck when they next play a
-  Skiddle-ticketed date.
-- [ ] Dispatch `.github/workflows/fetch-artist-events.yml` manually once, review the draft PR,
-  and only then let the Mon/Wed/Fri schedule run. The adapters have not been exercised against
-  a live key yet.
-
-## Follow-up maintenance
-
-- [ ] Monitor the moderate nested PostCSS advisory and upgrade through a patched stable
-  Next.js release when available. Do not accept the audit's forced Next.js 9 downgrade.
-- [ ] Optionally remove the existing `ThemeProvider.tsx` effect/state lint warning in a
-  separate focused change.
-- [ ] Reassess consent and cookie requirements before introducing analytics, advertising,
-  tracking, or any other non-essential browser storage.
-
 ## Recently completed
 
 - [x] Added verified company address, Companies House/ICO details, retention periods, and a

@@ -1,0 +1,59 @@
+name: Improvement (Melhoria)
+description: Something already works, but should be better — performance, copy, design, tooling, docs, or developer experience.
+title: "improve: "
+labels: ["type:improvement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open this **before** starting work. The pull request that closes it must reference
+        this issue number. See the "Issue and PR workflow" section of `CLAUDE.md`.
+  - type: textarea
+    id: today
+    attributes:
+      label: How it works today
+      description: Describe the current behaviour and point at the files, routes, or workflow involved.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Why it is worth doing
+      description: Who benefits — a visitor, a promoter filling in the booking form, or whoever maintains the repo?
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of done
+      description: How anyone can tell this is finished. Prefer a command that passes or a behaviour that can be observed.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints to respect
+      description: Repo invariants this must not break. Delete what does not apply.
+      value: |
+        - Static export: no server-side rendering, no runtime data fetching for page content.
+        - Third-party embeds stay behind media consent; no analytics or new cookies without a controller decision.
+        - Real data only: no invented stats, dates, or legal facts.
+        - Production releases only through the manual "Deploy production" dispatch.
+    validations:
+      required: true
+  - type: checkboxes
+    id: hygiene
+    attributes:
+      label: Hygiene
+      options:
+        - label: I have not pasted any secret, token, or personal data into this issue.
+          required: true

@@ -1,0 +1,67 @@
+name: Fix (Correção)
+description: Something is broken, wrong, or behaving differently from what the docs promise.
+title: "fix: "
+labels: ["type:fix"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open this **before** writing the fix. The pull request that closes it must reference
+        this issue number. See the "Issue and PR workflow" section of `CLAUDE.md`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is wrong, and where? Link the page, route, workflow run, or file.
+      placeholder: "On /artists at 768px the flyer track overlaps the player column."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Exact steps, URL, viewport, browser, or command. "It looks wrong" is not reproducible.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where was this seen?
+      multiple: true
+      options:
+        - Production (aaaartists.co)
+        - Staging (aaa-artists-staging.workers.dev)
+        - Local dev
+        - CI (GitHub Actions)
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshot, failing test name, run link, or log excerpt. Never paste secrets, API keys, or a visitor's personal data.
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Invariant check
+      options:
+        - label: The static export remains intact; this fix adds no server-side rendering or runtime page-content fetching.
+          required: true
+        - label: Third-party media stays behind consent, and this fix adds no analytics or cookies without a controller decision.
+          required: true
+        - label: This fix invents no stats, dates, legal, privacy, or company facts (see `TODO.md` and `config/privacy.js`).
+          required: true
+        - label: Production will still be released only through the manual "Deploy production" dispatch.
+          required: true
+        - label: I have not pasted any secret, token, or personal data into this issue.
+          required: true
