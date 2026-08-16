@@ -28,6 +28,9 @@
     "deploy:staging": "npm run build:production && wrangler deploy --env staging",
     "deploy:dry-run": "npm run build:production && npm run check:deploy",
     "fetch:events": "node scripts/fetch-artist-events.mjs",
+    "preview:email": "node scripts/preview-enquiry-email.mjs",
+    "dev:mail": "node scripts/mail-catcher.mjs",
+    "dev:worker": "npm run build && wrangler dev --port 8787",
     "smoke:production": "node scripts/smoke-production.mjs",
     "smoke:staging": "SMOKE_TARGET=staging node scripts/smoke-production.mjs",
     "start": "next start",
@@ -37,7 +40,9 @@
     "test:events": "node --test tests/events/*.test.mjs",
     "test:e2e": "NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key npm run build && npm run test:e2e:run",
     "test:e2e:run": "playwright test",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:visual": "NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key npm run build && node scripts/run-visual-tests.mjs",
+    "test:visual:run": "node scripts/run-visual-tests.mjs"
   },
   "dependencies": {
     "@intl-tel-input/react": "^29.1.2",

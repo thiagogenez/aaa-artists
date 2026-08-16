@@ -252,7 +252,9 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function enquiryEmail(payload) {
+/** Exported so `npm run preview:email` can render exactly what a customer receives,
+ *  without a network call, an API key, or emailing a real person. */
+export function enquiryEmail(payload, bookingAddress = BOOKING_EMAIL) {
   const details = enquiryDetails(payload);
   const detailLines = Object.entries(details).map(([label, value]) => `${label}: ${value}`);
   const textBody = [
@@ -291,7 +293,7 @@ function enquiryEmail(payload) {
   return {
     sender: { name: SITE_NAME, email: BOOKING_EMAIL },
     to: [{ email: payload.email, name: payload.name }],
-    bcc: [{ email: BOOKING_EMAIL }],
+    bcc: [{ email: bookingAddress }],
     replyTo: { email: BOOKING_EMAIL },
     subject: enquirySubject(payload),
     textContent: textBody,
@@ -352,7 +354,14 @@ async function handleEnquiry(request, env) {
 
     // Brevo deduplicates on a UUID Idempotency-Key for 30 minutes, which covers
     // client retries of the same submission without double-emailing anyone.
-    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    // Local testing seam: `npm run dev:mail` runs a catcher that receives this POST
+    // and writes the email to disk, so the whole form can be exercised without an
+    // API key and without emailing anyone. Ignored outside non-production so a
+    // stray variable can never divert real booking mail.
+    const brevoEndpoint = env.ENVIRONMENT !== "production" && env.BREVO_API_BASE
+      ? `${env.BREVO_API_BASE}/v3/smtp/email`
+      : "https://api.brevo.com/v3/smtp/email";
+    const response = await fetch(brevoEndpoint, {
       method: "POST",
       headers: {
         "api-key": env.BREVO_API_KEY,
@@ -360,7 +369,16 @@ async function handleEnquiry(request, env) {
         Accept: "application/json",
         "Idempotency-Key": payload.submissionId,
       },
-      body: JSON.stringify(enquiryEmail(payload)),
+      // Outside production the booking copy can be redirected, so a local test
+      // against a real Brevo key reaches only the tester and never the agency's
+      // shared inbox. In production the override is ignored and the BCC is always
+      // the real booking address.
+      body: JSON.stringify(enquiryEmail(
+        payload,
+        env.ENVIRONMENT !== "production" && env.BOOKING_BCC_OVERRIDE
+          ? env.BOOKING_BCC_OVERRIDE
+          : BOOKING_EMAIL,
+      )),
       signal: AbortSignal.timeout(10_000),
     });
     if (response.status === 429) {

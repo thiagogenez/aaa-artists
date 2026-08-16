@@ -42,6 +42,10 @@ jobs:
 
   browser:
     runs-on: ubuntu-24.04
+    container:
+      # Keep fonts and browser rendering identical to the committed Linux baseline.
+      image: mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07
+      options: --ipc=host
     timeout-minutes: 30
     steps:
       - name: Check out repository
@@ -62,7 +66,5 @@ jobs:
         run: npm run build
       - name: Validate Cloudflare deployment bundle
         run: npm run check:deploy
-      - name: Install Playwright browsers
-        run: npm exec -- playwright install --with-deps chromium webkit
       - name: Run browser tests
         run: npm run test:e2e:run

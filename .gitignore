@@ -28,3 +28,6 @@ next-env.d.ts
 # Playwright artifacts
 /playwright-report/
 /test-results/
+
+# Locally captured/rendered booking emails (npm run preview:email, npm run dev:mail)
+/.preview/
