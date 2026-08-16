@@ -16,9 +16,5 @@ export const metadata = createPageMetadata({
 export default function ContactPage() {
   // Only names/slugs reach the client — the dropdown and back link need nothing more.
   const artistOptions = artists.map((a) => ({ name: a.name, slug: a.slug }));
-  return (
-    <>
-      <ContactView artistOptions={artistOptions} />
-    </>
-  );
+  return <ContactView artistOptions={artistOptions} />;
 }

@@ -156,6 +156,11 @@ function PaginationMarks({
   label: string;
   testId: string;
 }) {
+  const marks = Array.from({ length: count }, (_, mark) => ({
+    id: `pagination-mark-${mark + 1}`,
+    position: mark,
+  }));
+
   return (
     <div
       data-testid={testId}
@@ -163,14 +168,14 @@ function PaginationMarks({
       aria-label={`${label} ${index + 1} of ${count}`}
       className="flex h-11 items-center gap-2"
     >
-      {Array.from({ length: count }, (_, mark) => (
+      {marks.map((mark) => (
         <span
-          key={mark}
+          key={mark.id}
           aria-hidden="true"
           className="h-1.5 rounded-full transition-[width,background-color] duration-200"
           style={{
-            width: mark === index ? "1.25rem" : "0.3125rem",
-            backgroundColor: mark === index ? "var(--text)" : "var(--text-30)",
+            width: mark.position === index ? "1.25rem" : "0.3125rem",
+            backgroundColor: mark.position === index ? "var(--text)" : "var(--text-30)",
           }}
         />
       ))}

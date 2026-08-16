@@ -208,7 +208,7 @@ for (const artist of artists) {
 
 if (errors.length > 0) {
   console.error("\n✗ Found problems in the artist data:\n");
-  for (const e of errors) console.error("   • " + e);
+  for (const e of errors) console.error(`   • ${e}`);
   console.error("\nFix the file(s) above, then run `npm run check` again.\n");
   process.exit(1);
 }
@@ -225,5 +225,5 @@ if (process.argv.includes("--check")) {
 // out of the bundle the browser downloads.
 const published = artists.map(({ sources, ...artist }) => artist);
 
-writeFileSync(OUT, JSON.stringify(published, null, 2) + "\n");
+writeFileSync(OUT, `${JSON.stringify(published, null, 2)}\n`);
 console.log(`✓ Built ${OUT} from ${artists.length} artist files.${skippedNote}`);

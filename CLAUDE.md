@@ -87,6 +87,21 @@ Thiago's own terminal. An agent stages the files and hands over the exact
 signing with `--no-gpg-sign`, and never use `git checkout -- .` or `git reset --hard` to undo a
 tool's edits — it silently discards unrelated work in the same tree.
 
+## Code quality
+
+Run `npm run check:quality` after changing source, configuration or dependencies. It checks
+formatting, ESLint and Biome rules, dead code and the architecture contract; the same commands
+gate every pull request in `checks / verify`. Run `npm run format` to apply the repository's
+Biome format before committing.
+
+`arch-contract.yaml` defines the allowed dependency graph. Because arch-contract analyses
+TypeScript only, matching ESLint rules enforce the Worker `.js` and tooling `.mjs` boundaries.
+Keep the contract, ESLint rules and `docs/code-quality.md` aligned when a boundary changes.
+Stryker mutation testing is available through `npm run test:mutation`, but is intentionally
+on-demand rather than a required pull-request gate.
+
+See `docs/code-quality.md` for the ownership and limitations of every tool.
+
 ## Tech stack
 
 - **Next.js 16** (App Router, static export)

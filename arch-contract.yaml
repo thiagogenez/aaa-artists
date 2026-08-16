@@ -1,0 +1,144 @@
+# Architecture contract for AAA Artists.
+#
+# These are not style preferences — every rule below is an invariant that AGENTS.md and
+# CLAUDE.md already state in prose, turned into something CI can fail on. Prose gets
+# re-invented by whoever (or whatever) edits the repository next; a failing check does not.
+#
+#   npm run arch          validate
+#   npm run arch:graph    print the layer graph
+#   npm run arch:explain  explain a rule
+version: 1
+
+project:
+  name: aaa-artists
+  packageManager: npm
+
+paths:
+  include:
+    - app
+    - components
+    - config
+    - data
+    - lib
+    - worker
+    - scripts
+  exclude:
+    - app/roster-prototype/**
+    - "**/*.data.json"
+
+layers:
+  # The browser bundle: routes and shared UI.
+  - name: ui
+    match:
+      - app/**/*.tsx
+      - components/**/*.tsx
+  # Framework-level route metadata that is not a React component.
+  - name: routing
+    match:
+      - app/**/*.ts
+  # The contract layer: the ONLY code both the browser bundle and the Cloudflare Worker
+  # are allowed to import. The booking form and the Worker validate against the same
+  # enums and limits, so these files run in three runtimes and must stay neutral.
+  - name: shared
+    match:
+      - config/**/*.ts
+      - config/**/*.js
+  # Helpers for the static export only. May know about Next.js; the Worker may not use them.
+  - name: app-shared
+    match:
+      - lib/**/*.ts
+      - data/**/*.ts
+  # The Cloudflare Worker: the booking API and host normalisation.
+  - name: worker
+    match:
+      - worker/**/*.js
+  # Build, generation, and deployment tooling. Never shipped to a browser.
+  - name: tooling
+    match:
+      - scripts/**/*.mjs
+
+ruleset:
+  ui:
+    mayDependOn:
+      - ui
+      - routing
+      - app-shared
+      - shared
+  routing:
+    mayDependOn:
+      - routing
+      - app-shared
+      - shared
+  app-shared:
+    mayDependOn:
+      - app-shared
+      - shared
+  shared:
+    mayDependOn:
+      - shared
+  # The Worker shares validation constants with the form, and nothing else. It must never
+  # reach into React code or lib/: it runs in the Workers runtime, where none of that
+  # exists, and a broken import here fails at deploy time rather than at review time.
+  worker:
+    mayDependOn:
+      - shared
+  tooling:
+    mayDependOn:
+      - shared
+      - worker
+      - tooling
+
+expectations:
+  # The Worker runs in the Workers runtime and is deployed separately from the static
+  # export. Importing React or Next.js into it would fail at deploy time, not review time.
+  - name: worker-stays-out-of-the-app
+    expect:
+      layer: worker
+    to:
+      notDependOnPackages:
+        - react
+        - react-dom
+        - next
+        - "next/*"
+        - intl-tel-input
+        - "@intl-tel-input/*"
+    severity: error
+
+  # Deployment and generation scripts use node:fs, node:child_process and Cloudflare
+  # credentials. Nothing shipped to a browser may import them.
+  - name: browser-code-must-not-import-tooling
+    expect:
+      layer: ui
+    to:
+      notDependOnPackages:
+        - wrangler
+        - js-yaml
+    severity: error
+
+  # config/ is imported by the Worker, so it must stay free of framework specifics: it is
+  # the one layer that has to run in the browser, in Node, and in the Workers runtime.
+  - name: shared-stays-runtime-neutral
+    expect:
+      layer: shared
+    to:
+      notDependOnPackages:
+        - react
+        - react-dom
+        - next
+        - "next/*"
+        - wrangler
+    severity: error
+
+agent:
+  enabled: true
+  validationCommand: npm run arch
+  updateDocs:
+    - AGENTS.md
+    - CLAUDE.md
+  instructions:
+    - Run `npm run arch` after changing imports, moving a file between app/, components/,
+      lib/, config/, worker/ or scripts/, or adding a dependency.
+    - A violation means the change crossed a boundary this repository deliberately keeps
+      closed. Fix the import rather than widening the contract.
+    - If a boundary genuinely has to move, change arch-contract.yaml in the same commit and
+      say why in the pull request.

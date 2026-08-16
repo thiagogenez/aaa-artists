@@ -979,6 +979,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           Your enquiry has been sent, and a copy has been emailed to {form.email}. Reply to that email if you need to add or correct anything. We aim to respond within 48 hours.
         </p>
         <button
+          type="button"
           onClick={() => resetForm(false)}
           className="text-sm underline underline-offset-4 transition-opacity hover:opacity-60"
           style={{ color: "var(--text-40)" }}

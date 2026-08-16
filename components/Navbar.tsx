@@ -102,6 +102,7 @@ export default function Navbar() {
             {/* Square bordered icon button — same .btn-outline hover standard as the
                 artist-page social boxes: border and icon brighten together */}
             <button
+              type="button"
               onClick={toggle}
               aria-label={themeLabel}
               className="btn-outline flex h-10 w-10 items-center justify-center"
@@ -123,6 +124,7 @@ export default function Navbar() {
         {/* Mobile: theme toggle + hamburger */}
         <div className="flex items-center gap-3 lg:hidden">
           <button
+            type="button"
             onClick={toggle}
             aria-label={themeLabel}
             className="link-quiet -mr-2 flex h-11 w-11 items-center justify-center"
@@ -130,6 +132,7 @@ export default function Navbar() {
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
           <button
+            type="button"
             className="-mr-2 flex h-11 w-11 flex-col items-center justify-center gap-1.5"
             onClick={() => setOpen(!open)}
             aria-label={open ? "Close menu" : "Open menu"}

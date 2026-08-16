@@ -1,34 +1,12 @@
 // Dropdown option lists for the booking form (app/contact/page.tsx).
-// Kept here so the form copy stays readable and the lists are easy to edit.
-
-export const CAPACITY_RANGES = [
-  "Under 100",
-  "100-300",
-  "300-500",
-  "500-1,000",
-  "1,000-3,000",
-  "3,000-5,000",
-  "5,000-10,000",
-  "10,000+",
-];
+// Capacity and budget ranges live in config/booking.js because the form and Worker
+// must share exactly the values that the API accepts.
 
 // value = ISO code used on submit, label = what the user sees.
 export const CURRENCIES = [
   { code: "GBP", label: "£ GBP" },
   { code: "EUR", label: "€ EUR" },
   { code: "USD", label: "$ USD" },
-];
-
-// Currency-agnostic budget brackets. Combined with the currency on submit.
-export const BUDGET_RANGES = [
-  "Under 1,000",
-  "1,000-2,500",
-  "2,500-5,000",
-  "5,000-10,000",
-  "10,000-25,000",
-  "25,000-50,000",
-  "50,000+",
-  "Prefer to discuss",
 ];
 
 export const COUNTRIES = [
