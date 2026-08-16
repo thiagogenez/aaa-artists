@@ -56,66 +56,14 @@ jobs:
           --verbose
 
   description-standard:
-    # Every pull request must carry the five things the project standard requires:
-    # the related issue, what changed, how it was validated, the risks and limitations,
-    # and the next steps. See "Issue and PR workflow" in CLAUDE.md.
-    # Dependabot opens its own pull requests and has no issue to reference.
-    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    # Human pull requests carry the complete project record. Dependabot has no issue to
+    # reference, but still has to show the dependency state before and after its update.
+    # See "Issue and PR workflow" in CLAUDE.md.
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Require an issue reference and the mandatory sections
         env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_BODY: ${{ github.event.pull_request.body }}
-        run: |
-          fail=0
-
-          # Strip HTML comments first. The template's guidance is written in them, and
-          # without this a pull request that changed nothing but left the comments in
-          # place would look filled in.
-          BODY=$(printf '%s\n' "$PR_BODY" | perl -0pe 's/<!--.*?-->//gs')
-
-          if printf '%s' "$BODY" | grep -qiE '(closes|fixes|resolves|refs|part of)[[:space:]]+#[0-9]+'; then
-            echo "Issue reference: ok"
-          else
-            echo "::error::No issue reference. Add 'Closes #N' (or 'Refs #N' for partial work)."
-            echo "If no issue exists yet, open one first — see CLAUDE.md, 'Issue and PR workflow'."
-            fail=1
-          fi
-
-          require_section() {
-            heading="$1"
-            if ! printf '%s' "$BODY" | grep -qE "^##[[:space:]]+$heading"; then
-              echo "::error::Missing section: '## $heading'. Do not delete it from the template."
-              fail=1
-              return
-            fi
-            # A heading alone proves nothing, so require at least one line of real
-            # content under it before the next heading. Bare list bullets do not count.
-            content=$(printf '%s\n' "$BODY" \
-              | awk -v h="$heading" '
-                  BEGIN { inside = 0 }
-                  /^##[[:space:]]+/ { inside = ($0 ~ "^##[[:space:]]+" h) ? 1 : 0; next }
-                  inside && !/^[[:space:]]*$/ && !/^[[:space:]]*-[[:space:]]*$/ {
-                    if ($0 ~ /^[[:space:]]*\|/) {
-                      if ($0 ~ /\|[[:space:]]*\|[[:space:]]*$/) next
-                      if ($0 ~ /\|[[:space:]]*Result[[:space:]]*\|[[:space:]]*$/) next
-                      if ($0 ~ /^[[:space:]]*\|([[:space:]]*:?-+:?[[:space:]]*\|)+[[:space:]]*$/) next
-                    }
-                    print
-                  }
-                ')
-            if [ -z "$content" ]; then
-              echo "::error::Section '## $heading' is present but empty. Fill it in."
-              fail=1
-            else
-              echo "Section '$heading': ok"
-            fi
-          }
-
-          require_section "Change"
-          require_section "Verification"
-          require_section "Risks and limitations"
-          require_section "Next steps"
-
-          exit "$fail"
+        run: node scripts/validate-pr-body.mjs
