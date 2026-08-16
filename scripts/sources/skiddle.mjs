@@ -14,7 +14,8 @@ export const credential = "SKIDDLE_API_KEY";
  *  mutually exclusive (see gen-artists validation). */
 function ticketing(event) {
   const link = text(event?.link);
-  const free = event?.entryprice != null && /^(free|£?0(\.00)?)$/i.test(String(event.entryprice).trim());
+  const free =
+    event?.entryprice != null && /^(free|£?0(\.00)?)$/i.test(String(event.entryprice).trim());
   if (free) return link ? { freeEntry: true, ticketLink: link } : { freeEntry: true };
   if (!link) return {};
   if (event?.tickets === true || String(event?.ticketsavailable) === "1") {
@@ -32,11 +33,12 @@ export async function fetchEvents(artist, env, { since } = {}) {
   // Without minDate the search returns upcoming events only. `since` is the
   // local backfill path (see --since in fetch-artist-events.mjs); the scheduled
   // workflow never sets it.
-  const url = "https://www.skiddle.com/api/v1/events/search/"
-    + `?api_key=${encodeURIComponent(apiKey)}`
-    + `&a=${encodeURIComponent(artistId)}`
-    + (since ? `&minDate=${encodeURIComponent(since)}` : "")
-    + "&order=date&limit=50&description=0";
+  const url =
+    "https://www.skiddle.com/api/v1/events/search/" +
+    `?api_key=${encodeURIComponent(apiKey)}` +
+    `&a=${encodeURIComponent(artistId)}` +
+    (since ? `&minDate=${encodeURIComponent(since)}` : "") +
+    "&order=date&limit=50&description=0";
   const payload = await fetchJson(id, url);
   const results = Array.isArray(payload?.results) ? payload.results : [];
 
@@ -44,15 +46,17 @@ export async function fetchEvents(artist, env, { since } = {}) {
     const date = isoDate(event?.startdate ?? event?.date);
     const venue = text(event?.venue?.name);
     if (!date || !venue) return [];
-    return [{
-      date,
-      venue,
-      city: text(event?.venue?.town ?? event?.venue?.city),
-      country: text(event?.venue?.country) ?? "UK",
-      ...ticketing(event),
-      source: id,
-      sourceUrl: text(event?.link),
-      flyerUrl: text(event?.largeimageurl ?? event?.imageurl),
-    }];
+    return [
+      {
+        date,
+        venue,
+        city: text(event?.venue?.town ?? event?.venue?.city),
+        country: text(event?.venue?.country) ?? "UK",
+        ...ticketing(event),
+        source: id,
+        sourceUrl: text(event?.link),
+        flyerUrl: text(event?.largeimageurl ?? event?.imageurl),
+      },
+    ];
   });
 }

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { artists } from "@/data/artists";
 import { createPageMetadata } from "@/lib/site";
 
-const description = "AAA Artists is the artist agency from the team behind AAA Events and the AAA pres. Fusion trance events in London and ADE. The roster is trance first, with artists across techno, progressive and hard techno.";
+const description =
+  "AAA Artists is the artist agency from the team behind AAA Events and the AAA pres. Fusion trance events in London and ADE. The roster is trance first, with artists across techno, progressive and hard techno.";
 
 export const metadata = createPageMetadata({
   title: "About Our Artist Booking Agency",
@@ -42,7 +43,10 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       {/* Hero */}
-      <section className="relative overflow-hidden border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+      <section
+        className="relative overflow-hidden border-b px-6 py-24"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
+      >
         {/* Background grid — centred, matching the home hero */}
         <div
           className="pointer-events-none absolute inset-0"
@@ -54,24 +58,36 @@ export default function AboutPage() {
           }}
         />
         <div className="relative z-10 mx-auto max-w-4xl">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p
+            className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]"
+            style={{ color: "var(--text-30)" }}
+          >
             About Us
           </p>
-          <h1 className="mb-8 text-4xl font-bold leading-tight tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>
+          <h1
+            className="mb-8 text-4xl font-bold leading-tight tracking-tight md:text-6xl"
+            style={{ color: "var(--text)" }}
+          >
             We put the right artists on the right stages.
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed" style={{ color: "var(--text-60)" }}>
-            AAA Artists is the artist agency from the team behind AAA Events. We represent a
-            small, trance-first roster of DJs and producers, and we work to grow their careers
-            one good booking at a time.
+            AAA Artists is the artist agency from the team behind AAA Events. We represent a small,
+            trance-first roster of DJs and producers, and we work to grow their careers one good
+            booking at a time.
           </p>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="border-b px-6 py-16" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
+      <section
+        className="border-b px-6 py-16"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
+      >
         <div className="site-shell">
-          <div className="grid grid-cols-2 gap-px sm:grid-cols-4" style={{ backgroundColor: "var(--border)" }}>
+          <div
+            className="grid grid-cols-2 gap-px sm:grid-cols-4"
+            style={{ backgroundColor: "var(--border)" }}
+          >
             {stats.map(({ value, label }) => (
               <div
                 key={label}
@@ -86,8 +102,18 @@ export default function AboutPage() {
                   className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
                   style={{ backgroundColor: "var(--card-line)" }}
                 />
-                <p className="relative text-4xl font-bold transition-all duration-300 group-hover:-translate-y-0.5" style={{ color: "var(--text)" }}>{value}</p>
-                <p className="relative mt-1 text-sm transition-all duration-300" style={{ color: "var(--text-40)" }}>{label}</p>
+                <p
+                  className="relative text-4xl font-bold transition-all duration-300 group-hover:-translate-y-0.5"
+                  style={{ color: "var(--text)" }}
+                >
+                  {value}
+                </p>
+                <p
+                  className="relative mt-1 text-sm transition-all duration-300"
+                  style={{ color: "var(--text-40)" }}
+                >
+                  {label}
+                </p>
               </div>
             ))}
           </div>
@@ -95,17 +121,29 @@ export default function AboutPage() {
       </section>
 
       {/* Story */}
-      <section className="border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+      <section
+        className="border-b px-6 py-24"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
+      >
         <div className="site-shell">
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-start">
             <div>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+              <p
+                className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]"
+                style={{ color: "var(--text-30)" }}
+              >
                 Our Story
               </p>
-              <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
+              <h2
+                className="mb-6 text-3xl font-bold tracking-tight md:text-4xl"
+                style={{ color: "var(--text)" }}
+              >
                 Where we started
               </h2>
-              <div className="space-y-4 text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
+              <div
+                className="space-y-4 text-base leading-relaxed"
+                style={{ color: "var(--text-60)" }}
+              >
                 <p>
                   AAA Artists started from a simple frustration: too many good artists were badly
                   represented, underbooked, or just lost in a crowded market. We wanted to do it
@@ -123,25 +161,35 @@ export default function AboutPage() {
                   what makes a show work for the artist, the venue and the crowd.
                 </p>
                 <p>
-                  AAA Artists is the next chapter. Today we represent {artists.length} artists. Trance comes
-                  first, and the roster stretches into techno, melodic techno, progressive and hard
-                  techno. Our job is to grow each artist's career and make the roster stronger than
-                  the sum of its parts.
+                  AAA Artists is the next chapter. Today we represent {artists.length} artists.
+                  Trance comes first, and the roster stretches into techno, melodic techno,
+                  progressive and hard techno. Our job is to grow each artist's career and make the
+                  roster stronger than the sum of its parts.
                 </p>
               </div>
             </div>
 
             <div>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+              <p
+                className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]"
+                style={{ color: "var(--text-30)" }}
+              >
                 For Promoters
               </p>
-              <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
+              <h2
+                className="mb-6 text-3xl font-bold tracking-tight md:text-4xl"
+                style={{ color: "var(--text)" }}
+              >
                 A booking partner you can rely on
               </h2>
-              <div className="space-y-4 text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
+              <div
+                className="space-y-4 text-base leading-relaxed"
+                style={{ color: "var(--text-60)" }}
+              >
                 <p>
-                  When you book through AAA Artists, you also get an agency that handles the details:
-                  clear communication, straightforward contracts, and artists who turn up prepared.
+                  When you book through AAA Artists, you also get an agency that handles the
+                  details: clear communication, straightforward contracts, and artists who turn up
+                  prepared.
                 </p>
                 <p>
                   We work with clubs, festivals, and private events of all sizes. Whether you need a
@@ -162,15 +210,27 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="border-b px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
+      <section
+        className="border-b px-6 py-24"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
+      >
         <div className="site-shell">
-          <p className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p
+            className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]"
+            style={{ color: "var(--text-30)" }}
+          >
             How We Work
           </p>
-          <h2 className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
+          <h2
+            className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl"
+            style={{ color: "var(--text)" }}
+          >
             Our values
           </h2>
-          <div className="grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-4" style={{ backgroundColor: "var(--border)" }}>
+          <div
+            className="grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-4"
+            style={{ backgroundColor: "var(--border)" }}
+          >
             {values.map(({ title, desc }) => (
               <div
                 key={title}
@@ -185,8 +245,18 @@ export default function AboutPage() {
                   className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
                   style={{ backgroundColor: "var(--card-line)" }}
                 />
-                <h3 className="relative mb-3 text-base font-bold transition-all duration-300 group-hover:-translate-y-0.5" style={{ color: "var(--text)" }}>{title}</h3>
-                <p className="relative text-sm leading-relaxed transition-all duration-300" style={{ color: "var(--text-40)" }}>{desc}</p>
+                <h3
+                  className="relative mb-3 text-base font-bold transition-all duration-300 group-hover:-translate-y-0.5"
+                  style={{ color: "var(--text)" }}
+                >
+                  {title}
+                </h3>
+                <p
+                  className="relative text-sm leading-relaxed transition-all duration-300"
+                  style={{ color: "var(--text-40)" }}
+                >
+                  {desc}
+                </p>
               </div>
             ))}
           </div>
@@ -196,7 +266,10 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="px-6 py-24" style={{ backgroundColor: "var(--bg-subtle)" }}>
         <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p
+            className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]"
+            style={{ color: "var(--text-30)" }}
+          >
             Work With Us
           </p>
           <h2 className="mb-6 text-3xl font-bold tracking-tight" style={{ color: "var(--text)" }}>

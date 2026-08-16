@@ -3,7 +3,14 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SOCIAL_IMAGE, SOCIAL_LINKS, serializeJsonLd } from "@/lib/site";
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  SOCIAL_IMAGE,
+  SOCIAL_LINKS,
+  serializeJsonLd,
+} from "@/lib/site";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -90,7 +97,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <Navbar />
           {/* --nav-h (globals.css) = fixed navbar height; keeps content clear of it */}
-          <main id="main" className="pt-[var(--nav-h)]">{children}</main>
+          <main id="main" className="pt-[var(--nav-h)]">
+            {children}
+          </main>
           <Footer />
         </ThemeProvider>
       </body>

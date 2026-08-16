@@ -13,5 +13,7 @@ export async function seedMediaConsent(page: Page, value: "granted" | "denied" =
 
 /** Stop embedded players from making real requests to third-party hosts. */
 export async function blockMediaProviders(page: Page) {
-  await page.route(/soundcloud\.com|spotify\.com|youtube(-nocookie)?\.com/, (route) => route.abort());
+  await page.route(/soundcloud\.com|spotify\.com|youtube(-nocookie)?\.com/, (route) =>
+    route.abort()
+  );
 }

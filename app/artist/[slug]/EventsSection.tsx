@@ -38,7 +38,10 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
       className="group flex h-full scroll-mt-24 flex-col border"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
     >
-      <div className="relative aspect-[3/4] overflow-hidden" style={{ backgroundColor: "var(--surface-2)" }}>
+      <div
+        className="relative aspect-[3/4] overflow-hidden"
+        style={{ backgroundColor: "var(--surface-2)" }}
+      >
         {gig.flyer ? (
           /* Whole poster always visible (object-contain), but instead of dead
              letterbox bars the same image is scaled up and blurred behind it, so
@@ -70,18 +73,26 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
             style={{ background: "linear-gradient(155deg, #1a1a1a 0%, #0a0a0a 55%, #000 100%)" }}
           >
             <div className="flex items-start justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">AAA Artists</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">
+                AAA Artists
+              </span>
               <div className="text-right leading-none">
                 <p className="text-2xl font-bold">{day}</p>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">{month}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
+                  {month}
+                </p>
               </div>
             </div>
             <div>
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">Live</p>
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">
+                Live
+              </p>
               <p className="text-xl font-bold leading-tight">{artist.name}</p>
               <div className="my-3 h-px w-10 bg-white/30" />
               <p className="text-sm font-semibold leading-tight text-white/90">{gig.venue}</p>
-              <p className="text-xs text-white/50">{gig.city}, {gig.country}</p>
+              <p className="text-xs text-white/50">
+                {gig.city}, {gig.country}
+              </p>
             </div>
           </div>
         )}
@@ -89,9 +100,15 @@ function FlyerCard({ artist, gig }: { artist: Artist; gig: Gig }) {
 
       <div className="flex flex-1 flex-col justify-between gap-3 p-4">
         <div>
-          <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
-          <p className="text-xs" style={{ color: "var(--text-40)" }}>{gig.city}, {gig.country}</p>
-          <p className="mt-1 text-xs font-medium" style={{ color: "var(--text-60)" }}>{formatEventDate(gig.date)}</p>
+          <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+            {gig.venue}
+          </p>
+          <p className="text-xs" style={{ color: "var(--text-40)" }}>
+            {gig.city}, {gig.country}
+          </p>
+          <p className="mt-1 text-xs font-medium" style={{ color: "var(--text-60)" }}>
+            {formatEventDate(gig.date)}
+          </p>
         </div>
         {/* "Tickets soon" is only true when tickets are actually expected. A free
             event says so — it is a selling point, not a missing ticket link. */}
@@ -190,12 +207,19 @@ function PaginationMarks({
  *  Horizontal is the only axis worth rolling on: the page already owns vertical
  *  scrolling, so an inner vertical scroller would capture the same wheel and
  *  swipe and read as a stuck page. */
-function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]; perView: number }) {
+function UpcomingSlider({
+  artist,
+  gigs,
+  perView,
+}: {
+  artist: Artist;
+  gigs: Gig[];
+  perView: number;
+}) {
   const PER_VIEW = perView;
   const desktopMaxIndex = Math.max(0, gigs.length - PER_VIEW);
-  const pageStarts = Array.from(
-    { length: Math.ceil(gigs.length / PER_VIEW) },
-    (_, page) => Math.min(page * PER_VIEW, desktopMaxIndex),
+  const pageStarts = Array.from({ length: Math.ceil(gigs.length / PER_VIEW) }, (_, page) =>
+    Math.min(page * PER_VIEW, desktopMaxIndex)
   ).filter((start, page, starts) => page === 0 || start !== starts[page - 1]);
   const [desktopIndex, setDesktopIndex] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -233,8 +257,13 @@ function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]
     setDesktopIndex(Math.min(closestIndex, desktopMaxIndex));
   }
 
-  const activePage = pageStarts.reduce((closestPage, start, page) =>
-    Math.abs(start - desktopIndex) < Math.abs(pageStarts[closestPage] - desktopIndex) ? page : closestPage, 0);
+  const activePage = pageStarts.reduce(
+    (closestPage, start, page) =>
+      Math.abs(start - desktopIndex) < Math.abs(pageStarts[closestPage] - desktopIndex)
+        ? page
+        : closestPage,
+    0
+  );
 
   function moveByPage(delta: number) {
     const nextPage = Math.max(0, Math.min(pageStarts.length - 1, activePage + delta));
@@ -259,7 +288,8 @@ function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]
             style={{ color: "var(--text-40)" }}
             aria-live="polite"
           >
-            {gigs.length > PER_VIEW && `${desktopIndex + 1}–${Math.min(gigs.length, desktopIndex + PER_VIEW)} of ${gigs.length}`}
+            {gigs.length > PER_VIEW &&
+              `${desktopIndex + 1}–${Math.min(gigs.length, desktopIndex + PER_VIEW)} of ${gigs.length}`}
           </p>
           {pageStarts.length > 1 && (
             <PaginationMarks
@@ -285,11 +315,13 @@ function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]
           {gigs.map((gig, index) => (
             <div
               key={gig.eventId ?? `${gig.date}-${gig.venue}`}
-              ref={(item) => { itemRefs.current[index] = item; }}
+              ref={(item) => {
+                itemRefs.current[index] = item;
+              }}
               className={`w-full flex-none snap-start ${index > 0 ? "md:scroll-ml-14" : ""} ${
                 gigs.length > PER_VIEW
-                  ? PEEK_CARD_WIDTH[PER_VIEW] ?? PEEK_CARD_WIDTH[3]
-                  : CARD_WIDTH[PER_VIEW] ?? CARD_WIDTH[3]
+                  ? (PEEK_CARD_WIDTH[PER_VIEW] ?? PEEK_CARD_WIDTH[3])
+                  : (CARD_WIDTH[PER_VIEW] ?? CARD_WIDTH[3])
               }`}
             >
               <FlyerCard artist={artist} gig={gig} />
@@ -298,7 +330,11 @@ function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]
         </div>
 
         {gigs.length > PER_VIEW && (
-          <div role="group" className="pointer-events-none absolute inset-y-0 left-3 right-3 hidden items-center justify-between md:flex" aria-label="Upcoming event controls">
+          <div
+            role="group"
+            className="pointer-events-none absolute inset-y-0 left-3 right-3 hidden items-center justify-between md:flex"
+            aria-label="Upcoming event controls"
+          >
             <button
               type="button"
               onClick={() => moveByPage(-1)}
@@ -307,8 +343,19 @@ function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]
               className="btn-outline pointer-events-auto flex h-12 w-12 cursor-pointer items-center justify-center rounded-full shadow-lg disabled:pointer-events-none disabled:opacity-0"
               style={{ backgroundColor: "var(--bg-nav)" }}
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
             <button
@@ -319,14 +366,24 @@ function UpcomingSlider({ artist, gigs, perView }: { artist: Artist; gigs: Gig[]
               className="btn-outline pointer-events-auto flex h-12 w-12 cursor-pointer items-center justify-center rounded-full shadow-lg disabled:pointer-events-none disabled:opacity-0"
               style={{ backgroundColor: "var(--bg-nav)" }}
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>
         )}
       </div>
-
     </div>
   );
 }
@@ -355,9 +412,17 @@ function MediaColumn({
         <div
           data-testid="media-player-disabled"
           className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1 border px-4 py-2 text-xs"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--text-40)" }}
+          style={{
+            borderColor: "var(--border)",
+            backgroundColor: "var(--surface)",
+            color: "var(--text-40)",
+          }}
         >
-          <span>{consent === "denied" ? "External media disabled." : "External media is waiting for your choice."}</span>
+          <span>
+            {consent === "denied"
+              ? "External media disabled."
+              : "External media is waiting for your choice."}
+          </span>
           {consent === "denied" && (
             <MediaConsentSettings
               label="Change media preferences"
@@ -424,7 +489,15 @@ function MediaColumn({
 }
 
 /** Fallback for a configured profile URL that cannot be converted to an embed. */
-function MediaLinkCard({ platform, label, href }: { platform: string; label: string; href: string }) {
+function MediaLinkCard({
+  platform,
+  label,
+  href,
+}: {
+  platform: string;
+  label: string;
+  href: string;
+}) {
   return (
     <a
       href={href}
@@ -437,7 +510,13 @@ function MediaLinkCard({ platform, label, href }: { platform: string; label: str
         <SocialIcon platform={platform} />
         <span className="text-sm font-semibold uppercase tracking-widest">{label}</span>
       </span>
-      <svg className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <svg
+        className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
       </svg>
     </a>
@@ -474,7 +553,9 @@ export default function EventsSection({
   if (spotifySrc) {
     players.push({
       label: "Spotify",
-      node: <SpotifyPlayer src={spotifySrc} title={`${artist.name} on Spotify`} className="h-full" />,
+      node: (
+        <SpotifyPlayer src={spotifySrc} title={`${artist.name} on Spotify`} className="h-full" />
+      ),
     });
   }
   if (artist.socials.soundcloud) {
@@ -517,7 +598,12 @@ export default function EventsSection({
         >
           <section data-testid="upcoming-events" className="flex min-w-0 flex-col">
             <div className="mb-6 flex min-h-11 items-center justify-between gap-4">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Upcoming Events</h2>
+              <h2
+                className="text-sm font-semibold uppercase tracking-[0.4em]"
+                style={{ color: "var(--text-30)" }}
+              >
+                Upcoming Events
+              </h2>
               {pastGigs.length > 0 && (
                 <div data-testid="past-dates" className="shrink-0">
                   <PastShowsDialog gigs={pastGigs} />
@@ -539,23 +625,31 @@ export default function EventsSection({
                   Book {artist.name}
                 </Link>
               </div>
-            ) : <UpcomingSlider artist={artist} gigs={upcomingGigs} perView={perView} />}
+            ) : (
+              <UpcomingSlider artist={artist} gigs={upcomingGigs} perView={perView} />
+            )}
           </section>
 
           {hasMedia && (
             <section data-testid="listen" className="flex min-w-0 flex-col">
               <div className="mb-6 flex min-h-11 items-center">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Listen</h2>
+                <h2
+                  className="text-sm font-semibold uppercase tracking-[0.4em]"
+                  style={{ color: "var(--text-30)" }}
+                >
+                  Listen
+                </h2>
               </div>
               {players.length > 0 ? (
                 <MediaColumn players={players} linkOnly={spotifyLinkOnly} />
               ) : (
-                spotifyLinkOnly && <MediaLinkCard platform="spotify" label="Spotify" href={spotifyLinkOnly} />
+                spotifyLinkOnly && (
+                  <MediaLinkCard platform="spotify" label="Spotify" href={spotifyLinkOnly} />
+                )
               )}
             </section>
           )}
         </div>
-
       </div>
       {players.length > 0 && <MediaConsentBanner />}
     </div>

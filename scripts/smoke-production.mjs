@@ -8,12 +8,13 @@ const targetOrigin = configuredOrigin ? new URL(configuredOrigin).origin : SITE_
 // canonical: production custom domains (no SMOKE_ORIGIN).
 // candidate: an inactive production version's preview URL (SMOKE_ORIGIN set).
 // staging: the staging Worker's workers.dev root (SMOKE_TARGET=staging + SMOKE_ORIGIN).
-const smokeTarget = process.env.SMOKE_TARGET === "staging"
-  ? "staging"
-  : configuredOrigin ? "candidate" : "canonical";
+const smokeTarget =
+  process.env.SMOKE_TARGET === "staging" ? "staging" : configuredOrigin ? "candidate" : "canonical";
 
 if (smokeTarget === "staging" && !configuredOrigin) {
-  throw new Error("SMOKE_TARGET=staging requires SMOKE_ORIGIN to be the staging workers.dev origin");
+  throw new Error(
+    "SMOKE_TARGET=staging requires SMOKE_ORIGIN to be the staging workers.dev origin"
+  );
 }
 if (configuredOrigin && !targetOrigin.endsWith(".workers.dev")) {
   throw new Error("SMOKE_ORIGIN must be a Cloudflare workers.dev URL");
@@ -55,25 +56,40 @@ if (smokeTarget === "canonical") {
   const redirectPath = "/artists?source=production-smoke";
   for (const source of ["http://aaaartists.co", "https://www.aaaartists.co"]) {
     await check(`${source} redirect`, async () => {
-      const response = await fetch(`${source}${redirectPath}`, requestOptions({ redirect: "manual" }));
-      if (![301, 308].includes(response.status)) throw new Error(`expected permanent redirect, received ${response.status}`);
-      if (response.headers.get("location") !== `${SITE_ORIGIN}${redirectPath}`) throw new Error(`unexpected location ${response.headers.get("location")}`);
+      const response = await fetch(
+        `${source}${redirectPath}`,
+        requestOptions({ redirect: "manual" })
+      );
+      if (![301, 308].includes(response.status))
+        throw new Error(`expected permanent redirect, received ${response.status}`);
+      if (response.headers.get("location") !== `${SITE_ORIGIN}${redirectPath}`)
+        throw new Error(`unexpected location ${response.headers.get("location")}`);
     });
   }
 }
 
-await check(smokeTarget === "canonical" ? "Worker enquiry route" : `${smokeTarget} enquiry route`, async () => {
-  const response = await fetch(`${targetOrigin}/api/enquiries`, requestOptions({
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: "{}",
-  }));
-  if (response.status !== 400) throw new Error(`expected safe validation 400, received ${response.status}`);
-  if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("API did not return JSON");
-});
+await check(
+  smokeTarget === "canonical" ? "Worker enquiry route" : `${smokeTarget} enquiry route`,
+  async () => {
+    const response = await fetch(
+      `${targetOrigin}/api/enquiries`,
+      requestOptions({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      })
+    );
+    if (response.status !== 400)
+      throw new Error(`expected safe validation 400, received ${response.status}`);
+    if (!response.headers.get("content-type")?.includes("application/json"))
+      throw new Error("API did not return JSON");
+  }
+);
 
 for (const result of checks) {
-  console[result.ok ? "log" : "error"](`${result.ok ? "✓" : "✗"} ${result.name}${result.error ? ` — ${result.error}` : ""}`);
+  console[result.ok ? "log" : "error"](
+    `${result.ok ? "✓" : "✗"} ${result.name}${result.error ? ` — ${result.error}` : ""}`
+  );
 }
 
 if (checks.some((result) => !result.ok)) process.exit(1);

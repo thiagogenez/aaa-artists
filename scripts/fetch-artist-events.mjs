@@ -81,7 +81,9 @@ async function collect(doc, env, problems) {
     try {
       lists.push(await adapter.fetchEvents(doc, env, { since }));
     } catch (error) {
-      problems.push(error instanceof SourceError ? error.message : `${adapter.id}: ${error.message}`);
+      problems.push(
+        error instanceof SourceError ? error.message : `${adapter.id}: ${error.message}`
+      );
       lists.push([]);
     }
   }
@@ -100,7 +102,9 @@ function describe(candidate) {
   return `${candidate.date} — ${where} _(via ${via})_${extras.length ? ` · ${extras.join(" · ")}` : ""}`;
 }
 
-const configured = ADAPTERS.filter((adapter) => process.env[adapter.credential]).map((adapter) => adapter.id);
+const configured = ADAPTERS.filter((adapter) => process.env[adapter.credential]).map(
+  (adapter) => adapter.id
+);
 const artists = loadArtists();
 const report = [];
 const problems = [];
@@ -108,8 +112,17 @@ let proposedCount = 0;
 
 for (const artist of artists) {
   const candidates = await collect(artist.doc, process.env, problems);
-  const { additions, enrichable, dateConfirmations, conflicts } = diffAgainstExisting(candidates, artist.doc.gigs ?? []);
-  if (additions.length === 0 && enrichable.length === 0 && dateConfirmations.length === 0 && conflicts.length === 0) continue;
+  const { additions, enrichable, dateConfirmations, conflicts } = diffAgainstExisting(
+    candidates,
+    artist.doc.gigs ?? []
+  );
+  if (
+    additions.length === 0 &&
+    enrichable.length === 0 &&
+    dateConfirmations.length === 0 &&
+    conflicts.length === 0
+  )
+    continue;
 
   let applied = [];
   if (write && additions.length > 0) {
@@ -134,17 +147,23 @@ for (const artist of artists) {
 // ---- Human-readable output -------------------------------------------------
 
 const lines = [];
-lines.push(since ? `## Backfilled artist events since ${since} (run ${today})` : `## Proposed artist events (${today})`);
+lines.push(
+  since
+    ? `## Backfilled artist events since ${since} (run ${today})`
+    : `## Proposed artist events (${today})`
+);
 lines.push("");
 lines.push(
   configured.length > 0
     ? `Sources queried: **${configured.join(", ")}**.`
-    : "_No source API keys are configured, so no source was queried._",
+    : "_No source API keys are configured, so no source was queried._"
 );
 lines.push("");
-lines.push(since
-  ? "**Local history backfill** — not what the scheduled workflow does. Past dates need no `eventId`; check each gig really is this artist before keeping it."
-  : "Every entry below is a machine suggestion. Verify the date, venue and line-up before merging, and **replace the generated `eventId`** with the shared id if other roster artists play the same event.");
+lines.push(
+  since
+    ? "**Local history backfill** — not what the scheduled workflow does. Past dates need no `eventId`; check each gig really is this artist before keeping it."
+    : "Every entry below is a machine suggestion. Verify the date, venue and line-up before merging, and **replace the generated `eventId`** with the shared id if other roster artists play the same event."
+);
 lines.push("");
 
 if (report.length === 0) {
@@ -158,17 +177,25 @@ if (report.length === 0) {
       lines.push(`- **New:** ${describe(candidate)}${eventId ? ` · \`eventId: ${eventId}\`` : ""}`);
     }
     for (const { candidate, existing } of conflicts) {
-      lines.push(`- **⚠️ Same date, different venue:** the file says **${existing.venue}** on \`${existing.date}\`; source says ${describe(candidate)}. Probably one booking recorded two ways — reconcile by hand, nothing was added.`);
+      lines.push(
+        `- **⚠️ Same date, different venue:** the file says **${existing.venue}** on \`${existing.date}\`; source says ${describe(candidate)}. Probably one booking recorded two ways — reconcile by hand, nothing was added.`
+      );
     }
     for (const { candidate, existing } of dateConfirmations) {
-      lines.push(`- **Possible date for a TBC gig:** the file has \`${existing.date}\` (${existing.venue}, exact day TBC); source reports ${describe(candidate)}. If it is the same booking, set the exact date by hand — nothing was added.`);
+      lines.push(
+        `- **Possible date for a TBC gig:** the file has \`${existing.date}\` (${existing.venue}, exact day TBC); source reports ${describe(candidate)}. If it is the same booking, set the exact date by hand — nothing was added.`
+      );
     }
     for (const { candidate, gained } of enrichable) {
-      lines.push(`- **Already listed**, source also knows \`${gained.join("`, `")}\`: ${describe(candidate)} — apply by hand if correct.`);
+      lines.push(
+        `- **Already listed**, source also knows \`${gained.join("`, `")}\`: ${describe(candidate)} — apply by hand if correct.`
+      );
     }
     const links = reviewLinks(artist.doc);
     if (links.length > 0) {
-      lines.push(`- _Check by hand:_ ${links.map(([label, url]) => `[${label}](${url})`).join(" · ")}`);
+      lines.push(
+        `- _Check by hand:_ ${links.map(([label, url]) => `[${label}](${url})`).join(" · ")}`
+      );
     }
     lines.push("");
   }
@@ -189,7 +216,9 @@ if (wantsPrBody) writeFileSync(prBodyPath, `${output}\n`);
 
 // Signals to the workflow: only open a pull request when something changed.
 if (process.env.GITHUB_OUTPUT) {
-  writeFileSync(process.env.GITHUB_OUTPUT, `proposed=${write ? proposedCount : 0}\n`, { flag: "a" });
+  writeFileSync(process.env.GITHUB_OUTPUT, `proposed=${write ? proposedCount : 0}\n`, {
+    flag: "a",
+  });
 }
 
 if (!write && proposedCount > 0) {

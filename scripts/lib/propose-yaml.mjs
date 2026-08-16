@@ -57,7 +57,10 @@ export function locateGigs(lines) {
     const line = lines[i];
     if (line.trim() === "") continue;
     // A non-indented, non-comment line ends the block.
-    if (!/^\s/.test(line)) { end = i; break; }
+    if (!/^\s/.test(line)) {
+      end = i;
+      break;
+    }
   }
 
   const items = [];
@@ -90,7 +93,11 @@ function insertionPoint(lines, block, date) {
  * Returns the new text plus the applied entries. Purely additive: an existing
  * gig is never moved, rewritten or removed.
  */
-export function insertGigs(text, candidates, { comment, today = new Date().toISOString().slice(0, 10) } = {}) {
+export function insertGigs(
+  text,
+  candidates,
+  { comment, today = new Date().toISOString().slice(0, 10) } = {}
+) {
   if (candidates.length === 0) return { text, applied: [], skipped: [] };
 
   const eol = text.includes("\r\n") ? "\r\n" : "\n";
@@ -106,7 +113,10 @@ export function insertGigs(text, candidates, { comment, today = new Date().toISO
     // dropped, never written. Callers normally filter with mergeCandidates,
     // but this must not depend on that.
     if (!isUsableCandidate(candidate)) {
-      skipped.push({ candidate, reason: "incomplete or malformed gig (needs a valid date, venue, city and country)" });
+      skipped.push({
+        candidate,
+        reason: "incomplete or malformed gig (needs a valid date, venue, city and country)",
+      });
       continue;
     }
     const block = locateGigs(lines);
@@ -155,7 +165,7 @@ export function insertGigsChecked(text, candidates, options = {}) {
   const afterGigs = Array.isArray(after?.gigs) ? after.gigs : [];
   if (afterGigs.length !== beforeGigs.length + result.applied.length) {
     throw new Error(
-      `expected ${beforeGigs.length + result.applied.length} gigs after insertion, found ${afterGigs.length}`,
+      `expected ${beforeGigs.length + result.applied.length} gigs after insertion, found ${afterGigs.length}`
     );
   }
 

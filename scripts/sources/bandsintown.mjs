@@ -29,8 +29,9 @@ export async function fetchEvents(artist, env, { since } = {}) {
 
   // `since` is the local backfill path only; the workflow asks for upcoming.
   const window = since ? `${since},2100-01-01` : "upcoming";
-  const url = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistId)}/events`
-    + `?app_id=${encodeURIComponent(appId)}&date=${encodeURIComponent(window)}`;
+  const url =
+    `https://rest.bandsintown.com/artists/${encodeURIComponent(artistId)}/events` +
+    `?app_id=${encodeURIComponent(appId)}&date=${encodeURIComponent(window)}`;
   const payload = await fetchJson(id, url);
   if (!Array.isArray(payload)) return [];
 
@@ -38,15 +39,17 @@ export async function fetchEvents(artist, env, { since } = {}) {
     const date = isoDate(event?.datetime);
     const venue = text(event?.venue?.name);
     if (!date || !venue) return [];
-    return [{
-      date,
-      venue,
-      city: text(event?.venue?.city),
-      country: text(event?.venue?.country),
-      ...ticketing(event),
-      source: id,
-      sourceUrl: event?.url,
-      flyerUrl: event?.artist?.image_url,
-    }];
+    return [
+      {
+        date,
+        venue,
+        city: text(event?.venue?.city),
+        country: text(event?.venue?.country),
+        ...ticketing(event),
+        source: id,
+        sourceUrl: event?.url,
+        flyerUrl: event?.artist?.image_url,
+      },
+    ];
   });
 }

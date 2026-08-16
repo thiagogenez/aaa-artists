@@ -15,9 +15,16 @@ export default function MediaConsentControl() {
   const consent = useMediaConsent();
 
   return (
-    <div className="mt-4 border p-5" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
-      <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Your current choice</p>
-      <p className="mt-1 text-sm" style={{ color: "var(--text-60)" }}>{STATE_LABEL[consent]}</p>
+    <div
+      className="mt-4 border p-5"
+      style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+    >
+      <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+        Your current choice
+      </p>
+      <p className="mt-1 text-sm" style={{ color: "var(--text-60)" }}>
+        {STATE_LABEL[consent]}
+      </p>
       <div className="mt-4 flex flex-wrap gap-3">
         {consent !== "granted" && (
           <button

@@ -28,7 +28,8 @@ export const DURATION_MINUTES = Object.freeze([0, 15, 30, 45]);
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
-export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const E164_PATTERN = /^\+[1-9]\d{6,14}$/;
 
 // Electronic-music contexts only — the roster plays club, festival and rave
@@ -72,7 +73,7 @@ export const BUDGET_RANGES = Object.freeze([
 ]);
 
 export const DURATION_VALUES = Object.freeze(
-  DURATION_HOURS.flatMap((hours) => DURATION_MINUTES.map((minutes) => String(hours * 60 + minutes))),
+  DURATION_HOURS.flatMap((hours) => DURATION_MINUTES.map((minutes) => String(hours * 60 + minutes)))
 );
 
 export function formatDuration(total) {
@@ -83,7 +84,9 @@ export function formatDuration(total) {
   return [
     hours ? `${hours} ${hours === 1 ? "hour" : "hours"}` : "",
     remainder ? `${remainder} ${remainder === 1 ? "minute" : "minutes"}` : "",
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function durationBetween(start, finish) {

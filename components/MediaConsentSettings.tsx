@@ -17,11 +17,7 @@ export default function MediaConsentSettings({
   if (consent === "unset") return null;
 
   return (
-    <button
-      type="button"
-      onClick={clearMediaConsent}
-      className={className}
-    >
+    <button type="button" onClick={clearMediaConsent} className={className}>
       {label}
     </button>
   );

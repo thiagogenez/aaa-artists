@@ -25,7 +25,9 @@ export function formatEventDate(date: string): string {
 export function eventDateBadge(date: string): { day: string; month: string } {
   const parsed = new Date(`${date}${isExactEventDate(date) ? "" : "-01"}T00:00:00Z`);
   return {
-    day: isExactEventDate(date) ? parsed.toLocaleDateString("en-GB", { day: "numeric", timeZone: "UTC" }) : "TBC",
+    day: isExactEventDate(date)
+      ? parsed.toLocaleDateString("en-GB", { day: "numeric", timeZone: "UTC" })
+      : "TBC",
     month: parsed.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" }).toUpperCase(),
   };
 }

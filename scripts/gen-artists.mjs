@@ -10,7 +10,14 @@ const DIR = "data/artists";
 const OUT = "data/artists.data.json";
 const REQUIRED = ["name", "artistType", "slug", "genre", "tagline", "bio", "image"];
 const GIG_REQUIRED = ["date", "venue", "city", "country"];
-const SOCIAL_FIELDS = new Set(["instagram", "soundcloud", "facebook", "spotify", "youtube", "beatport"]);
+const SOCIAL_FIELDS = new Set([
+  "instagram",
+  "soundcloud",
+  "facebook",
+  "spotify",
+  "youtube",
+  "beatport",
+]);
 // Ids used by scripts/fetch-artist-events.mjs to look this artist up on each
 // gig source. Build tooling only — stripped from the generated JSON below, so
 // none of it ships to the browser. "ra" is a review link, never fetched.
@@ -51,9 +58,11 @@ function isHttpsUrl(value) {
 }
 
 function isLocalAsset(value) {
-  return typeof value === "string"
-    && /^\/[A-Za-z0-9/_-]+\.(?:avif|jpe?g|png|webp)$/i.test(value)
-    && !value.includes("..");
+  return (
+    typeof value === "string" &&
+    /^\/[A-Za-z0-9/_-]+\.(?:avif|jpe?g|png|webp)$/i.test(value) &&
+    !value.includes("..")
+  );
 }
 
 function checkGigs(gigs, file, listName) {
@@ -68,7 +77,8 @@ function checkGigs(gigs, file, listName) {
       if (!gig?.[field]) errors.push(`${where}: missing "${field}"`);
     }
     const date = asDateString(gig?.date);
-    if (date && !isValidDate(date)) errors.push(`${where}: "date" must be a real YYYY-MM-DD or YYYY-MM date`);
+    if (date && !isValidDate(date))
+      errors.push(`${where}: "date" must be a real YYYY-MM-DD or YYYY-MM date`);
     // The date decides past vs upcoming. Future-dated entries need a stable
     // eventId so /events can merge shared line-ups; once the date has passed
     // the requirement lapses (it only ever relaxes, so scheduled rebuilds can
@@ -77,13 +87,17 @@ function checkGigs(gigs, file, listName) {
       errors.push(`${where}: missing "eventId" (required while the date is today or later)`);
     }
     if (gig?.eventId && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(gig.eventId)) {
-      errors.push(`${where}: "eventId" must contain lowercase letters, numbers and single hyphens only`);
+      errors.push(
+        `${where}: "eventId" must contain lowercase letters, numbers and single hyphens only`
+      );
     }
-    if (gig?.ticketLink && !isHttpsUrl(gig.ticketLink)) errors.push(`${where}: "ticketLink" must be an https URL`);
+    if (gig?.ticketLink && !isHttpsUrl(gig.ticketLink))
+      errors.push(`${where}: "ticketLink" must be an https URL`);
     if (gig?.ticketStatus && !["available", "sold-out", "unavailable"].includes(gig.ticketStatus)) {
       errors.push(`${where}: "ticketStatus" must be "available", "sold-out", or "unavailable"`);
     }
-    if (gig?.ticketStatus && !gig?.ticketLink) errors.push(`${where}: "ticketStatus" requires "ticketLink"`);
+    if (gig?.ticketStatus && !gig?.ticketLink)
+      errors.push(`${where}: "ticketStatus" requires "ticketLink"`);
     if (gig?.freeEntry !== undefined && typeof gig.freeEntry !== "boolean") {
       errors.push(`${where}: "freeEntry" must be true or false`);
     }
@@ -92,7 +106,8 @@ function checkGigs(gigs, file, listName) {
     if (gig?.freeEntry && gig?.ticketStatus) {
       errors.push(`${where}: "freeEntry" cannot be combined with "ticketStatus"`);
     }
-    if (gig?.flyer && !isLocalAsset(gig.flyer)) errors.push(`${where}: "flyer" must be a local /path image`);
+    if (gig?.flyer && !isLocalAsset(gig.flyer))
+      errors.push(`${where}: "flyer" must be a local /path image`);
     return { ...gig, date };
   });
   for (let index = 1; index < normalized.length; index += 1) {
@@ -104,7 +119,9 @@ function checkGigs(gigs, file, listName) {
   return normalized;
 }
 
-const files = readdirSync(DIR).filter((f) => /\.ya?ml$/i.test(f)).sort();
+const files = readdirSync(DIR)
+  .filter((f) => /\.ya?ml$/i.test(f))
+  .sort();
 if (files.length === 0) errors.push(`No artist files found in ${DIR}/`);
 
 const artists = [];
@@ -134,14 +151,17 @@ for (const file of files) {
   }
   if (doc.slug) {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(doc.slug)) {
-      errors.push(`${file}: "slug" must contain lowercase letters, numbers and single hyphens only`);
+      errors.push(
+        `${file}: "slug" must contain lowercase letters, numbers and single hyphens only`
+      );
     }
     if (seenSlugs.has(doc.slug)) {
       errors.push(`${file}: slug "${doc.slug}" is already used in ${seenSlugs.get(doc.slug)}`);
     }
     seenSlugs.set(doc.slug, file);
   }
-  if (doc.image && !isLocalAsset(doc.image)) errors.push(`${file}: "image" must be a local /path image`);
+  if (doc.image && !isLocalAsset(doc.image))
+    errors.push(`${file}: "image" must be a local /path image`);
 
   doc.socials = doc.socials ?? {};
   if (!doc.socials || typeof doc.socials !== "object" || Array.isArray(doc.socials)) {
@@ -149,7 +169,8 @@ for (const file of files) {
     doc.socials = {};
   }
   for (const [platform, url] of Object.entries(doc.socials)) {
-    if (!SOCIAL_FIELDS.has(platform)) errors.push(`${file}: unsupported social platform "${platform}"`);
+    if (!SOCIAL_FIELDS.has(platform))
+      errors.push(`${file}: unsupported social platform "${platform}"`);
     if (url && !isHttpsUrl(url)) errors.push(`${file}: social "${platform}" must be an https URL`);
   }
   if (doc.spotifyEmbed && !isHttpsUrl(doc.spotifyEmbed)) {
@@ -157,11 +178,15 @@ for (const file of files) {
   }
   // The artist page is audio-only, so a youtubeEmbed would silently do nothing.
   if (doc.youtubeEmbed) {
-    errors.push(`${file}: "youtubeEmbed" is no longer rendered — the "Listen" section is audio-only`);
+    errors.push(
+      `${file}: "youtubeEmbed" is no longer rendered — the "Listen" section is audio-only`
+    );
   }
   for (const legacyKey of ["pastGigs", "upcomingGigs"]) {
     if (legacyKey in doc) {
-      errors.push(`${file}: "${legacyKey}" was merged into a single "gigs" list (ordered oldest to newest; the date decides past vs upcoming) — see data/artists/README.md`);
+      errors.push(
+        `${file}: "${legacyKey}" was merged into a single "gigs" list (ordered oldest to newest; the date decides past vs upcoming) — see data/artists/README.md`
+      );
     }
   }
   if (doc.sources !== undefined) {
@@ -171,10 +196,14 @@ for (const file of files) {
     } else {
       for (const [platform, value] of Object.entries(doc.sources)) {
         if (!SOURCE_FIELDS.has(platform)) {
-          errors.push(`${file}: unsupported event source "${platform}" (expected ${[...SOURCE_FIELDS].join(", ")})`);
+          errors.push(
+            `${file}: unsupported event source "${platform}" (expected ${[...SOURCE_FIELDS].join(", ")})`
+          );
         }
         if (value === null || value === undefined || String(value).trim() === "") {
-          errors.push(`${file}: event source "${platform}" needs the artist's id on that platform, or remove the line`);
+          errors.push(
+            `${file}: event source "${platform}" needs the artist's id on that platform, or remove the line`
+          );
         }
       }
     }

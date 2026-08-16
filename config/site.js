@@ -16,8 +16,20 @@ export const BOOKING_EMAIL = "bookings@aaaartists.co";
 export const PRIVACY_EMAIL = BOOKING_EMAIL;
 
 export const SOCIAL_LINKS = Object.freeze([
-  { href: "https://www.instagram.com/aaaeventsofficial/", label: "Instagram", platform: "instagram" },
-  { href: "https://www.soundcloud.com/aaaeventsofficial", label: "SoundCloud", platform: "soundcloud" },
+  {
+    href: "https://www.instagram.com/aaaeventsofficial/",
+    label: "Instagram",
+    platform: "instagram",
+  },
+  {
+    href: "https://www.soundcloud.com/aaaeventsofficial",
+    label: "SoundCloud",
+    platform: "soundcloud",
+  },
   { href: "https://www.facebook.com/aaaeventsofficial", label: "Facebook", platform: "facebook" },
-  { href: "https://www.youtube.com/channel/UCZFxKt8xkwG7_yPFKz3GyMw", label: "YouTube", platform: "youtube" },
+  {
+    href: "https://www.youtube.com/channel/UCZFxKt8xkwG7_yPFKz3GyMw",
+    label: "YouTube",
+    platform: "youtube",
+  },
 ]);

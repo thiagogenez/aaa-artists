@@ -14,7 +14,9 @@ test("asks before embedding any third-party player", async ({ page }) => {
   await expect(banner(page)).toBeVisible();
   // The whole point: nothing is embedded while the question is unanswered.
   await expect(page.locator("iframe")).toHaveCount(0);
-  await expect(page.getByTestId("media-player-disabled")).toContainText("External media is waiting for your choice.");
+  await expect(page.getByTestId("media-player-disabled")).toContainText(
+    "External media is waiting for your choice."
+  );
   await expect(page.getByRole("button", { name: /Load .* player/i })).toHaveCount(0);
 });
 
@@ -28,14 +30,14 @@ test("inverts the media prompt against light and dark themes", async ({ page }) 
   await expect(banner(page)).toHaveCSS("background-color", "rgb(10, 10, 10)");
   await expect(banner(page).getByRole("button", { name: "Accept" })).toHaveCSS(
     "background-color",
-    "rgb(248, 248, 248)",
+    "rgb(248, 248, 248)"
   );
 
   await page.getByRole("button", { name: "Switch to dark theme" }).click();
   await expect(banner(page)).toHaveCSS("background-color", "rgb(242, 242, 242)");
   await expect(banner(page).getByRole("button", { name: "Accept" })).toHaveCSS(
     "background-color",
-    "rgb(10, 10, 10)",
+    "rgb(10, 10, 10)"
   );
 });
 
@@ -76,7 +78,9 @@ test("declining keeps players disabled and the choice is reversible", async ({ p
   await expect(page.locator("iframe").first()).toBeAttached();
 });
 
-test("the footer can reset a remembered choice without prompting on unrelated pages", async ({ page }) => {
+test("the footer can reset a remembered choice without prompting on unrelated pages", async ({
+  page,
+}) => {
   await page.goto("/about");
   await page.evaluate(() => window.localStorage.setItem("aaa-media-consent-v1", "denied"));
   await page.reload();
@@ -98,6 +102,8 @@ test("the privacy page can change and reset the choice", async ({ page }) => {
   await expect(page.getByText("Players load automatically.")).toBeVisible();
 
   await page.getByRole("button", { name: "Ask me again" }).click();
-  await expect(page.getByText("You have not answered yet, so nothing is loaded automatically.")).toBeVisible();
+  await expect(
+    page.getByText("You have not answered yet, so nothing is loaded automatically.")
+  ).toBeVisible();
   await expect(banner(page)).toHaveCount(0);
 });

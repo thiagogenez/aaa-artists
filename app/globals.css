@@ -34,10 +34,12 @@ html.light {
 
   --logo-filter: none;
   --artist-photo-filter: grayscale(1) contrast(1.02) brightness(1.14);
-  --artist-photo-gradient: linear-gradient(to top,
-      rgba(0, 0, 0, 0.82) 0%,
-      rgba(0, 0, 0, 0.4) 66%,
-      transparent 100%);
+  --artist-photo-gradient: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.4) 66%,
+    transparent 100%
+  );
   /* Flip reveal: drop the front's grayscale so the photo shows in full colour, lifted for the light card */
   --artist-card-back-photo-filter: contrast(1.06) brightness(1.05) saturate(1.1);
 }
@@ -75,10 +77,12 @@ html.dark {
 
   --logo-filter: invert(1) brightness(0.92);
   --artist-photo-filter: grayscale(1) contrast(1.12) brightness(0.86);
-  --artist-photo-gradient: linear-gradient(to top,
-      rgba(0, 0, 0, 0.9) 0%,
-      rgba(0, 0, 0, 0.45) 68%,
-      transparent 100%);
+  --artist-photo-gradient: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.45) 68%,
+    transparent 100%
+  );
   /* Flip reveal: full colour, slightly brighter than the resting (front) tile */
   --artist-card-back-photo-filter: contrast(1.08) brightness(0.96) saturate(1.1);
 }
@@ -106,7 +110,9 @@ body {
   background-color: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 ::selection {
@@ -150,7 +156,9 @@ button:not(:disabled) {
 .btn-outline {
   border: 1px solid var(--border);
   color: var(--text-60);
-  transition: border-color 0.2s ease, color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* The media decision is intentionally inverted against the page theme so it
@@ -160,7 +168,9 @@ button:not(:disabled) {
   color: var(--media-banner-text);
   border-color: var(--media-banner-border);
   box-shadow: 0 -10px 30px var(--media-banner-shadow);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .media-consent-link {
@@ -175,7 +185,9 @@ button:not(:disabled) {
 .media-consent-decline {
   border: 1px solid var(--media-banner-border);
   color: var(--media-banner-muted);
-  transition: border-color 0.2s ease, color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 .media-consent-decline:hover,
 .media-consent-decline:focus-visible {
@@ -205,7 +217,9 @@ button:not(:disabled) {
 .btn-outline-photo {
   border: 1px solid rgba(255, 255, 255, 0.5);
   color: #ffffff;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 .btn-outline-photo:hover,
 .btn-outline-photo:focus-visible {

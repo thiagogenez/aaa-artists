@@ -9,14 +9,7 @@ import {
   SOCIAL_LINKS,
 } from "@/config/site";
 
-export {
-  BOOKING_EMAIL,
-  PRIVACY_EMAIL,
-  SITE_DESCRIPTION,
-  SITE_NAME,
-  SOCIAL_IMAGE,
-  SOCIAL_LINKS,
-};
+export { BOOKING_EMAIL, PRIVACY_EMAIL, SITE_DESCRIPTION, SITE_NAME, SOCIAL_IMAGE, SOCIAL_LINKS };
 
 // Canonical URLs always identify the real public site, including on previews.
 export const SITE_URL = SITE_ORIGIN;
@@ -58,7 +51,14 @@ export function createPageMetadata({
       description,
       url: path,
       type: openGraphType,
-      images: [{ url: image, width: image === SOCIAL_IMAGE ? 1200 : undefined, height: image === SOCIAL_IMAGE ? 630 : undefined, alt: imageAlt }],
+      images: [
+        {
+          url: image,
+          width: image === SOCIAL_IMAGE ? 1200 : undefined,
+          height: image === SOCIAL_IMAGE ? 630 : undefined,
+          alt: imageAlt,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
@@ -74,7 +74,11 @@ export function sentenceDescription(value: string, maxLength = 160): string {
   const clean = value.replace(/\s+/g, " ").trim();
   if (clean.length <= maxLength) return clean;
   const candidate = clean.slice(0, maxLength + 1);
-  const sentenceEnd = Math.max(candidate.lastIndexOf(". "), candidate.lastIndexOf("! "), candidate.lastIndexOf("? "));
+  const sentenceEnd = Math.max(
+    candidate.lastIndexOf(". "),
+    candidate.lastIndexOf("! "),
+    candidate.lastIndexOf("? ")
+  );
   if (sentenceEnd >= Math.floor(maxLength * 0.55)) return candidate.slice(0, sentenceEnd + 1);
   const wordEnd = candidate.lastIndexOf(" ");
   return `${candidate.slice(0, wordEnd > 0 ? wordEnd : maxLength).trimEnd()}…`;

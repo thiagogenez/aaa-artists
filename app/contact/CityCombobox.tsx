@@ -84,15 +84,17 @@ function loadCityData(country: string): Promise<CityEntry[]> {
       if (!response.ok) throw new Error("City suggestions unavailable");
       return response.json() as Promise<string[]>;
     })
-    .then((countryCities) => Array.from(new Set(
-      countryCities.map((city) => city.trim()).filter(Boolean),
-    ))
-      .map((city) => ({ city, search: normalizeSearchValue(city) }))
-      .sort((first, second) => (
-        first.search < second.search ? -1
-          : first.search > second.search ? 1
-            : first.city.localeCompare(second.city)
-      )))
+    .then((countryCities) =>
+      Array.from(new Set(countryCities.map((city) => city.trim()).filter(Boolean)))
+        .map((city) => ({ city, search: normalizeSearchValue(city) }))
+        .sort((first, second) =>
+          first.search < second.search
+            ? -1
+            : first.search > second.search
+              ? 1
+              : first.city.localeCompare(second.city)
+        )
+    )
     .catch((error) => {
       cityDataCache.delete(slug);
       throw error;
@@ -145,8 +147,8 @@ export default function CityCombobox({
 
   const normalized = normalizeSearchValue(value);
   const matches = useMemo(
-    () => normalized ? rankCityMatches(cities, normalized) : [],
-    [cities, normalized],
+    () => (normalized ? rankCityMatches(cities, normalized) : []),
+    [cities, normalized]
   );
 
   async function loadCities() {
@@ -189,9 +191,15 @@ export default function CityCombobox({
         aria-autocomplete="list"
         aria-expanded={open && Boolean(normalized)}
         aria-controls={listId}
-        aria-activedescendant={open && matches[activeIndex] ? `${listId}-${activeIndex}` : undefined}
+        aria-activedescendant={
+          open && matches[activeIndex] ? `${listId}-${activeIndex}` : undefined
+        }
         aria-busy={loading || undefined}
-        aria-describedby={[rest["aria-describedby"], loading || loadFailed ? statusId : ""].filter(Boolean).join(" ") || undefined}
+        aria-describedby={
+          [rest["aria-describedby"], loading || loadFailed ? statusId : ""]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
         disabled={cityDisabled}
         placeholder={country ? `Start typing a city in ${country}…` : "Choose a country first"}
         value={value}
@@ -262,8 +270,15 @@ export default function CityCombobox({
       )}
 
       {(loading || loadFailed) && (
-        <p id={statusId} className="mt-1.5 text-xs" role="status" style={{ color: "var(--text-40)" }}>
-          {loading ? `Loading city suggestions for ${country}…` : "Suggestions unavailable — type the city manually."}
+        <p
+          id={statusId}
+          className="mt-1.5 text-xs"
+          role="status"
+          style={{ color: "var(--text-40)" }}
+        >
+          {loading
+            ? `Loading city suggestions for ${country}…`
+            : "Suggestions unavailable — type the city manually."}
         </p>
       )}
       {country && !loading && !loadFailed && (

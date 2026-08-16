@@ -13,7 +13,9 @@ export const metadata = createPageMetadata({
 });
 
 export default function HomePage() {
-  const featuredArtists = artists.filter((artist) => artist.image !== "/artists/placeholder.jpg").slice(0, 4);
+  const featuredArtists = artists
+    .filter((artist) => artist.image !== "/artists/placeholder.jpg")
+    .slice(0, 4);
 
   return (
     <>
@@ -48,22 +50,32 @@ export default function HomePage() {
             {/* Ray up */}
             <span
               className="pointer-events-none absolute bottom-full left-1/2 -z-10 h-[14vh] w-px -translate-x-1/2"
-              style={{ background: "linear-gradient(to top, transparent, var(--border) 50%, transparent)" }}
+              style={{
+                background: "linear-gradient(to top, transparent, var(--border) 50%, transparent)",
+              }}
             />
             {/* Ray down */}
             <span
               className="pointer-events-none absolute top-full left-1/2 -z-10 h-[14vh] w-px -translate-x-1/2"
-              style={{ background: "linear-gradient(to bottom, transparent, var(--border) 50%, transparent)" }}
+              style={{
+                background:
+                  "linear-gradient(to bottom, transparent, var(--border) 50%, transparent)",
+              }}
             />
             {/* Ray left */}
             <span
               className="pointer-events-none absolute right-full top-1/2 -z-10 h-px w-[28vw] -translate-y-1/2"
-              style={{ background: "linear-gradient(to left, transparent, var(--border) 50%, transparent)" }}
+              style={{
+                background: "linear-gradient(to left, transparent, var(--border) 50%, transparent)",
+              }}
             />
             {/* Ray right */}
             <span
               className="pointer-events-none absolute left-full top-1/2 -z-10 h-px w-[28vw] -translate-y-1/2"
-              style={{ background: "linear-gradient(to right, transparent, var(--border) 50%, transparent)" }}
+              style={{
+                background:
+                  "linear-gradient(to right, transparent, var(--border) 50%, transparent)",
+              }}
             />
             <Image
               src="/logo.png"
@@ -77,16 +89,21 @@ export default function HomePage() {
           </div>
 
           {/* Headline — 7 words, outcome-focused */}
-          <h1 className="mb-5 text-4xl font-bold leading-tight tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>
+          <h1
+            className="mb-5 text-4xl font-bold leading-tight tracking-tight md:text-6xl"
+            style={{ color: "var(--text)" }}
+          >
             World-class electronic music,
             <br />
             <span style={{ color: "var(--text-40)" }}>booked right.</span>
           </h1>
 
           {/* Subheadline — 15 words */}
-          <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed md:text-xl" style={{ color: "var(--text-60)" }}>
-            From uplifting trance to hard techno, we connect great artists
-            with the right events.
+          <p
+            className="mx-auto mb-10 max-w-xl text-lg leading-relaxed md:text-xl"
+            style={{ color: "var(--text-60)" }}
+          >
+            From uplifting trance to hard techno, we connect great artists with the right events.
           </p>
 
           {/* CTAs — from md up, sized to the grid: 4 cells wide, 1 cell tall, 2-cell gap,
@@ -101,8 +118,19 @@ export default function HomePage() {
               className="btn-cta group inline-flex h-[60px] w-full items-center justify-center gap-2 text-sm font-semibold uppercase tracking-widest sm:w-[240px]"
             >
               See Our Roster
-              <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </Link>
             <Link
@@ -137,8 +165,18 @@ export default function HomePage() {
                     className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
                     style={{ backgroundColor: "var(--card-line)" }}
                   />
-                  <p className="relative text-2xl font-bold transition-all duration-300 group-hover:-translate-y-0.5" style={{ color: "var(--text)" }}>{num}</p>
-                  <p className="relative text-xs uppercase tracking-widest" style={{ color: "var(--text-30)" }}>{label}</p>
+                  <p
+                    className="relative text-2xl font-bold transition-all duration-300 group-hover:-translate-y-0.5"
+                    style={{ color: "var(--text)" }}
+                  >
+                    {num}
+                  </p>
+                  <p
+                    className="relative text-xs uppercase tracking-widest"
+                    style={{ color: "var(--text-30)" }}
+                  >
+                    {label}
+                  </p>
                 </div>
               ))}
             </div>
@@ -147,31 +185,46 @@ export default function HomePage() {
       </section>
 
       {/* About */}
-      <section className="border-t px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+      <section
+        className="border-t px-6 py-24"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
+      >
         <div className="site-shell">
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
             <div>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Who We Are</p>
-              <h2 className="mb-6 text-4xl font-bold leading-tight tracking-tight md:text-5xl" style={{ color: "var(--text)" }}>
+              <p
+                className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]"
+                style={{ color: "var(--text-30)" }}
+              >
+                Who We Are
+              </p>
+              <h2
+                className="mb-6 text-4xl font-bold leading-tight tracking-tight md:text-5xl"
+                style={{ color: "var(--text)" }}
+              >
                 More than an agency.
                 <br />
                 <span style={{ color: "var(--text-30)" }}>We build careers.</span>
               </h2>
-              <div className="space-y-4 text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
+              <div
+                className="space-y-4 text-base leading-relaxed"
+                style={{ color: "var(--text-60)" }}
+              >
                 <p>
-                  AAA Artists is the next chapter of AAA Events. We started in 2023 as a group of trance
-                  fans organising our first event in London, and grew into AAA pres. Fusion: trance
-                  nights in London and at ADE with some of the scene&apos;s biggest names on the bill.
+                  AAA Artists is the next chapter of AAA Events. We started in 2023 as a group of
+                  trance fans organising our first event in London, and grew into AAA pres. Fusion:
+                  trance nights in London and at ADE with some of the scene&apos;s biggest names on
+                  the bill.
                 </p>
                 <p>
-                  Now we&apos;re putting that promoter experience to work for our own roster. We work closely
-                  with each artist to build a career over time, not just fill the next date. Trance comes
-                  first, and the roster stretches into techno, melodic techno, progressive and hard
-                  techno. We pick for quality rather than quantity.
+                  Now we&apos;re putting that promoter experience to work for our own roster. We
+                  work closely with each artist to build a career over time, not just fill the next
+                  date. Trance comes first, and the roster stretches into techno, melodic techno,
+                  progressive and hard techno. We pick for quality rather than quantity.
                 </p>
                 <p>
-                  If you want to book one of our artists, or you're an artist looking for representation,
-                  we'd like to hear from you.
+                  If you want to book one of our artists, or you're an artist looking for
+                  representation, we'd like to hear from you.
                 </p>
               </div>
               <div className="mt-8">
@@ -180,8 +233,19 @@ export default function HomePage() {
                   className="link-quiet group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest"
                 >
                   Meet the roster
-                  <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </Link>
               </div>
@@ -212,8 +276,10 @@ export default function HomePage() {
                       <p className="text-sm font-semibold text-white">{artist.name}</p>
                       <p className="text-xs text-white/75">{artist.genre}</p>
                     </div>
-                    <div className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-                      style={{ backgroundColor: "var(--card-line)" }} />
+                    <div
+                      className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                      style={{ backgroundColor: "var(--card-line)" }}
+                    />
                   </Link>
                 ))}
               </div>
@@ -223,13 +289,27 @@ export default function HomePage() {
       </section>
 
       {/* Genres */}
-      <section className="border-t px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
+      <section
+        className="border-t px-6 py-24"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
+      >
         <div className="site-shell">
-          <p className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Genres</p>
-          <h2 className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
+          <p
+            className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]"
+            style={{ color: "var(--text-30)" }}
+          >
+            Genres
+          </p>
+          <h2
+            className="mb-16 text-center text-3xl font-bold tracking-tight md:text-4xl"
+            style={{ color: "var(--text)" }}
+          >
             Across the electronic spectrum
           </h2>
-          <div className="grid grid-cols-2 gap-px sm:grid-cols-4" style={{ backgroundColor: "var(--border)" }}>
+          <div
+            className="grid grid-cols-2 gap-px sm:grid-cols-4"
+            style={{ backgroundColor: "var(--border)" }}
+          >
             {[
               { genre: "Trance", desc: "Uplifting and melodic" },
               { genre: "Progressive", desc: "Deep and cinematic" },
@@ -249,10 +329,16 @@ export default function HomePage() {
                   className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
                   style={{ backgroundColor: "var(--card-line)" }}
                 />
-                <p className="relative text-xl font-bold transition-all duration-300 group-hover:-translate-y-0.5" style={{ color: "var(--text)" }}>
+                <p
+                  className="relative text-xl font-bold transition-all duration-300 group-hover:-translate-y-0.5"
+                  style={{ color: "var(--text)" }}
+                >
                   {genre}
                 </p>
-                <p className="relative text-sm transition-all duration-300" style={{ color: "var(--text-30)" }}>
+                <p
+                  className="relative text-sm transition-all duration-300"
+                  style={{ color: "var(--text-30)" }}
+                >
                   {desc}
                 </p>
               </div>
@@ -262,10 +348,21 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t px-6 py-24" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+      <section
+        className="border-t px-6 py-24"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
+      >
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>Ready to book?</p>
-          <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
+          <p
+            className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]"
+            style={{ color: "var(--text-30)" }}
+          >
+            Ready to book?
+          </p>
+          <h2
+            className="mb-6 text-3xl font-bold tracking-tight md:text-4xl"
+            style={{ color: "var(--text)" }}
+          >
             Bring the right artist to your event
           </h2>
           <p className="mb-10 text-base leading-relaxed" style={{ color: "var(--text-40)" }}>

@@ -23,7 +23,10 @@ export default function ThirdPartyConsent({
   if (consent === "granted") return children;
 
   return (
-    <div className={`flex items-center gap-2 px-4 text-xs ${className}`} style={{ backgroundColor: "var(--surface)", color: "var(--text-40)" }}>
+    <div
+      className={`flex items-center gap-2 px-4 text-xs ${className}`}
+      style={{ backgroundColor: "var(--surface)", color: "var(--text-40)" }}
+    >
       <span>{provider} media disabled.</span>
       {consent === "denied" && (
         <MediaConsentSettings

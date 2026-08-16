@@ -30,7 +30,10 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
       />
 
       <div className="relative">
-        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+        <p
+          className="mb-3 text-sm font-semibold uppercase tracking-[0.4em]"
+          style={{ color: "var(--text-30)" }}
+        >
           Bookings
         </p>
         <h2 className="text-2xl font-bold leading-tight" style={{ color: "var(--text)" }}>
@@ -42,11 +45,15 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
         <p className="mb-6 text-sm leading-relaxed" style={{ color: "var(--text-40)" }}>
           Send the date, venue, capacity, and the sound you want. We will help match the room.
         </p>
-        <span
-          className="btn-cta inline-flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold uppercase tracking-widest"
-        >
+        <span className="btn-cta inline-flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold uppercase tracking-widest">
           Book Artists
-          <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg
+            className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </span>
@@ -63,17 +70,29 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
 
 export default function ArtistsPage() {
   return (
-    <div className="min-h-screen overscroll-contain px-6 pb-16 pt-20 sm:py-20" style={{ backgroundColor: "var(--bg)" }}>
+    <div
+      className="min-h-screen overscroll-contain px-6 pb-16 pt-20 sm:py-20"
+      style={{ backgroundColor: "var(--bg)" }}
+    >
       <div className="site-shell">
         {/* Header */}
         <div className="mb-8 text-center sm:mb-16">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <p
+            className="mb-4 text-sm font-semibold uppercase tracking-[0.4em]"
+            style={{ color: "var(--text-30)" }}
+          >
             AAA Artists
           </p>
-          <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>
+          <h1
+            className="mb-4 text-4xl font-bold tracking-tight md:text-6xl"
+            style={{ color: "var(--text)" }}
+          >
             Our Artists
           </h1>
-          <p className="mx-auto max-w-xl text-base leading-relaxed" style={{ color: "var(--text-40)" }}>
+          <p
+            className="mx-auto max-w-xl text-base leading-relaxed"
+            style={{ color: "var(--text-40)" }}
+          >
             {artists.length} artists, one agency. Hover or tap any card to learn more.
           </p>
         </div>
@@ -83,7 +102,12 @@ export default function ArtistsPage() {
           {artists.map((artist, index) => (
             <ArtistCard
               key={artist.slug}
-              artist={{ slug: artist.slug, name: artist.name, genre: artist.genre, image: artist.image }}
+              artist={{
+                slug: artist.slug,
+                name: artist.name,
+                genre: artist.genre,
+                image: artist.image,
+              }}
               priority={index === 0}
             />
           ))}
