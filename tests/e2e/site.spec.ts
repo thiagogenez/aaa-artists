@@ -8,17 +8,27 @@ test.beforeEach(async ({ page }) => {
   await seedMediaConsent(page, "granted");
 });
 
-test("uses the production canonical origin and keeps the pending privacy notice out of search", async ({ page }) => {
+test("uses the production canonical origin and keeps the pending privacy notice out of search", async ({
+  page,
+}) => {
   await page.goto("/");
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://aaaartists.co");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    "https://aaaartists.co"
+  );
 
   await page.goto("/privacy");
   await expect(page.getByRole("heading", { name: "Privacy notice" })).toBeVisible();
   await expect(page.getByText("Controller details are being confirmed")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "How to make a data-protection complaint" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "How to make a data-protection complaint" })
+  ).toBeVisible();
   await expect(page.getByText(/acknowledge your complaint within 30 days/i)).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, follow");
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://aaaartists.co/privacy");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    "https://aaaartists.co/privacy"
+  );
 
   const viewportWidth = await page.evaluate(() => document.documentElement.clientWidth);
   const contentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -53,12 +63,14 @@ test("emits event schema on artist pages and keeps TBC dates out of it", async (
   expect(xoyoLd[0]).not.toHaveProperty("offers");
 });
 
-test("marks a shared event with the same identifier on every performer's page", async ({ page }) => {
+test("marks a shared event with the same identifier on every performer's page", async ({
+  page,
+}) => {
   const identifiers: string[] = [];
   for (const slug of ["c-systems", "krevix"]) {
     await page.goto(`/artist/${slug}`);
     const shared = (await musicEvents(page)).filter(
-      (event) => event.identifier === "aaa-fusion-xoyo-2026-08-22",
+      (event) => event.identifier === "aaa-fusion-xoyo-2026-08-22"
     );
     expect(shared, `${slug} is missing the shared event`).toHaveLength(1);
     expect(shared[0]["@id"]).toContain(`/artist/${slug}#event-`);
@@ -77,13 +89,20 @@ test("shows visible nested breadcrumbs and a compact, non-duplicated footer", as
   const footer = page.locator("footer");
   await expect(footer.getByRole("link", { name: "Instagram", exact: true })).toHaveCount(1);
   await expect(
-    footer.getByRole("navigation", { name: "Navigation" }).getByRole("button", { name: "Media preferences" }),
+    footer
+      .getByRole("navigation", { name: "Navigation" })
+      .getByRole("button", { name: "Media preferences" })
   ).toBeVisible();
-  const width = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
+  const width = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
   expect(width.content).toBeLessThanOrEqual(width.viewport);
 });
 
-test("pairs upcoming dates with the player in one row and keeps past shows behind a dialog", async ({ page }) => {
+test("pairs upcoming dates with the player in one row and keeps past shows behind a dialog", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   // FROGR is the sparse case the layout exists for: two dates, one player.
   await page.goto("/artist/frogr");
@@ -119,7 +138,9 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     page.getByTestId("media-player").boundingBox(),
   ]);
   expect(playerBox!.x - (upcomingBox!.x + upcomingBox!.width)).toBeGreaterThanOrEqual(64);
-  expect(Math.abs((playerBox!.y + playerBox!.height) - (cardBox!.y + cardBox!.height))).toBeLessThan(8);
+  expect(Math.abs(playerBox!.y + playerBox!.height - (cardBox!.y + cardBox!.height))).toBeLessThan(
+    8
+  );
 
   // History stays reachable, but only on request.
   // A closed <dialog> keeps its content in the DOM, so this asserts on
@@ -150,7 +171,10 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   const eventCard = page.locator("#event-aaa-fusion-xoyo-2026-08-22");
   const flyer = eventCard.getByRole("img", { name: "FROGR at XOYO" });
   const eventDetails = eventCard.getByRole("link", { name: "Event details" });
-  const [flyerBox, detailsBox] = await Promise.all([flyer.boundingBox(), eventDetails.boundingBox()]);
+  const [flyerBox, detailsBox] = await Promise.all([
+    flyer.boundingBox(),
+    eventDetails.boundingBox(),
+  ]);
   expect(flyerBox).not.toBeNull();
   expect(detailsBox).not.toBeNull();
   expect(detailsBox!.y).toBeGreaterThan(flyerBox!.y + flyerBox!.height);
@@ -166,7 +190,9 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     page.getByTestId("upcoming-range").boundingBox(),
     page.getByTestId("player-label").boundingBox(),
   ]);
-  expect(Math.abs(rangeBox!.y + rangeBox!.height / 2 - (playerLabelBox!.y + playerLabelBox!.height / 2))).toBeLessThan(2);
+  expect(
+    Math.abs(rangeBox!.y + rangeBox!.height / 2 - (playerLabelBox!.y + playerLabelBox!.height / 2))
+  ).toBeLessThan(2);
   const paginationBox = await page.getByTestId("upcoming-pagination").boundingBox();
   expect(paginationBox!.x - (rangeBox!.x + rangeBox!.width)).toBeLessThanOrEqual(16);
   await expect(page.getByTestId("media-player")).toHaveCSS("border-top-width", "0px");
@@ -175,7 +201,13 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     page.locator("#event-timescape-festival-2026").boundingBox(),
     page.getByTestId("media-player").boundingBox(),
   ]);
-  expect(Math.abs(carouselCardBox!.y + carouselCardBox!.height - (carouselPlayerBox!.y + carouselPlayerBox!.height))).toBeLessThan(8);
+  expect(
+    Math.abs(
+      carouselCardBox!.y +
+        carouselCardBox!.height -
+        (carouselPlayerBox!.y + carouselPlayerBox!.height)
+    )
+  ).toBeLessThan(8);
   const [desktopSliderBox, desktopNextFlyerBox] = await Promise.all([
     page.getByTestId("upcoming-slider").boundingBox(),
     page.locator("#event-ds-30yrs-2026").boundingBox(),
@@ -185,14 +217,19 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(desktopPeek).toBeLessThan(desktopNextFlyerBox!.width);
   await eventControls.getByRole("button", { name: "Next upcoming events" }).click();
   await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 4");
-  await expect.poll(() => page.getByTestId("upcoming-slider").evaluate(
-    (slider) => Math.abs(slider.scrollWidth - slider.clientWidth - slider.scrollLeft),
-  )).toBeLessThan(2);
+  await expect
+    .poll(() =>
+      page
+        .getByTestId("upcoming-slider")
+        .evaluate((slider) => Math.abs(slider.scrollWidth - slider.clientWidth - slider.scrollLeft))
+    )
+    .toBeLessThan(2);
   const [desktopLaterSliderBox, desktopPreviousFlyerBox] = await Promise.all([
     page.getByTestId("upcoming-slider").boundingBox(),
     page.locator("#event-aaa-fusion-xoyo-2026-08-22").boundingBox(),
   ]);
-  const desktopPreviousPeek = desktopPreviousFlyerBox!.x + desktopPreviousFlyerBox!.width - desktopLaterSliderBox!.x;
+  const desktopPreviousPeek =
+    desktopPreviousFlyerBox!.x + desktopPreviousFlyerBox!.width - desktopLaterSliderBox!.x;
   expect(desktopPreviousPeek).toBeGreaterThan(20);
   expect(desktopPreviousPeek).toBeLessThan(desktopPreviousFlyerBox!.width);
 
@@ -201,17 +238,19 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   await page.goto("/artist/xijaro-pitch");
   await page.getByRole("button", { name: "Next upcoming events" }).click();
   await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 5");
-  await expect.poll(async () => {
-    const [slider, previous, next] = await Promise.all([
-      page.getByTestId("upcoming-slider").boundingBox(),
-      page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
-      page.locator("#event-ablazing-sense-chasing-dreams-2026").boundingBox(),
-    ]);
-    return Math.min(
-      previous!.x + previous!.width - slider!.x,
-      slider!.x + slider!.width - next!.x,
-    );
-  }).toBeGreaterThan(20);
+  await expect
+    .poll(async () => {
+      const [slider, previous, next] = await Promise.all([
+        page.getByTestId("upcoming-slider").boundingBox(),
+        page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
+        page.locator("#event-ablazing-sense-chasing-dreams-2026").boundingBox(),
+      ]);
+      return Math.min(
+        previous!.x + previous!.width - slider!.x,
+        slider!.x + slider!.width - next!.x
+      );
+    })
+    .toBeGreaterThan(20);
   const [middleSliderBox, middlePreviousBox, middleNextBox] = await Promise.all([
     page.getByTestId("upcoming-slider").boundingBox(),
     page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
@@ -245,7 +284,7 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   await expect(mobileSlider.getByText("XOYO", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next upcoming events" })).toHaveCount(0);
   const trapsScroll = await mobileSlider.evaluate(
-    (el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1,
+    (el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1
   );
   expect(trapsScroll, "upcoming events must not scroll inside itself on mobile").toBe(false);
 
@@ -253,7 +292,9 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   // players went two-up at 768 while the events above stayed single-column, and
   // the flyer cards sat at a 320px cap inside a ~790px column.
   await page.setViewportSize({ width: 834, height: 1112 });
-  const tabletCards = await page.locator("#event-timescape-festival-2026, #event-aaa-fusion-xoyo-2026-08-22").all();
+  const tabletCards = await page
+    .locator("#event-timescape-festival-2026, #event-aaa-fusion-xoyo-2026-08-22")
+    .all();
   const tabletBoxes = await Promise.all(tabletCards.map((card) => card.boundingBox()));
   expect(tabletBoxes).toHaveLength(2);
   // Two-up, so they share a row and use the width available.
@@ -268,14 +309,19 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(tabletPeek).toBeLessThan(tabletNextFlyerBox!.width);
   const tabletControls = page.getByRole("group", { name: "Upcoming event controls" });
   await tabletControls.getByRole("button", { name: "Next upcoming events" }).click();
-  await expect.poll(() => page.getByTestId("upcoming-slider").evaluate(
-    (slider) => Math.abs(slider.scrollWidth - slider.clientWidth - slider.scrollLeft),
-  )).toBeLessThan(2);
+  await expect
+    .poll(() =>
+      page
+        .getByTestId("upcoming-slider")
+        .evaluate((slider) => Math.abs(slider.scrollWidth - slider.clientWidth - slider.scrollLeft))
+    )
+    .toBeLessThan(2);
   const [tabletLaterSliderBox, tabletPreviousFlyerBox] = await Promise.all([
     page.getByTestId("upcoming-slider").boundingBox(),
     page.locator("#event-aaa-fusion-xoyo-2026-08-22").boundingBox(),
   ]);
-  const tabletPreviousPeek = tabletPreviousFlyerBox!.x + tabletPreviousFlyerBox!.width - tabletLaterSliderBox!.x;
+  const tabletPreviousPeek =
+    tabletPreviousFlyerBox!.x + tabletPreviousFlyerBox!.width - tabletLaterSliderBox!.x;
   expect(tabletPreviousPeek).toBeGreaterThan(20);
   expect(tabletPreviousPeek).toBeLessThan(tabletPreviousFlyerBox!.width);
   // C-Systems has both providers. Only one occupies the column at a time, so
@@ -287,7 +333,10 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   await expect(page.getByTestId("player-pagination").locator("span")).toHaveCount(2);
   await page.getByRole("button", { name: "Switch to SoundCloud player" }).click();
   await expect(playerLabel).toContainText("SoundCloud");
-  await expect(page.getByTestId("player-pagination")).toHaveAttribute("aria-label", "Player 2 of 2");
+  await expect(page.getByTestId("player-pagination")).toHaveAttribute(
+    "aria-label",
+    "Player 2 of 2"
+  );
   await page.getByRole("button", { name: "Switch to Spotify player" }).click();
   await expect(playerLabel).toContainText("Spotify");
 
@@ -319,7 +368,9 @@ test("keeps shared chrome inside common phone and desktop widths", async ({ page
       viewport: document.documentElement.clientWidth,
       content: document.documentElement.scrollWidth,
     }));
-    expect(dimensions.content, `horizontal overflow at ${width}px`).toBeLessThanOrEqual(dimensions.viewport);
+    expect(dimensions.content, `horizontal overflow at ${width}px`).toBeLessThanOrEqual(
+      dimensions.viewport
+    );
     await expect(page.locator("header")).toBeVisible();
     await expect(page.locator("footer")).toBeVisible();
   }

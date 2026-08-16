@@ -13,11 +13,11 @@ const nextConfig: NextConfig = {
   // Without this, Next.js 15+ blocks _next/static JS from external hosts,
   // causing React hydration to fail silently (animations, theme toggle stop working).
   allowedDevOrigins: [
-    "*.ngrok-free.app",   // ngrok free tier (.app)
-    "*.ngrok-free.dev",   // ngrok free tier (.dev) — current default
-    "*.ngrok.app",        // ngrok paid
-    "*.ngrok.io",         // ngrok legacy
-    "*.eu.ngrok.io",      // ngrok EU region
+    "*.ngrok-free.app", // ngrok free tier (.app)
+    "*.ngrok-free.dev", // ngrok free tier (.dev) — current default
+    "*.ngrok.app", // ngrok paid
+    "*.ngrok.io", // ngrok legacy
+    "*.eu.ngrok.io", // ngrok EU region
   ],
 };
 

@@ -1,0 +1,157 @@
+{
+  // Biome owns formatting and general correctness/accessibility linting.
+  // It does NOT replace ESLint: eslint-config-next carries the Next.js App Router,
+  // next/image and React hooks rules that Biome has no equivalent for. ESLint here
+  // contributes no formatting rules, so the two do not fight over the same code.
+  //
+  //   npm run format         rewrite files
+  //   npm run format:check   CI gate, no writes
+  //   npm run lint:biome     lint only
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/out",
+      "!**/.wrangler",
+      "!**/coverage",
+      "!**/reports",
+      "!**/playwright-report",
+      "!**/test-results",
+      // Generated: cities come from all-countries-and-cities-json, artist JSON from YAML.
+      "!public/cities",
+      "!data/artists.data.json",
+      "!package-lock.json",
+      "!**/*.tsbuildinfo"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    // Matches the width the repository was already hand-wrapped to.
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "trailingCommas": "es5",
+      "semicolons": "always",
+      "arrowParentheses": "always"
+    }
+  },
+  "json": {
+    "parser": {
+      // wrangler.jsonc and this file carry explanatory comments on purpose.
+      "allowComments": true
+    },
+    "formatter": {
+      "enabled": true
+    }
+  },
+  "css": {
+    "parser": {
+      // app/globals.css uses Tailwind v4 directives (@theme, @layer, @import
+      // "tailwindcss"). Without this Biome cannot even parse the file.
+      "tailwindDirectives": true
+    },
+    "formatter": {
+      "enabled": true
+    },
+    // The CSS linter does not understand the Tailwind directives well enough to be
+    // useful here; formatting and parsing are what we want from Biome on CSS.
+    "linter": {
+      "enabled": false
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        // React hook dependency analysis is ESLint's job here (react-hooks plugin).
+        "useExhaustiveDependencies": "off"
+      },
+      "style": {
+        "useConst": "error",
+        "useTemplate": "error"
+      },
+      "a11y": {
+        "preset": "recommended",
+        // These seven fire on the artist cards, the contact comboboxes and the
+        // events pager. They are real findings, not false positives, but fixing
+        // them safely is its own change — tracked in issue #45. They are warnings
+        // so they stay visible without blocking every unrelated pull request.
+        // Promote each back to "error" as #45 clears it.
+        "useSemanticElements": "warn",
+        "useKeyWithClickEvents": "warn",
+        "noStaticElementInteractions": "warn",
+        "noNoninteractiveElementToInteractiveRole": "warn",
+        "useFocusableInteractive": "warn",
+        "useAriaPropsSupportedByRole": "warn",
+        "noNoninteractiveTabindex": "warn"
+      },
+      "nursery": {
+        "preset": "none"
+      }
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        // Import order is deliberate in several files (side-effect CSS imports).
+        "organizeImports": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      // The only sanctioned uses of dangerouslySetInnerHTML: JSON-LD structured data
+      // built from our own validated content. Anywhere else the rule still errors.
+      "includes": [
+        "app/layout.tsx",
+        "app/artist/\\[slug\\]/page.tsx",
+        "components/Breadcrumbs.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
+    },
+    {
+      // The Worker strips control characters from header values on purpose.
+      "includes": ["worker/**/*.js"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noControlCharactersInRegex": "off"
+          }
+        }
+      }
+    },
+    {
+      // Non-null assertions are idiomatic in Playwright specs.
+      "includes": ["tests/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
+  ]
+}

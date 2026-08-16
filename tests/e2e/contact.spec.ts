@@ -8,7 +8,9 @@ import { seedMediaConsent } from "./helpers";
  *  marker is baked into the prerendered form, so this check cannot race. */
 async function waitForTurnstileToken(page: Page) {
   if (await page.locator('form[data-turnstile="widget"]').count()) {
-    await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue("", { timeout: 15_000 });
+    await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue("", {
+      timeout: 15_000,
+    });
   }
 }
 
@@ -64,11 +66,7 @@ test.describe("booking form regression coverage", () => {
 
     await emailInput.fill("jane@hotmail.");
     await expect(suggestions).toHaveCount(3);
-    await expect(suggestions).toHaveText([
-      "@hotmail.co.uk",
-      "@hotmail.com",
-      "@hotmail.fr",
-    ]);
+    await expect(suggestions).toHaveText(["@hotmail.co.uk", "@hotmail.com", "@hotmail.fr"]);
 
     await page.getByRole("button", { name: "+5 more", exact: true }).click();
     await expect(suggestions).toHaveCount(8);
@@ -82,7 +80,9 @@ test.describe("booking form regression coverage", () => {
   test("keeps WhatsApp usernames clean while showing the fixed @ prefix", async ({ page }) => {
     await page.goto("/contact");
 
-    await page.locator('input[name="whatsapp-contact-method"][value="username"]').check({ force: true });
+    await page
+      .locator('input[name="whatsapp-contact-method"][value="username"]')
+      .check({ force: true });
     const usernameInput = page.locator('input[name="whatsappUsername"]');
     await usernameInput.fill("@aaa-booking");
 
@@ -120,7 +120,9 @@ test.describe("booking form regression coverage", () => {
     const cityInput = page.locator('input[name="city"]');
     await expect(cityInput).toBeEnabled();
     await cityInput.fill("Sao Paulo");
-    await expect(page.getByRole("option", { name: "Sao Paulo", exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: "Sao Paulo", exact: true }).first()
+    ).toBeVisible();
 
     await cityInput.fill("My small town");
     await expect(cityInput).toHaveValue("My small town");
@@ -130,7 +132,11 @@ test.describe("booking form regression coverage", () => {
     let requestBody: Record<string, unknown> | undefined;
     await page.route("**/api/enquiries", async (route) => {
       requestBody = route.request().postDataJSON() as Record<string, unknown>;
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true }),
+      });
     });
     await page.goto("/contact");
 
@@ -146,7 +152,9 @@ test.describe("booking form regression coverage", () => {
     // Mobile WebKit on busy CI runners regularly needs more than the global 5s
     // expectation window here (twice killed scheduled deploys); the submit
     // round-trip is mocked, so a generous timeout costs nothing when healthy.
-    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible({
+      timeout: 15_000,
+    });
     expect(requestBody).toMatchObject({
       name: "Jane Booker",
       email: "jane@example.com",
@@ -160,8 +168,11 @@ test.describe("booking form regression coverage", () => {
     expect(requestBody).not.toHaveProperty("_subject");
   });
 
-  test("preserves an in-progress draft across navigation until reset or submit", async ({ page }) => {
-    const storedDraft = () => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"));
+  test("preserves an in-progress draft across navigation until reset or submit", async ({
+    page,
+  }) => {
+    const storedDraft = () =>
+      page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"));
     await page.goto("/contact");
     const nameInput = page.locator('input[name="name"]');
     await nameInput.fill("Jane Draft");
@@ -194,20 +205,30 @@ test.describe("booking form regression coverage", () => {
 
   test("clears the stored draft after a successful submission", async ({ page }) => {
     await page.route("**/api/enquiries", async (route) => {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true }),
+      });
     });
     await page.goto("/contact");
     await page.locator('input[name="name"]').fill("Jane Booker");
     await page.locator('input[name="email"]').fill("jane@example.com");
     await page.locator('input[name="date"]').fill("2026-12-01");
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
-    await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"))).not.toBeNull();
+    await expect
+      .poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1")))
+      .not.toBeNull();
 
     // Same Turnstile token wait as the submit test above: never race the widget.
     await waitForTurnstileToken(page);
     await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible({ timeout: 15_000 });
-    await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"))).toBeNull();
+    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect
+      .poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1")))
+      .toBeNull();
   });
 
   test("associates email errors and suggestions with the input", async ({ page }) => {

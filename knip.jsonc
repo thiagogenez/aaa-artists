@@ -1,0 +1,46 @@
+{
+  // Dead-code and dead-dependency detection.
+  //   npm run knip           report
+  //   npm run knip -- --fix  apply the safe removals
+  //
+  // Entries are the real roots of this repository: Next.js routes (its own plugin adds
+  // robots/sitemap/manifest and the configs), the deploy and generation scripts, the
+  // event-source adapters (loaded via `import * as`, so they need to be roots), and the
+  // test suites.
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "app/**/page.tsx",
+    "app/**/layout.tsx",
+    "app/**/not-found.tsx",
+    "scripts/*.mjs",
+    "scripts/sources/*.mjs",
+    "tests/**/*.test.mjs",
+    "tests/e2e/*.spec.ts"
+  ],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "config/**/*.{ts,js}",
+    "data/**/*.ts",
+    "lib/**/*.ts",
+    "scripts/**/*.mjs",
+    "tests/**/*.{ts,mjs}",
+    "worker/**/*.js"
+  ],
+  "ignoreDependencies": [
+    // Used by postcss.config.mjs / the Tailwind v4 pipeline, not imported in source.
+    "tailwindcss",
+    // Read at build time by scripts/gen-cities.mjs through a dynamic path.
+    "all-countries-and-cities-json",
+    // Stryker 9 ships the "command" test runner inside @stryker-mutator/core; Knip's
+    // plugin still expects the pre-9 standalone package, which no longer exists on npm.
+    "@stryker-mutator/command-runner"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    // config/site.js exports PRIVACY_EMAIL as a deliberate alias of BOOKING_EMAIL until
+    // the controller confirms a dedicated privacy address (see TODO.md). Knip cannot tell
+    // an intentional alias from a copy-paste duplicate.
+    "duplicates": "off"
+  }
+}

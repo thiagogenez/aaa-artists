@@ -31,3 +31,7 @@ next-env.d.ts
 
 # Locally captured/rendered booking emails (npm run preview:email, npm run dev:mail)
 /.preview/
+
+# Mutation-test artifacts (npm run test:mutation)
+/reports/
+/.stryker-tmp/

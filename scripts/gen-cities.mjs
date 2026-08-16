@@ -19,14 +19,16 @@ const source = JSON.parse(await readFile(path.join(packageRoot, "countries.min.j
 await rm(outputDir, { recursive: true, force: true });
 await mkdir(outputDir, { recursive: true });
 
-await Promise.all(Object.entries(source).map(([country, cities]) => (
-  writeFile(path.join(outputDir, `${countrySlug(country)}.json`), JSON.stringify(cities))
-)));
+await Promise.all(
+  Object.entries(source).map(([country, cities]) =>
+    writeFile(path.join(outputDir, `${countrySlug(country)}.json`), JSON.stringify(cities))
+  )
+);
 
 await copyFile(path.join(packageRoot, "LICENSE"), path.join(outputDir, "LICENSE.txt"));
 await writeFile(
   path.join(outputDir, "ATTRIBUTION.txt"),
-  "City suggestions generated from all-countries-and-cities-json by Ruslan Orel (MIT).\n",
+  "City suggestions generated from all-countries-and-cities-json by Ruslan Orel (MIT).\n"
 );
 
 console.log(`Generated ${Object.keys(source).length} country city files in public/cities.`);

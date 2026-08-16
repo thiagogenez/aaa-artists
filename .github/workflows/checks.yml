@@ -31,8 +31,14 @@ jobs:
         run: npm run check
       - name: Run Worker tests
         run: npm test
+      - name: Check formatting
+        run: npm run format:check
       - name: Lint source
         run: npm run lint
+      - name: Check for unused files, exports and dependencies
+        run: npm run knip
+      - name: Validate the architecture contract
+        run: npm run arch
       - name: Audit production dependencies
         run: npm run check:dependencies
       - name: Validate production build requirements

@@ -16,15 +16,13 @@ export default function PastShowsDialog({ gigs }: { gigs: Gig[] }) {
   const [open, setOpen] = useState(false);
 
   // Newest first, grouped by year — a career reads backwards from now.
-  const grouped = [...gigs]
-    .reverse()
-    .reduce<Array<{ year: string; gigs: Gig[] }>>((years, gig) => {
-      const year = gig.date.slice(0, 4);
-      const group = years.find((entry) => entry.year === year);
-      if (group) group.gigs.push(gig);
-      else years.push({ year, gigs: [gig] });
-      return years;
-    }, []);
+  const grouped = [...gigs].reverse().reduce<Array<{ year: string; gigs: Gig[] }>>((years, gig) => {
+    const year = gig.date.slice(0, 4);
+    const group = years.find((entry) => entry.year === year);
+    if (group) group.gigs.push(gig);
+    else years.push({ year, gigs: [gig] });
+    return years;
+  }, []);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -68,8 +66,14 @@ export default function PastShowsDialog({ gigs }: { gigs: Gig[] }) {
         className="m-auto w-[min(44rem,92vw)] max-w-none border p-0 backdrop:bg-black/60"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)", color: "var(--text)" }}
       >
-        <div className="flex items-center justify-between gap-4 border-b px-6 py-4" style={{ borderColor: "var(--border)" }}>
-          <h2 className="text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+        <div
+          className="flex items-center justify-between gap-4 border-b px-6 py-4"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <h2
+            className="text-sm font-semibold uppercase tracking-[0.4em]"
+            style={{ color: "var(--text-30)" }}
+          >
             Past shows
           </h2>
           <button
@@ -78,8 +82,19 @@ export default function PastShowsDialog({ gigs }: { gigs: Gig[] }) {
             aria-label="Close past shows"
             className="btn-outline flex h-11 w-11 cursor-pointer items-center justify-center"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -90,7 +105,10 @@ export default function PastShowsDialog({ gigs }: { gigs: Gig[] }) {
           <div className="flex flex-col gap-6">
             {grouped.map((group) => (
               <div key={group.year}>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--text-30)" }}>
+                <p
+                  className="mb-3 text-xs font-semibold uppercase tracking-[0.3em]"
+                  style={{ color: "var(--text-30)" }}
+                >
                   {group.year}
                 </p>
                 <ul className="flex flex-col gap-3">
@@ -102,12 +120,20 @@ export default function PastShowsDialog({ gigs }: { gigs: Gig[] }) {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold" style={{ color: "var(--text)" }}>{gig.venue}</p>
+                          <p
+                            className="truncate text-sm font-semibold"
+                            style={{ color: "var(--text)" }}
+                          >
+                            {gig.venue}
+                          </p>
                           <p className="text-xs" style={{ color: "var(--text-40)" }}>
                             {gig.city}, {gig.country}
                           </p>
                         </div>
-                        <p className="shrink-0 text-right text-xs" style={{ color: "var(--text-40)" }}>
+                        <p
+                          className="shrink-0 text-right text-xs"
+                          style={{ color: "var(--text-40)" }}
+                        >
                           {formatEventDate(gig.date)}
                         </p>
                       </div>

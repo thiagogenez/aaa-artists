@@ -29,7 +29,9 @@ export function wranglerJson(args) {
   });
   if (result.error) throw result.error;
   if (result.status !== 0) {
-    throw new Error(`wrangler ${args.join(" ")} exited with status ${result.status}: ${result.stderr?.trim() || "no error output"}`);
+    throw new Error(
+      `wrangler ${args.join(" ")} exited with status ${result.status}: ${result.stderr?.trim() || "no error output"}`
+    );
   }
   return JSON.parse(result.stdout);
 }

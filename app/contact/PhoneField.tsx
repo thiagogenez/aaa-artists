@@ -48,7 +48,8 @@ export default function PhoneField({
           autoComplete: "tel",
           inputMode: "tel",
           onBlur,
-          className: "aaa-phone-input w-full border px-4 py-3 text-base outline-none transition-all",
+          className:
+            "aaa-phone-input w-full border px-4 py-3 text-base outline-none transition-all",
           style: {
             borderColor: error ? "var(--error)" : "var(--border)",
             backgroundColor: "var(--surface)",

@@ -47,7 +47,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /** Convert a public Spotify URL into its embed equivalent. */
 function spotifyEmbedSrc(url: string): string | null {
-  const m = url.match(/open\.spotify\.com\/(artist|album|track|playlist|episode|show)\/([A-Za-z0-9]+)/);
+  const m = url.match(
+    /open\.spotify\.com\/(artist|album|track|playlist|episode|show)\/([A-Za-z0-9]+)/
+  );
   if (!m) return null;
   // Theme (theme=0 dark / theme=1 light) is appended client-side in <SpotifyPlayer>.
   return `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator`;
@@ -72,7 +74,7 @@ export default async function ArtistPage({ params }: Props) {
       ? spotifyEmbedSrc(artist.socials.spotify)
       : null;
   const socialLinks = Object.entries(artist.socials).filter(
-    ([platform]) => !HIDDEN_SOCIAL_PLATFORMS.has(platform),
+    ([platform]) => !HIDDEN_SOCIAL_PLATFORMS.has(platform)
   );
 
   // Per-artist structured data for richer search results.
@@ -93,7 +95,9 @@ export default async function ArtistPage({ params }: Props) {
   // the same event, each page emits its own node; the shared `identifier` (the
   // gig's eventId) marks them as the same real-world event.
   const eventLd = artist.gigs
-    .filter((gig) => isUpcomingEventDate(gig.date, buildNow) && isExactEventDate(gig.date) && gig.eventId)
+    .filter(
+      (gig) => isUpcomingEventDate(gig.date, buildNow) && isExactEventDate(gig.date) && gig.eventId
+    )
     .map((gig) => ({
       "@context": "https://schema.org",
       "@type": "MusicEvent",
@@ -124,13 +128,14 @@ export default async function ArtistPage({ params }: Props) {
       ...(gig.freeEntry && { isAccessibleForFree: true }),
       // A ticket URL alone is not proof of availability, so offers are emitted
       // only once ticketStatus has been verified.
-      ...(gig.ticketLink && gig.ticketStatus && {
-        offers: {
-          "@type": "Offer",
-          url: gig.ticketLink,
-          availability: EVENT_AVAILABILITY[gig.ticketStatus],
-        },
-      }),
+      ...(gig.ticketLink &&
+        gig.ticketStatus && {
+          offers: {
+            "@type": "Offer",
+            url: gig.ticketLink,
+            availability: EVENT_AVAILABILITY[gig.ticketStatus],
+          },
+        }),
     }));
 
   return (
@@ -146,7 +151,10 @@ export default async function ArtistPage({ params }: Props) {
         />
       )}
       {/* Artist hero */}
-      <div className="relative border-b px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+      <div
+        className="relative border-b px-6 py-20"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
+      >
         <div className="site-shell">
           <Breadcrumbs
             className="mb-8"
@@ -160,7 +168,10 @@ export default async function ArtistPage({ params }: Props) {
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-[300px_1fr]">
             {/* Artist photo */}
             <div className="mx-auto flex w-full max-w-[320px] flex-col gap-4 lg:mx-0 lg:max-w-none">
-              <div className="relative aspect-square overflow-hidden border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}>
+              <div
+                className="relative aspect-square overflow-hidden border"
+                style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}
+              >
                 <Image
                   src={artist.image}
                   alt={artist.name}
@@ -204,12 +215,27 @@ export default async function ArtistPage({ params }: Props) {
 
             {/* Info */}
             <div>
-              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+              <p
+                className="mb-2 text-sm font-semibold uppercase tracking-[0.4em]"
+                style={{ color: "var(--text-30)" }}
+              >
                 {artist.genre}
               </p>
-              <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-6xl" style={{ color: "var(--text)" }}>{artist.name}</h1>
-              <p className="mb-6 text-lg italic" style={{ color: "var(--text-40)" }}>{artist.tagline}</p>
-              <p className="max-w-2xl text-base leading-relaxed" style={{ color: "var(--text-60)" }}>{artist.bio}</p>
+              <h1
+                className="mb-4 text-4xl font-bold tracking-tight md:text-6xl"
+                style={{ color: "var(--text)" }}
+              >
+                {artist.name}
+              </h1>
+              <p className="mb-6 text-lg italic" style={{ color: "var(--text-40)" }}>
+                {artist.tagline}
+              </p>
+              <p
+                className="max-w-2xl text-base leading-relaxed"
+                style={{ color: "var(--text-60)" }}
+              >
+                {artist.bio}
+              </p>
             </div>
           </div>
         </div>
@@ -219,9 +245,15 @@ export default async function ArtistPage({ params }: Props) {
       <EventsSection artist={artist} buildNow={buildNow} spotifySrc={spotifySrc} />
 
       {/* Other artists */}
-      <div className="border-t px-6 py-20" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
+      <div
+        className="border-t px-6 py-20"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
+      >
         <div className="site-shell">
-          <h2 className="mb-10 text-center text-sm font-semibold uppercase tracking-[0.4em]" style={{ color: "var(--text-30)" }}>
+          <h2
+            className="mb-10 text-center text-sm font-semibold uppercase tracking-[0.4em]"
+            style={{ color: "var(--text-30)" }}
+          >
             Also on the Roster
           </h2>
           {/* Centered wrap (not a grid) so an incomplete last row — e.g. 5 tiles

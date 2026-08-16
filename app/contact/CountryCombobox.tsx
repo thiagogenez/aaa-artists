@@ -32,10 +32,12 @@ const COUNTRY_ISO_OVERRIDES: Record<string, string> = {
 };
 
 const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
-const COUNTRY_ISO = new Map(allPhoneCountries.map((country) => [
-  regionNames.of(country.iso2.toUpperCase()) ?? "",
-  country.iso2,
-]));
+const COUNTRY_ISO = new Map(
+  allPhoneCountries.map((country) => [
+    regionNames.of(country.iso2.toUpperCase()) ?? "",
+    country.iso2,
+  ])
+);
 
 function countryIso(country: string): string {
   return COUNTRY_ISO_OVERRIDES[country] ?? COUNTRY_ISO.get(country) ?? "";
@@ -43,7 +45,9 @@ function countryIso(country: string): string {
 
 function CountryFlag({ country }: { country: string }) {
   const iso = countryIso(country);
-  return iso ? <span className={`iti__flag iti__${iso} inline-block shrink-0`} aria-hidden="true" /> : null;
+  return iso ? (
+    <span className={`iti__flag iti__${iso} inline-block shrink-0`} aria-hidden="true" />
+  ) : null;
 }
 
 type CountryComboboxProps = {
@@ -64,8 +68,10 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
   const selectedIso = countryIso(value);
   const matches = COUNTRIES.filter((country) => {
     if (!normalized) return true;
-    return country.toLowerCase().includes(normalized)
-      || COUNTRY_ALIASES[country]?.some((alias) => alias.includes(normalized));
+    return (
+      country.toLowerCase().includes(normalized) ||
+      COUNTRY_ALIASES[country]?.some((alias) => alias.includes(normalized))
+    );
   }).slice(0, 30);
 
   const choose = (country: string) => {
@@ -78,7 +84,10 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
   return (
     <div className="relative">
       {!open && selectedIso && (
-        <span className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2" aria-hidden="true">
+        <span
+          className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2"
+          aria-hidden="true"
+        >
           <CountryFlag country={value} />
         </span>
       )}
@@ -90,7 +99,9 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
         aria-autocomplete="list"
         aria-expanded={open}
         aria-controls={listId}
-        aria-activedescendant={open && matches[activeIndex] ? `${listId}-${activeIndex}` : undefined}
+        aria-activedescendant={
+          open && matches[activeIndex] ? `${listId}-${activeIndex}` : undefined
+        }
         placeholder="Start typing a country…"
         value={open ? query : value}
         onFocus={() => {
@@ -141,26 +152,28 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
           className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto border py-1 shadow-xl"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
         >
-          {matches.length ? matches.map((country, index) => (
-            <li
-              id={`${listId}-${index}`}
-              key={country}
-              role="option"
-              aria-selected={country === value}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                choose(country);
-              }}
-              className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm"
-              style={{
-                backgroundColor: index === activeIndex ? "var(--surface-2)" : "transparent",
-                color: "var(--text)",
-              }}
-            >
-              <CountryFlag country={country} />
-              <span>{country}</span>
-            </li>
-          )) : (
+          {matches.length ? (
+            matches.map((country, index) => (
+              <li
+                id={`${listId}-${index}`}
+                key={country}
+                role="option"
+                aria-selected={country === value}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  choose(country);
+                }}
+                className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm"
+                style={{
+                  backgroundColor: index === activeIndex ? "var(--surface-2)" : "transparent",
+                  color: "var(--text)",
+                }}
+              >
+                <CountryFlag country={country} />
+                <span>{country}</span>
+              </li>
+            ))
+          ) : (
             <li className="px-4 py-3 text-sm" style={{ color: "var(--text-40)" }}>
               No matching country
             </li>

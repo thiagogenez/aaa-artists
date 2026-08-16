@@ -22,7 +22,10 @@ try {
     setGithubOutput("refresh", "true");
   } else {
     setGithubOutput("refresh", "false");
-    annotate("notice", `Production runs '${liveTag || "<untagged>"}' but main is ${expectedTag}; skipping the production refresh. Dispatch 'Deploy production' to release main.`);
+    annotate(
+      "notice",
+      `Production runs '${liveTag || "<untagged>"}' but main is ${expectedTag}; skipping the production refresh. Dispatch 'Deploy production' to release main.`
+    );
   }
 } catch (error) {
   annotate("error", error instanceof Error ? error.message : String(error));

@@ -17,12 +17,26 @@ const PREVIEW_URL_PATTERN = /^https:\/\/[0-9a-f]{8}-[a-z0-9-]+\.[^/]+\.workers\.
 
 try {
   const commit = requiredEnvironment("GITHUB_SHA");
-  const outputFilePath = join(process.env.RUNNER_TEMP || tmpdir(), `wrangler-upload-${process.pid}.jsonl`);
-  const uploadExit = runWrangler(
-    ["versions", "upload", "--env", "production", "--strict", "--tag", `github-${commit.slice(0, 12)}`, "--message", `GitHub Actions ${commit}`],
-    { env: { WRANGLER_OUTPUT_FILE_PATH: outputFilePath } },
+  const outputFilePath = join(
+    process.env.RUNNER_TEMP || tmpdir(),
+    `wrangler-upload-${process.pid}.jsonl`
   );
-  if (uploadExit !== 0) throw new Error(`wrangler versions upload exited with status ${uploadExit}`);
+  const uploadExit = runWrangler(
+    [
+      "versions",
+      "upload",
+      "--env",
+      "production",
+      "--strict",
+      "--tag",
+      `github-${commit.slice(0, 12)}`,
+      "--message",
+      `GitHub Actions ${commit}`,
+    ],
+    { env: { WRANGLER_OUTPUT_FILE_PATH: outputFilePath } }
+  );
+  if (uploadExit !== 0)
+    throw new Error(`wrangler versions upload exited with status ${uploadExit}`);
 
   const upload = lastWranglerOutputEntry(outputFilePath, "version-upload") ?? {};
   const versionId = upload.version_id ?? "";
@@ -31,11 +45,14 @@ try {
     throw new Error("Could not identify the uploaded release candidate");
   }
   if (!PREVIEW_URL_PATTERN.test(previewUrl)) {
-    annotate("error", `Candidate ${versionId} uploaded, but Wrangler returned no version-prefixed Preview URL (got: '${previewUrl || "<empty>"}').`);
+    annotate(
+      "error",
+      `Candidate ${versionId} uploaded, but Wrangler returned no version-prefixed Preview URL (got: '${previewUrl || "<empty>"}').`
+    );
     throw new Error(
       "Version Preview URLs must be enabled on the aaa-artists Worker so the exact inactive candidate can be smoke-tested before promotion. " +
-      "wrangler.jsonc sets \"preview_urls\": true, but `wrangler versions upload` only reads this — enable Preview URLs once on the Worker " +
-      "(Cloudflare dashboard, or a one-time `npx wrangler triggers deploy --env production`). See docs/deployment.md. Not promoting.",
+        'wrangler.jsonc sets "preview_urls": true, but `wrangler versions upload` only reads this — enable Preview URLs once on the Worker ' +
+        "(Cloudflare dashboard, or a one-time `npx wrangler triggers deploy --env production`). See docs/deployment.md. Not promoting."
     );
   }
 

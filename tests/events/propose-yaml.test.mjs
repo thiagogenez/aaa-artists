@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import * as yaml from "js-yaml";
-import { formatGigBlock, insertGigs, insertGigsChecked, locateGigs } from "../../scripts/lib/propose-yaml.mjs";
+import {
+  formatGigBlock,
+  insertGigs,
+  insertGigsChecked,
+  locateGigs,
+} from "../../scripts/lib/propose-yaml.mjs";
 
 /** A file shaped like the real ones: comments above items, mixed quote styles,
  *  a trailing comment inside an entry. */
@@ -42,11 +47,16 @@ const candidate = (overrides = {}) => ({
 test("finds the gigs list and every entry in it", () => {
   const block = locateGigs(SAMPLE.split("\n"));
   assert.equal(block.items.length, 3);
-  assert.deepEqual(block.items.map((item) => item.date), ["2025-08-24", "2026-07-24", "2026-11-30"]);
+  assert.deepEqual(
+    block.items.map((item) => item.date),
+    ["2025-08-24", "2026-07-24", "2026-11-30"]
+  );
 });
 
 test("keeps every comment in the file", () => {
-  const { text } = insertGigsChecked(SAMPLE, [candidate()], { comment: () => "proposed from skiddle" });
+  const { text } = insertGigsChecked(SAMPLE, [candidate()], {
+    comment: () => "proposed from skiddle",
+  });
   for (const comment of [
     "# real account (test2 is someone else)",
     "# Verified gigs only. Oldest first.",
@@ -62,7 +72,7 @@ test("inserts in date order and above the following entry's comment", () => {
   const doc = yaml.load(text);
   assert.deepEqual(
     doc.gigs.map((gig) => String(gig.date)),
-    ["2025-08-24", "2026-01-15", "2026-07-24", "2026-11-30"],
+    ["2025-08-24", "2026-01-15", "2026-07-24", "2026-11-30"]
   );
   // The Tomorrowland comment must still sit directly above the Tomorrowland gig.
   const lines = text.split("\n");
@@ -85,7 +95,7 @@ test("applies several gigs at once without disturbing the order", () => {
   assert.equal(applied.length, 3);
   assert.deepEqual(
     yaml.load(text).gigs.map((gig) => String(gig.date)),
-    ["2025-08-24", "2026-02-02", "2026-07-24", "2026-08-15", "2026-11-30", "2026-12-24"],
+    ["2025-08-24", "2026-02-02", "2026-07-24", "2026-08-15", "2026-11-30", "2026-12-24"]
   );
 });
 
@@ -100,7 +110,9 @@ test("leaves every pre-existing gig byte-identical", () => {
 });
 
 test("quotes values that would otherwise change meaning in YAML", () => {
-  const lines = formatGigBlock(candidate({ venue: "Bar: 22", city: "No", country: "UK" }), { eventId: "x-1" });
+  const lines = formatGigBlock(candidate({ venue: "Bar: 22", city: "No", country: "UK" }), {
+    eventId: "x-1",
+  });
   const parsed = yaml.load(lines.map((line) => line.replace(/^ {2}/, "")).join("\n"))[0];
   assert.equal(parsed.venue, "Bar: 22");
   assert.equal(parsed.city, "No", "the YAML 1.1 boolean 'No' must survive as a string");
@@ -113,8 +125,14 @@ test("backfilled past gigs carry no eventId and no ticketing fields", () => {
   // introduce a stale "ticketStatus: available" on a past date.
   const { text, applied } = insertGigsChecked(
     SAMPLE,
-    [candidate({ date: "2025-09-01", ticketLink: "https://skiddle.test/e/1", ticketStatus: "available" })],
-    { today: "2026-08-02" },
+    [
+      candidate({
+        date: "2025-09-01",
+        ticketLink: "https://skiddle.test/e/1",
+        ticketStatus: "available",
+      }),
+    ],
+    { today: "2026-08-02" }
   );
   assert.equal(applied[0].eventId, null, "history needs no eventId");
   const gig = yaml.load(text).gigs.find((entry) => String(entry.date) === "2025-09-01");
@@ -126,8 +144,14 @@ test("backfilled past gigs carry no eventId and no ticketing fields", () => {
 test("upcoming gigs keep their ticketing fields and gain an eventId", () => {
   const { text, applied } = insertGigsChecked(
     SAMPLE,
-    [candidate({ date: "2026-12-01", ticketLink: "https://skiddle.test/e/2", ticketStatus: "available" })],
-    { today: "2026-08-02" },
+    [
+      candidate({
+        date: "2026-12-01",
+        ticketLink: "https://skiddle.test/e/2",
+        ticketStatus: "available",
+      }),
+    ],
+    { today: "2026-08-02" }
   );
   assert.equal(applied[0].eventId, "egg-london-2026-12-01");
   const gig = yaml.load(text).gigs.find((entry) => String(entry.date) === "2026-12-01");
@@ -136,7 +160,10 @@ test("upcoming gigs keep their ticketing fields and gain an eventId", () => {
 });
 
 test("writes freeEntry instead of a ticket status when entry is free", () => {
-  const lines = formatGigBlock(candidate({ freeEntry: true, ticketLink: "https://skiddle.test/e/1" }), { eventId: "x-1" });
+  const lines = formatGigBlock(
+    candidate({ freeEntry: true, ticketLink: "https://skiddle.test/e/1" }),
+    { eventId: "x-1" }
+  );
   const block = lines.join("\n");
   assert.match(block, /freeEntry: true/);
   assert.doesNotMatch(block, /ticketStatus/);
@@ -168,7 +195,7 @@ gigs:
 `;
   assert.throws(
     () => insertGigsChecked(unordered, [candidate({ date: "2026-06-01" })]),
-    /oldest-to-newest/,
+    /oldest-to-newest/
   );
 });
 
@@ -181,7 +208,9 @@ test("reports rather than throws when a file has no gigs list", () => {
 
 test("round-trips against a real artist file", () => {
   const real = readFileSync("data/artists/04-frogr.yml", "utf8");
-  const { text, applied } = insertGigsChecked(real, [candidate({ date: "2026-09-19", venue: "Egg London" })]);
+  const { text, applied } = insertGigsChecked(real, [
+    candidate({ date: "2026-09-19", venue: "Egg London" }),
+  ]);
   assert.equal(applied.length, 1);
   const doc = yaml.load(text);
   assert.equal(doc.gigs.length, yaml.load(real).gigs.length + 1);

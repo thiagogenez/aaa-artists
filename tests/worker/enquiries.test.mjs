@@ -14,13 +14,15 @@ function validPayload(overrides = {}) {
     phone: "",
     whatsappNumber: "",
     whatsappUsername: "",
-    bookings: [{
-      artist: "Xijaro & Pitch",
-      timingMode: "duration",
-      durationMinutes: "60",
-      startTime: "",
-      finishTime: "",
-    }],
+    bookings: [
+      {
+        artist: "Xijaro & Pitch",
+        timingMode: "duration",
+        durationMinutes: "60",
+        startTime: "",
+        finishTime: "",
+      },
+    ],
     eventName: "",
     eventType: "",
     eventDate: "2026-12-01",
@@ -43,7 +45,10 @@ function validPayload(overrides = {}) {
 function request(payload, method = "POST", extraHeaders = {}) {
   return new Request("https://aaaartists.co/api/enquiries", {
     method,
-    headers: method === "POST" ? { "Content-Type": "application/json", "CF-Connecting-IP": "203.0.113.5", ...extraHeaders } : undefined,
+    headers:
+      method === "POST"
+        ? { "Content-Type": "application/json", "CF-Connecting-IP": "203.0.113.5", ...extraHeaders }
+        : undefined,
     body: method === "POST" ? JSON.stringify(payload) : undefined,
   });
 }
@@ -66,9 +71,14 @@ test("validates and emails a clean enquiry with a stable threaded reference", as
     assert.equal(init.headers["api-key"], "xkeysib-test-api-key");
     assert.equal(init.headers["Idempotency-Key"], SUBMISSION_ID);
     forwarded = JSON.parse(init.body);
-    return Response.json({ messageId: "<202607180101.123456789@smtp-relay.mailin.fr>" }, { status: 201 });
+    return Response.json(
+      { messageId: "<202607180101.123456789@smtp-relay.mailin.fr>" },
+      { status: 201 }
+    );
   };
-  context.after(() => { globalThis.fetch = originalFetch; });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
   const response = await worker.fetch(request(validPayload()), env());
   const result = await response.json();
@@ -93,7 +103,9 @@ test("routes non-production delivery to the local catcher and optional test BCC"
     forwarded = JSON.parse(init.body);
     return Response.json({ messageId: "<local@mail-catcher.test>" }, { status: 201 });
   };
-  context.after(() => { globalThis.fetch = originalFetch; });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
   const response = await worker.fetch(
     request(validPayload()),
@@ -101,7 +113,7 @@ test("routes non-production delivery to the local catcher and optional test BCC"
       ENVIRONMENT: "development",
       BREVO_API_BASE: "http://127.0.0.1:8025",
       BOOKING_BCC_OVERRIDE: "tester@example.com",
-    }),
+    })
   );
 
   assert.equal(response.status, 200);
@@ -126,7 +138,9 @@ test("ignores local email overrides in production", async (context) => {
     forwarded = JSON.parse(init.body);
     return Response.json({ messageId: "<production@smtp-relay.mailin.fr>" }, { status: 201 });
   };
-  context.after(() => { globalThis.fetch = originalFetch; });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
   const response = await worker.fetch(
     request(validPayload({ turnstileToken: "production-token" })),
@@ -135,7 +149,7 @@ test("ignores local email overrides in production", async (context) => {
       TURNSTILE_SECRET_KEY: "production-secret",
       BREVO_API_BASE: "https://attacker.example",
       BOOKING_BCC_OVERRIDE: "attacker@example.com",
-    }),
+    })
   );
 
   assert.equal(response.status, 200);
@@ -148,13 +162,23 @@ test("escapes customer content in the HTML confirmation", async (context) => {
   let forwarded;
   globalThis.fetch = async (_url, init) => {
     forwarded = JSON.parse(init.body);
-    return Response.json({ messageId: "<202607180101.123456789@smtp-relay.mailin.fr>" }, { status: 201 });
+    return Response.json(
+      { messageId: "<202607180101.123456789@smtp-relay.mailin.fr>" },
+      { status: 201 }
+    );
   };
-  context.after(() => { globalThis.fetch = originalFetch; });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
-  const response = await worker.fetch(request(validPayload({
-    message: '<img src=x onerror="alert(1)">',
-  })), env());
+  const response = await worker.fetch(
+    request(
+      validPayload({
+        message: '<img src=x onerror="alert(1)">',
+      })
+    ),
+    env()
+  );
   assert.equal(response.status, 200);
   assert.doesNotMatch(forwarded.htmlContent, /<img src=x/);
   assert.match(forwarded.htmlContent, /&lt;img src=x onerror=&quot;alert\(1\)&quot;&gt;/);
@@ -164,20 +188,45 @@ test("escapes customer content in the HTML confirmation", async (context) => {
 test("rejects invalid fields and honeypot submissions before delivery", async (context) => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = async () => { calls += 1; return Response.json({ ok: true }); };
-  context.after(() => { globalThis.fetch = originalFetch; });
+  globalThis.fetch = async () => {
+    calls += 1;
+    return Response.json({ ok: true });
+  };
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
   const invalidEmail = await worker.fetch(request(validPayload({ email: "not-an-email" })), env());
-  const honeypot = await worker.fetch(request(validPayload({ website: "https://spam.example" })), env());
-  const crlf = await worker.fetch(request(validPayload({ name: "Jane\r\nBcc: victim@example.com" })), env());
-  const invalidOption = await worker.fetch(request(validPayload({ eventType: "Injected option" })), env());
-  const conflictingWhatsApp = await worker.fetch(request(validPayload({
-    whatsappNumber: "+447400123456",
-    whatsappUsername: "@janebooker",
-  })), env());
+  const honeypot = await worker.fetch(
+    request(validPayload({ website: "https://spam.example" })),
+    env()
+  );
+  const crlf = await worker.fetch(
+    request(validPayload({ name: "Jane\r\nBcc: victim@example.com" })),
+    env()
+  );
+  const invalidOption = await worker.fetch(
+    request(validPayload({ eventType: "Injected option" })),
+    env()
+  );
+  const conflictingWhatsApp = await worker.fetch(
+    request(
+      validPayload({
+        whatsappNumber: "+447400123456",
+        whatsappUsername: "@janebooker",
+      })
+    ),
+    env()
+  );
   assert.deepEqual(
-    [invalidEmail.status, honeypot.status, crlf.status, invalidOption.status, conflictingWhatsApp.status],
-    [400, 400, 400, 400, 400],
+    [
+      invalidEmail.status,
+      honeypot.status,
+      crlf.status,
+      invalidOption.status,
+      conflictingWhatsApp.status,
+    ],
+    [400, 400, 400, 400, 400]
   );
   assert.equal(calls, 0);
 });
@@ -185,7 +234,7 @@ test("rejects invalid fields and honeypot submissions before delivery", async (c
 test("enforces actor rate limits and HTTP method", async () => {
   const limited = await worker.fetch(
     request(validPayload()),
-    env({ CONTACT_ACTOR_RATE_LIMIT: { limit: async () => ({ success: false }) } }),
+    env({ CONTACT_ACTOR_RATE_LIMIT: { limit: async () => ({ success: false }) } })
   );
   const wrongMethod = await worker.fetch(request(null, "GET"), env());
   assert.equal(limited.status, 429);
@@ -199,18 +248,29 @@ test("verifies Turnstile before consuming the email quota", async (context) => {
   let emailLimitCalls = 0;
   globalThis.fetch = async (url) => {
     if (String(url).includes("siteverify")) {
-      return Response.json({ success: false, action: "booking_enquiry", hostname: "aaaartists.co" });
+      return Response.json({
+        success: false,
+        action: "booking_enquiry",
+        hostname: "aaaartists.co",
+      });
     }
     throw new Error("Delivery should not run");
   };
-  context.after(() => { globalThis.fetch = originalFetch; });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
   const response = await worker.fetch(
     request(validPayload({ turnstileToken: "invalid-token" })),
     env({
       TURNSTILE_SECRET_KEY: "secret",
-      CONTACT_EMAIL_RATE_LIMIT: { limit: async () => { emailLimitCalls += 1; return { success: true }; } },
-    }),
+      CONTACT_EMAIL_RATE_LIMIT: {
+        limit: async () => {
+          emailLimitCalls += 1;
+          return { success: true };
+        },
+      },
+    })
   );
   assert.equal(response.status, 400);
   assert.equal(emailLimitCalls, 0);
@@ -226,15 +286,17 @@ test("requires the expected Turnstile action and hostname", async (context) => {
     if (String(url).includes("siteverify")) return Response.json(results.shift());
     throw new Error("Delivery should not run");
   };
-  context.after(() => { globalThis.fetch = originalFetch; });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
   const wrongAction = await worker.fetch(
     request(validPayload({ turnstileToken: "test-token" })),
-    env({ TURNSTILE_SECRET_KEY: "secret" }),
+    env({ TURNSTILE_SECRET_KEY: "secret" })
   );
   const wrongHost = await worker.fetch(
     request(validPayload({ turnstileToken: "test-token" })),
-    env({ TURNSTILE_SECRET_KEY: "secret" }),
+    env({ TURNSTILE_SECRET_KEY: "secret" })
   );
   assert.equal(wrongAction.status, 400);
   assert.equal(wrongHost.status, 400);
@@ -248,7 +310,7 @@ test("fails closed when production security bindings or secrets are missing", as
       BREVO_API_KEY: undefined,
       TURNSTILE_SECRET_KEY: undefined,
       CONTACT_EMAIL_RATE_LIMIT: undefined,
-    }),
+    })
   );
   const body = await response.json();
   assert.equal(response.status, 503);
@@ -257,7 +319,12 @@ test("fails closed when production security bindings or secrets are missing", as
 
 test("stops oversized streamed and dishonest-length bodies at 64 KiB", async () => {
   const oversized = new Uint8Array(BOOKING_LIMITS.bodyBytes + 1).fill(97);
-  const stream = new ReadableStream({ start(controller) { controller.enqueue(oversized); controller.close(); } });
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(oversized);
+      controller.close();
+    },
+  });
   const streamedRequest = new Request("https://aaaartists.co/api/enquiries", {
     method: "POST",
     headers: { "Content-Type": "application/json", "CF-Connecting-IP": "203.0.113.5" },
@@ -266,7 +333,11 @@ test("stops oversized streamed and dishonest-length bodies at 64 KiB", async () 
   });
   const dishonestRequest = new Request("https://aaaartists.co/api/enquiries", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Content-Length": "10", "CF-Connecting-IP": "203.0.113.5" },
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": "10",
+      "CF-Connecting-IP": "203.0.113.5",
+    },
     body: oversized,
   });
   assert.equal((await worker.fetch(streamedRequest, env())).status, 413);
@@ -275,8 +346,11 @@ test("stops oversized streamed and dishonest-length bodies at 64 KiB", async () 
 
 test("preserves email-provider retry semantics without exposing enquiry data", async (context) => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response("busy", { status: 429, headers: { "Retry-After": "120" } });
-  context.after(() => { globalThis.fetch = originalFetch; });
+  globalThis.fetch = async () =>
+    new Response("busy", { status: 429, headers: { "Retry-After": "120" } });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
   const response = await worker.fetch(request(validPayload()), env());
   const body = await response.json();
@@ -290,19 +364,25 @@ test("accepts Turnstile testing-key results only outside production", async (con
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
     if (String(url).includes("siteverify")) {
-      return Response.json({ success: true, hostname: "example.com", metadata: { result_with_testing_key: true } });
+      return Response.json({
+        success: true,
+        hostname: "example.com",
+        metadata: { result_with_testing_key: true },
+      });
     }
     return Response.json({ ok: true });
   };
-  context.after(() => { globalThis.fetch = originalFetch; });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
 
   const staging = await worker.fetch(
     request(validPayload({ turnstileToken: "XXXX.DUMMY.TOKEN.XXXX" })),
-    env({ ENVIRONMENT: "staging", TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA" }),
+    env({ ENVIRONMENT: "staging", TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA" })
   );
   const production = await worker.fetch(
     request(validPayload({ turnstileToken: "XXXX.DUMMY.TOKEN.XXXX" })),
-    env({ ENVIRONMENT: "production", TURNSTILE_SECRET_KEY: "real-secret" }),
+    env({ ENVIRONMENT: "production", TURNSTILE_SECRET_KEY: "real-secret" })
   );
   assert.equal(staging.status, 200);
   assert.equal(production.status, 400);
@@ -312,11 +392,11 @@ test("marks non-production asset responses noindex and leaves production untouch
   const asset = () => new Response("asset", { headers: { "Content-Type": "text/html" } });
   const staging = await worker.fetch(
     new Request("https://aaa-artists-staging.example.workers.dev/"),
-    env({ ENVIRONMENT: "staging", ASSETS: { fetch: async () => asset() } }),
+    env({ ENVIRONMENT: "staging", ASSETS: { fetch: async () => asset() } })
   );
   const production = await worker.fetch(
     new Request("https://aaaartists.co/"),
-    env({ ENVIRONMENT: "production", ASSETS: { fetch: async () => asset() } }),
+    env({ ENVIRONMENT: "production", ASSETS: { fetch: async () => asset() } })
   );
   assert.equal(staging.status, 200);
   assert.equal(staging.headers.get("X-Robots-Tag"), "noindex");
@@ -336,7 +416,10 @@ test("redirects HTTP apex and www to the HTTPS canonical origin", async () => {
 
 test("permanently redirects the retired /events page to the roster", async () => {
   const bare = await worker.fetch(new Request("https://aaaartists.co/events"), env());
-  const trailing = await worker.fetch(new Request("https://aaaartists.co/events/?ref=flyer"), env());
+  const trailing = await worker.fetch(
+    new Request("https://aaaartists.co/events/?ref=flyer"),
+    env()
+  );
   assert.equal(bare.status, 301);
   assert.equal(bare.headers.get("Location"), "https://aaaartists.co/artists");
   assert.equal(trailing.status, 301);

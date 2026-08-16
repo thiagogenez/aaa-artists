@@ -64,7 +64,9 @@ export default function TurnstileWidget({ siteKey }: { siteKey: string }) {
       <div ref={containerRef} />
       {status && (
         <div className="mt-3 flex flex-wrap items-center gap-3" role="alert" aria-live="assertive">
-          <p className="text-xs" style={{ color: "var(--error)" }}>{status}</p>
+          <p className="text-xs" style={{ color: "var(--error)" }}>
+            {status}
+          </p>
           <button
             type="button"
             className="btn-outline min-h-[44px] px-3 text-xs font-semibold uppercase tracking-widest"

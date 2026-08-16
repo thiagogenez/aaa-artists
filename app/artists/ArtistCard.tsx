@@ -13,25 +13,38 @@ export type ArtistCardData = {
   image: string;
 };
 
-export default function ArtistCard({ artist, priority = false }: { artist: ArtistCardData; priority?: boolean }) {
+export default function ArtistCard({
+  artist,
+  priority = false,
+}: {
+  artist: ArtistCardData;
+  priority?: boolean;
+}) {
   const [open, setOpen] = useState(false);
 
   const profileHref = `/artist/${artist.slug}`;
   const actionsId = `artist-card-${artist.slug}-actions`;
   // Pointer devices reveal the actions on hover/focus; touch devices on the first tap.
-  const canHover = () => typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches;
+  const canHover = () =>
+    typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches;
 
   return (
     <div
       className="group relative mx-auto aspect-square w-full max-w-md touch-manipulation select-none overflow-hidden border sm:max-w-none lg:aspect-auto lg:h-[380px]"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}
-      onMouseEnter={() => { if (canHover()) setOpen(true); }}
-      onMouseLeave={() => { if (canHover()) setOpen(false); }}
+      onMouseEnter={() => {
+        if (canHover()) setOpen(true);
+      }}
+      onMouseLeave={() => {
+        if (canHover()) setOpen(false);
+      }}
       onFocus={() => setOpen(true)}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
       }}
-      onClick={() => { if (!canHover()) setOpen((o) => !o); }}
+      onClick={() => {
+        if (!canHover()) setOpen((o) => !o);
+      }}
     >
       <Image
         src={artist.image}
@@ -39,7 +52,10 @@ export default function ArtistCard({ artist, priority = false }: { artist: Artis
         fill
         priority={priority}
         className="object-cover transition-transform duration-300"
-        style={{ filter: "var(--artist-photo-filter)", transform: open ? "scale(1.04)" : "scale(1)" }}
+        style={{
+          filter: "var(--artist-photo-filter)",
+          transform: open ? "scale(1.04)" : "scale(1)",
+        }}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
       />
 
@@ -88,7 +104,13 @@ export default function ArtistCard({ artist, priority = false }: { artist: Artis
           style={{ backgroundColor: "#ffffff", color: "#0a0a0a" }}
         >
           View Profile
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg
+            className="h-3.5 w-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Link>

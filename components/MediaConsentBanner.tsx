@@ -22,7 +22,7 @@ export default function MediaConsentBanner() {
   const hydrated = useSyncExternalStore(
     subscribeToHydration,
     getClientHydration,
-    getServerHydration,
+    getServerHydration
   );
 
   if (!hydrated || consent !== "unset") return null;
@@ -34,7 +34,10 @@ export default function MediaConsentBanner() {
       className="media-consent-banner fixed inset-x-0 bottom-0 z-[90] border-t px-6 py-4"
     >
       <div className="site-shell flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-2xl text-sm leading-relaxed" style={{ color: "var(--media-banner-muted)" }}>
+        <p
+          className="max-w-2xl text-sm leading-relaxed"
+          style={{ color: "var(--media-banner-muted)" }}
+        >
           We&apos;d like to load music and video players from SoundCloud, Spotify and YouTube. They
           receive your IP address and set cookies under their own terms. Nothing loads until you
           choose.{" "}

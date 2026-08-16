@@ -9,7 +9,6 @@ import {
   EMAIL_PATTERN,
   EVENT_TYPES,
   HEAR_ABOUT_OPTIONS,
-  TIME_PATTERN,
   TICKETING_OPTIONS,
   UUID_PATTERN,
   durationBetween,
@@ -39,7 +38,12 @@ function json(status, body, headers = {}) {
 function text(value, maxLength, required = false) {
   if (typeof value !== "string") return required ? null : "";
   const clean = value.trim();
-  if ((required && !clean) || clean.length > maxLength || /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(clean)) return null;
+  if (
+    (required && !clean) ||
+    clean.length > maxLength ||
+    /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(clean)
+  )
+    return null;
   return clean;
 }
 
@@ -60,14 +64,16 @@ function validDate(value) {
 }
 
 function validateBookings(value) {
-  if (!Array.isArray(value) || value.length < 1 || value.length > BOOKING_LIMITS.artists) return null;
+  if (!Array.isArray(value) || value.length < 1 || value.length > BOOKING_LIMITS.artists)
+    return null;
   const seen = new Set();
   const bookings = [];
 
   for (const item of value) {
     if (!item || typeof item !== "object" || Array.isArray(item)) return null;
     const artist = singleLine(item.artist, BOOKING_LIMITS.artist, true);
-    const timingMode = item.timingMode === "duration" || item.timingMode === "times" ? item.timingMode : null;
+    const timingMode =
+      item.timingMode === "duration" || item.timingMode === "times" ? item.timingMode : null;
     const durationMinutes = text(item.durationMinutes, 3);
     const startTime = text(item.startTime, 5);
     const finishTime = text(item.finishTime, 5);
@@ -90,7 +96,15 @@ function validatePayload(input) {
   const submissionId = singleLine(input.submissionId, BOOKING_LIMITS.submissionId, true);
   const website = text(input.website, 200);
   const turnstileToken = text(input.turnstileToken, 2048);
-  if (!name || !email || !EMAIL_PATTERN.test(email) || !eventDate || !validDate(eventDate) || !bookings) return null;
+  if (
+    !name ||
+    !email ||
+    !EMAIL_PATTERN.test(email) ||
+    !eventDate ||
+    !validDate(eventDate) ||
+    !bookings
+  )
+    return null;
   if (!submissionId || !UUID_PATTERN.test(submissionId)) return null;
   if (website === null || website) return null;
 
@@ -114,16 +128,34 @@ function validatePayload(input) {
     whatsappNumber,
     whatsappUsername,
     eventName: singleLine(input.eventName, BOOKING_LIMITS.eventName),
-    eventType: optionalAllowed(singleLine(input.eventType, BOOKING_LIMITS.eventType), ALLOWED_EVENT_TYPES),
+    eventType: optionalAllowed(
+      singleLine(input.eventType, BOOKING_LIMITS.eventType),
+      ALLOWED_EVENT_TYPES
+    ),
     venue: singleLine(input.venue, BOOKING_LIMITS.venue),
     city: singleLine(input.city, BOOKING_LIMITS.city),
     country: singleLine(input.country, BOOKING_LIMITS.country),
-    capacity: optionalAllowed(singleLine(input.capacity, BOOKING_LIMITS.capacity), ALLOWED_CAPACITIES),
-    ticketing: optionalAllowed(singleLine(input.ticketing, BOOKING_LIMITS.ticketing), ALLOWED_TICKETING),
-    currency: optionalAllowed(singleLine(input.currency, BOOKING_LIMITS.currency), ALLOWED_CURRENCIES),
-    budgetRange: optionalAllowed(singleLine(input.budgetRange, BOOKING_LIMITS.budgetRange), ALLOWED_BUDGETS),
+    capacity: optionalAllowed(
+      singleLine(input.capacity, BOOKING_LIMITS.capacity),
+      ALLOWED_CAPACITIES
+    ),
+    ticketing: optionalAllowed(
+      singleLine(input.ticketing, BOOKING_LIMITS.ticketing),
+      ALLOWED_TICKETING
+    ),
+    currency: optionalAllowed(
+      singleLine(input.currency, BOOKING_LIMITS.currency),
+      ALLOWED_CURRENCIES
+    ),
+    budgetRange: optionalAllowed(
+      singleLine(input.budgetRange, BOOKING_LIMITS.budgetRange),
+      ALLOWED_BUDGETS
+    ),
     lineup: text(input.lineup, BOOKING_LIMITS.lineup),
-    hearAbout: optionalAllowed(singleLine(input.hearAbout, BOOKING_LIMITS.hearAbout), ALLOWED_REFERRALS),
+    hearAbout: optionalAllowed(
+      singleLine(input.hearAbout, BOOKING_LIMITS.hearAbout),
+      ALLOWED_REFERRALS
+    ),
     message: text(input.message, BOOKING_LIMITS.message),
   };
   return Object.values(fields).some((value) => value === null) ? null : fields;
@@ -184,7 +216,8 @@ async function verifyTurnstile(request, env, token) {
   // Cloudflare's always-pass test keys return no action and hostname "example.com",
   // flagged by metadata.result_with_testing_key. Accept them only outside production
   // so staging exercises the full siteverify path without the real widget secret.
-  if (env.ENVIRONMENT !== "production" && result.metadata?.result_with_testing_key === true) return true;
+  if (env.ENVIRONMENT !== "production" && result.metadata?.result_with_testing_key === true)
+    return true;
   if (result.action !== "booking_enquiry") return false;
   return result.hostname === (env.TURNSTILE_HOSTNAME || SITE_HOSTNAME);
 }
@@ -202,23 +235,30 @@ function productionConfigurationIssue(env) {
 
 function enquirySubject(payload) {
   const artistNames = payload.bookings.map((booking) => booking.artist);
-  const subjectArtists = artistNames.length > 2
-    ? `${artistNames.slice(0, 2).join(", ")} +${artistNames.length - 2}`
-    : artistNames.join(", ");
+  const subjectArtists =
+    artistNames.length > 2
+      ? `${artistNames.slice(0, 2).join(", ")} +${artistNames.length - 2}`
+      : artistNames.join(", ");
   return `Booking enquiry [${payload.submissionId.slice(0, 8).toUpperCase()}]${subjectArtists ? `: ${subjectArtists}` : ""}`;
 }
 
 function enquiryDetails(payload) {
-  const schedule = payload.bookings.map((booking, index) => {
-    if (booking.timingMode === "duration") {
-      return `${index + 1}. ${booking.artist} — ${formatDuration(booking.durationMinutes)} set · times TBC`;
-    }
-    const duration = booking.startTime ? durationBetween(booking.startTime, booking.finishTime) : "";
-    return `${index + 1}. ${booking.artist}${booking.startTime ? ` — ${booking.startTime}–${booking.finishTime} — ${duration}` : " — Exact times TBC"}`;
-  }).join("\n");
+  const schedule = payload.bookings
+    .map((booking, index) => {
+      if (booking.timingMode === "duration") {
+        return `${index + 1}. ${booking.artist} — ${formatDuration(booking.durationMinutes)} set · times TBC`;
+      }
+      const duration = booking.startTime
+        ? durationBetween(booking.startTime, booking.finishTime)
+        : "";
+      return `${index + 1}. ${booking.artist}${booking.startTime ? ` — ${booking.startTime}–${booking.finishTime} — ${duration}` : " — Exact times TBC"}`;
+    })
+    .join("\n");
   const location = [payload.venue, payload.city, payload.country].filter(Boolean).join(", ");
   const budget = payload.budgetRange
-    ? payload.budgetRange === "Prefer to discuss" ? payload.budgetRange : `${payload.budgetRange} ${payload.currency}`
+    ? payload.budgetRange === "Prefer to discuss"
+      ? payload.budgetRange
+      : `${payload.budgetRange} ${payload.currency}`
     : "";
 
   return {
@@ -268,11 +308,15 @@ export function enquiryEmail(payload, bookingAddress = BOOKING_EMAIL) {
     "",
     SITE_NAME,
   ].join("\n");
-  const rows = Object.entries(details).map(([label, value]) => `
+  const rows = Object.entries(details)
+    .map(
+      ([label, value]) => `
     <tr>
       <th align="left" valign="top" style="padding:8px 12px 8px 0;font-size:13px;color:#666;font-weight:600;white-space:nowrap">${escapeHtml(label)}</th>
       <td style="padding:8px 0;font-size:14px;color:#111;line-height:1.5">${escapeHtml(value).replaceAll("\n", "<br>")}</td>
-    </tr>`).join("");
+    </tr>`
+    )
+    .join("");
   const htmlBody = `<!doctype html>
 <html lang="en">
   <body style="margin:0;padding:0;background:#f5f5f5;color:#111;font-family:Arial,sans-serif">
@@ -307,16 +351,33 @@ async function handleEnquiry(request, env) {
   try {
     const configurationIssue = productionConfigurationIssue(env);
     if (configurationIssue) {
-      console.error(JSON.stringify({ event: "enquiry_security_unconfigured", requestId, missing: configurationIssue }));
-      return json(503, { error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.` });
+      console.error(
+        JSON.stringify({
+          event: "enquiry_security_unconfigured",
+          requestId,
+          missing: configurationIssue,
+        })
+      );
+      return json(503, {
+        error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.`,
+      });
     }
     const actorKey = await sha256(request.headers.get("CF-Connecting-IP") || "unknown-actor");
     if (!(await withinLimit(env.CONTACT_ACTOR_RATE_LIMIT, actorKey))) {
       console.warn(JSON.stringify({ event: "enquiry_rate_limited", scope: "actor", requestId }));
-      return json(429, { error: "Too many enquiries were sent from this connection. Please wait a minute and try again.", requestId }, { "Retry-After": "60" });
+      return json(
+        429,
+        {
+          error:
+            "Too many enquiries were sent from this connection. Please wait a minute and try again.",
+          requestId,
+        },
+        { "Retry-After": "60" }
+      );
     }
     const contentLength = Number(request.headers.get("Content-Length") ?? 0);
-    if (contentLength > BOOKING_LIMITS.bodyBytes) return json(413, { error: "This enquiry is too large to send." });
+    if (contentLength > BOOKING_LIMITS.bodyBytes)
+      return json(413, { error: "This enquiry is too large to send." });
     if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("application/json")) {
       return json(415, { error: "Unsupported request format." });
     }
@@ -327,7 +388,8 @@ async function handleEnquiry(request, env) {
     } catch {
       return json(400, { error: "The enquiry could not be read.", requestId });
     }
-    if (rawBody === null) return json(413, { error: "This enquiry is too large to send.", requestId });
+    if (rawBody === null)
+      return json(413, { error: "This enquiry is too large to send.", requestId });
     let input;
     try {
       input = JSON.parse(rawBody);
@@ -335,21 +397,34 @@ async function handleEnquiry(request, env) {
       return json(400, { error: "The enquiry could not be read.", requestId });
     }
     const payload = validatePayload(input);
-    if (!payload) return json(400, { error: "Please check the enquiry details and try again.", requestId });
+    if (!payload)
+      return json(400, { error: "Please check the enquiry details and try again.", requestId });
 
     if (!(await verifyTurnstile(request, env, payload.turnstileToken))) {
       console.warn(JSON.stringify({ event: "enquiry_turnstile_failed", requestId }));
-      return json(400, { error: "The security check expired or failed. Please try again.", requestId });
+      return json(400, {
+        error: "The security check expired or failed. Please try again.",
+        requestId,
+      });
     }
 
     const emailKey = await sha256(payload.email.toLowerCase());
     if (!(await withinLimit(env.CONTACT_EMAIL_RATE_LIMIT, emailKey))) {
       console.warn(JSON.stringify({ event: "enquiry_rate_limited", scope: "email", requestId }));
-      return json(429, { error: "Too many enquiries were sent for this email address. Please wait and try again.", requestId }, { "Retry-After": "60" });
+      return json(
+        429,
+        {
+          error: "Too many enquiries were sent for this email address. Please wait and try again.",
+          requestId,
+        },
+        { "Retry-After": "60" }
+      );
     }
     if (!env.BREVO_API_KEY) {
       console.error(JSON.stringify({ event: "enquiry_delivery_unconfigured", requestId }));
-      return json(503, { error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.` });
+      return json(503, {
+        error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.`,
+      });
     }
 
     // Brevo deduplicates on a UUID Idempotency-Key for 30 minutes, which covers
@@ -358,9 +433,10 @@ async function handleEnquiry(request, env) {
     // and writes the email to disk, so the whole form can be exercised without an
     // API key and without emailing anyone. Ignored outside non-production so a
     // stray variable can never divert real booking mail.
-    const brevoEndpoint = env.ENVIRONMENT !== "production" && env.BREVO_API_BASE
-      ? `${env.BREVO_API_BASE}/v3/smtp/email`
-      : "https://api.brevo.com/v3/smtp/email";
+    const brevoEndpoint =
+      env.ENVIRONMENT !== "production" && env.BREVO_API_BASE
+        ? `${env.BREVO_API_BASE}/v3/smtp/email`
+        : "https://api.brevo.com/v3/smtp/email";
     const response = await fetch(brevoEndpoint, {
       method: "POST",
       headers: {
@@ -373,37 +449,51 @@ async function handleEnquiry(request, env) {
       // against a real Brevo key reaches only the tester and never the agency's
       // shared inbox. In production the override is ignored and the BCC is always
       // the real booking address.
-      body: JSON.stringify(enquiryEmail(
-        payload,
-        env.ENVIRONMENT !== "production" && env.BOOKING_BCC_OVERRIDE
-          ? env.BOOKING_BCC_OVERRIDE
-          : BOOKING_EMAIL,
-      )),
+      body: JSON.stringify(
+        enquiryEmail(
+          payload,
+          env.ENVIRONMENT !== "production" && env.BOOKING_BCC_OVERRIDE
+            ? env.BOOKING_BCC_OVERRIDE
+            : BOOKING_EMAIL
+        )
+      ),
       signal: AbortSignal.timeout(10_000),
     });
     if (response.status === 429) {
       console.warn(JSON.stringify({ event: "enquiry_delivery_rate_limited", requestId }));
-      return json(429, { error: "The booking service is temporarily busy. Please wait and try again.", requestId }, {
-        "Retry-After": response.headers.get("Retry-After") || "60",
-      });
+      return json(
+        429,
+        { error: "The booking service is temporarily busy. Please wait and try again.", requestId },
+        {
+          "Retry-After": response.headers.get("Retry-After") || "60",
+        }
+      );
     }
     if (!response.ok) throw new Error(`Email delivery returned ${response.status}`);
     console.log(JSON.stringify({ event: "enquiry_delivered", requestId }));
     return json(200, { ok: true, requestId });
   } catch (error) {
-    console.error(JSON.stringify({
-      event: "enquiry_delivery_failed",
+    console.error(
+      JSON.stringify({
+        event: "enquiry_delivery_failed",
+        requestId,
+        reason: error instanceof Error ? error.name : "unknown",
+      })
+    );
+    return json(502, {
+      error: `Something went wrong sending your enquiry. Please email ${BOOKING_EMAIL} directly.`,
       requestId,
-      reason: error instanceof Error ? error.name : "unknown",
-    }));
-    return json(502, { error: `Something went wrong sending your enquiry. Please email ${BOOKING_EMAIL} directly.`, requestId });
+    });
   }
 }
 
 const worker = {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if ((url.hostname === SITE_HOSTNAME && url.protocol === "http:") || url.hostname === `www.${SITE_HOSTNAME}`) {
+    if (
+      (url.hostname === SITE_HOSTNAME && url.protocol === "http:") ||
+      url.hostname === `www.${SITE_HOSTNAME}`
+    ) {
       url.protocol = "https:";
       url.hostname = SITE_HOSTNAME;
       return Response.redirect(url, 308);

@@ -68,11 +68,11 @@ export function normalizeCountry(country) {
 
 export function isUsableCandidate(candidate) {
   return Boolean(
-    candidate
-    && DATE_PATTERN.test(String(candidate.date ?? ""))
-    && String(candidate.venue ?? "").trim()
-    && String(candidate.city ?? "").trim()
-    && String(candidate.country ?? "").trim(),
+    candidate &&
+      DATE_PATTERN.test(String(candidate.date ?? "")) &&
+      String(candidate.venue ?? "").trim() &&
+      String(candidate.city ?? "").trim() &&
+      String(candidate.country ?? "").trim()
   );
 }
 
@@ -88,9 +88,11 @@ export function isUpcoming(date, today) {
  *  listing, and a verified ticket status more useful still — but neither is
  *  invented here, both come from the source. */
 function score(candidate) {
-  return (candidate.ticketStatus ? 4 : 0)
-    + (candidate.ticketLink ? 2 : 0)
-    + (candidate.freeEntry ? 1 : 0);
+  return (
+    (candidate.ticketStatus ? 4 : 0) +
+    (candidate.ticketLink ? 2 : 0) +
+    (candidate.freeEntry ? 1 : 0)
+  );
 }
 
 /** Merge two records of the same gig, preferring the richer one but keeping any
@@ -101,7 +103,9 @@ function combine(existing, next) {
   // A source reporting free entry and another reporting a ticket status
   // contradict each other; drop the status rather than assert both.
   if (merged.freeEntry && merged.ticketStatus) delete merged.ticketStatus;
-  merged.sources = [...new Set([...(existing.sources ?? [existing.source]), ...(next.sources ?? [next.source])])].filter(Boolean);
+  merged.sources = [
+    ...new Set([...(existing.sources ?? [existing.source]), ...(next.sources ?? [next.source])]),
+  ].filter(Boolean);
   return merged;
 }
 
@@ -120,7 +124,8 @@ export function mergeCandidates(lists, today = new Date().toISOString().slice(0,
     byKey.set(key, existing ? combine(existing, seeded) : seeded);
   }
   return [...byKey.values()].sort(
-    (a, b) => a.date.localeCompare(b.date) || normalizeVenue(a.venue).localeCompare(normalizeVenue(b.venue)),
+    (a, b) =>
+      a.date.localeCompare(b.date) || normalizeVenue(a.venue).localeCompare(normalizeVenue(b.venue))
   );
 }
 
@@ -140,7 +145,7 @@ export function diffAgainstExisting(candidates, existingGigs) {
 
   for (const candidate of candidates) {
     const match = known.find(
-      (gig) => String(gig.date) === candidate.date && sameVenue(gig.venue, candidate.venue),
+      (gig) => String(gig.date) === candidate.date && sameVenue(gig.venue, candidate.venue)
     );
 
     if (!match) {
@@ -149,7 +154,7 @@ export function diffAgainstExisting(candidates, existingGigs) {
       // venue may be named quite differently (a festival's name versus its site),
       // so this is surfaced for a person rather than merged or added.
       const tbc = known.find(
-        (gig) => String(gig.date).length === 7 && candidate.date.startsWith(`${gig.date}-`),
+        (gig) => String(gig.date).length === 7 && candidate.date.startsWith(`${gig.date}-`)
       );
       if (tbc) {
         dateConfirmations.push({ candidate, existing: tbc });

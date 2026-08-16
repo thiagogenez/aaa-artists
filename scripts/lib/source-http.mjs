@@ -52,6 +52,8 @@ export function isoDate(value) {
 /** Collapse whitespace and drop empties, so blank venue strings never pass
  *  the candidate check as "present". */
 export function text(value) {
-  const cleaned = String(value ?? "").replace(/\s+/g, " ").trim();
+  const cleaned = String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
   return cleaned === "" ? undefined : cleaned;
 }
