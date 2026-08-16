@@ -36,8 +36,12 @@
   `checks / verify` and `checks / browser`; production is a separate manual dispatch.
 - Commits are signed and signing only works in the maintainer's terminal. Stage the files, then
   hand over exact `git commit` / `git push` / `gh pr create` commands grouped by logical block.
-  Never bypass with `--no-gpg-sign`. Never use `git checkout -- .` or `git reset --hard` to undo
-  a tool's edits; it discards unrelated work in the same tree.
+  Never bypass with `--no-gpg-sign`. `npm install` activates `.githooks/pre-commit`; never bypass
+  its `npm run check:pre-commit` gate with `--no-verify`. Never use `git checkout -- .` or
+  `git reset --hard` to undo a tool's edits; it discards unrelated work in the same tree.
+- Before handing over a commit command, verify that `git config --get core.hooksPath` returns
+  `.githooks`. If it does not, run `npm run hooks:install`. The agent runs and records
+  `npm run check:pre-commit` before staging; the maintainer's signed commit runs the hook again.
 - **Findings discovered while working are not optional paperwork.** Fixed inside the change →
   `## Change`, plus a comment on the issue when it was outside the original scope. Found but not
   fixed → **its own issue, before the PR is opened**. A limitation of what was built →

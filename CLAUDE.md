@@ -90,8 +90,12 @@ Repository: **`thiagogenez/aaa-artists`** (the local checkout directory is `webp
 Agent-specific note: commits in this repository are **signed**, and signing only works in
 Thiago's own terminal. An agent stages the files and hands over the exact
 `git commit` / `git push` / `gh pr create` commands, grouped by logical block. Never bypass
-signing with `--no-gpg-sign`, and never use `git checkout -- .` or `git reset --hard` to undo a
-tool's edits — it silently discards unrelated work in the same tree.
+signing with `--no-gpg-sign`. `npm install` activates `.githooks/pre-commit`, which runs
+`npm run check:pre-commit`; never bypass it with `--no-verify`. Never use `git checkout -- .` or
+`git reset --hard` to undo a tool's edits — it silently discards unrelated work in the same tree.
+Before handing over a commit command, verify that `git config --get core.hooksPath` returns
+`.githooks`; run `npm run hooks:install` if it does not. The agent runs and records
+`npm run check:pre-commit` before staging, and the maintainer's signed commit runs it again.
 
 ## Code quality
 

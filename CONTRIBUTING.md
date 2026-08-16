@@ -39,6 +39,12 @@ The rules for public examples apply here too: use fictional paths and identities
 from the command that printed it. Do not invent a clean-looking result. Dependabot pull requests
 are not exempt from `Before` and `After`; add those sections before merging an automated update.
 
+`npm install` activates the versioned pre-commit hook. It runs the quality gate and tooling tests
+before Git creates a commit, including the test that checks the PR-description workflow can load
+its validator. For a checkout whose dependencies were installed before the hook existed, run
+`npm run hooks:install` once. Agents verify the configured hook path before handing over a commit.
+Do not bypass it with `--no-verify`; fix the failure before signing the commit.
+
 Commits are signed by the repository owner. An agent or contributor prepares and stages a change,
 then the owner creates the signed commit. A maintainer may land contributed work through a squash
 merge so the signed, validated pull request title becomes the commit on `main`.

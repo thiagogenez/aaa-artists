@@ -47,6 +47,7 @@ Closes #
 | Check | Command | Result |
 | --- | --- | --- |
 | Content | `npm run check` | |
+| Pre-commit gate | `npm run check:pre-commit` | |
 | Quality gate | `npm run check:quality` | |
 | Unit + integration | `npm test` | |
 | Coverage | `npm run test:coverage` | |
