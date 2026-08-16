@@ -26,10 +26,11 @@ const commitlintConfig = {
         "revert", // reverts a previous commit
       ],
     ],
-    // The repository wraps prose at 100 columns; commit subjects stay shorter than that.
-    "header-max-length": [2, "always", 100],
+    // Prefer subjects at or below 50 characters; 72 is the hard outside limit.
+    "header-max-length": [2, "always", 72],
     "body-max-line-length": [1, "always", 100],
-    "subject-case": [2, "never", ["pascal-case", "upper-case"]],
+    "subject-case": [2, "never", ["sentence-case", "start-case", "pascal-case", "upper-case"]],
+    "subject-full-stop": [2, "never", "."],
     "scope-case": [2, "always", "kebab-case"],
   },
 };

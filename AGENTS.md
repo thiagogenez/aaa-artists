@@ -16,21 +16,32 @@
   pull request and comment bodies must not, because GitHub turns a single newline into a real
   line break and wrapped prose renders as a staircase. One long line per paragraph and per list
   item.
-- **Every pull request must contain all five of these**, and
+- **Every human pull request must contain all eight of these**, and
   `.github/workflows/commit-style.yml` fails the PR when one is missing or left empty:
   1. the related issue (`Closes #N`, or `Refs #N` for partial work);
-  2. `## Change` — what changed, including anything deliberately left out;
-  3. `## Verification` — how it was validated, stating what was **actually run** and the
+  2. `## Problem` — what was wrong or missing, with reproducible evidence;
+  3. `## Before` — an input and its result before the change;
+  4. `## After` — the same input and its result with the change;
+  5. `## Change` — how the new result was implemented, including anything deliberately left out;
+  6. `## Verification` — how it was validated, stating what was **actually run** and the
      result, hand checks included ("not tested on a real phone" is a valid entry);
-  4. `## Risks and limitations` — what could break, what no test covers, what only fails in
+  7. `## Risks and limitations` — what could break, what no test covers, what only fails in
      production (Cloudflare, Brevo, Turnstile, real devices), and how to undo it;
-  5. `## Next steps` — follow-up work left out, as issue numbers where they exist, or "none".
+  8. `## Next steps` — follow-up work left out, as issue numbers where they exist, or "none".
+- Keep `## Root cause` for fixes; delete it when it does not apply. Before and After repeat the same
+  command, route and viewport, or reader task; output is copied, never invented. Dependabot is
+  exempt from the issue and full human record, but it still requires `## Before` and `## After`.
+  Full writing guidance and title rules live in `CONTRIBUTING.md`.
 - Deploys are managed through PRs: merging to `main` deploys staging automatically after
   `checks / verify` and `checks / browser`; production is a separate manual dispatch.
 - Commits are signed and signing only works in the maintainer's terminal. Stage the files, then
   hand over exact `git commit` / `git push` / `gh pr create` commands grouped by logical block.
-  Never bypass with `--no-gpg-sign`. Never use `git checkout -- .` or `git reset --hard` to undo
-  a tool's edits; it discards unrelated work in the same tree.
+  Never bypass with `--no-gpg-sign`. `npm install` activates `.githooks/pre-commit`; never bypass
+  its `npm run check:pre-commit` gate with `--no-verify`. Never use `git checkout -- .` or
+  `git reset --hard` to undo a tool's edits; it discards unrelated work in the same tree.
+- Before handing over a commit command, verify that `git config --get core.hooksPath` returns
+  `.githooks`. If it does not, run `npm run hooks:install`. The agent runs and records
+  `npm run check:pre-commit` before staging; the maintainer's signed commit runs the hook again.
 - **Findings discovered while working are not optional paperwork.** Fixed inside the change →
   `## Change`, plus a comment on the issue when it was outside the original scope. Found but not
   fixed → **its own issue, before the PR is opened**. A limitation of what was built →

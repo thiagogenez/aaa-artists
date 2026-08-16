@@ -66,9 +66,8 @@ generated artist JSON must be accessed through `data/artists.ts`.
 request *and* against the pull request title, because squash-merging turns the title into the
 commit on `main`.
 
-It is deliberately **not** a local husky `commit-msg` hook: commits here are signed from the
-maintainer's own terminal, and a hook in that path risks breaking the one place where signing
-works. To check locally before pushing:
+The repository does not install a `commit-msg` hook: commits here are signed from the maintainer's
+own terminal. To check a range locally before pushing:
 
 ```bash
 npm run lint:commits
@@ -76,6 +75,24 @@ npm run lint:commits
 
 The same workflow also fails a pull request whose description does not reference an issue
 (`Closes #N` or `Refs #N`), which is the enforcement behind the standard in `CLAUDE.md`.
+
+## Local pre-commit gate
+
+`npm install` runs `prepare`, which points Git at the versioned `.githooks/` directory. The
+pre-commit hook then runs:
+
+```bash
+npm run check:pre-commit   # check:quality + test:tooling
+```
+
+The tooling suite includes a structural test for the PR-description job: checkout and Node setup
+must happen before the job invokes `scripts/validate-pr-body.mjs`. That test covers the failure
+first seen on PR #75, where ordinary linting passed but GitHub could not load the script because
+the job had no checkout step.
+
+The hook is a local feedback loop, not the merge authority. A new clone has no active hook until
+`npm install` runs, and local hooks can be removed from Git configuration; GitHub CI therefore
+repeats the gates and remains authoritative.
 
 ## Mutation testing
 
