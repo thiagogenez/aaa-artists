@@ -223,7 +223,7 @@ test("escapes customer content in the HTML confirmation", async (context) => {
   assert.match(forwarded.textContent, /<img src=x onerror="alert\(1\)">/);
 });
 
-test("rejects invalid fields and honeypot submissions before delivery", async (context) => {
+test("rejects invalid fields, header injection and honeypot submissions before delivery", async (context) => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
   globalThis.fetch = async () => {
@@ -241,6 +241,23 @@ test("rejects invalid fields and honeypot submissions before delivery", async (c
   );
   const crlf = await worker.fetch(
     request(validPayload({ name: "Jane\r\nBcc: victim@example.com" })),
+    env()
+  );
+  const emailCrlf = await worker.fetch(
+    request(validPayload({ email: "jane@example.com\r\nBcc:victim@example.com" })),
+    env()
+  );
+  const artistCrlf = await worker.fetch(
+    request(
+      validPayload({
+        bookings: [
+          {
+            ...validPayload().bookings[0],
+            artist: "Xijaro & Pitch\r\nBcc: victim@example.com",
+          },
+        ],
+      })
+    ),
     env()
   );
   const invalidOption = await worker.fetch(
@@ -261,10 +278,12 @@ test("rejects invalid fields and honeypot submissions before delivery", async (c
       invalidEmail.status,
       honeypot.status,
       crlf.status,
+      emailCrlf.status,
+      artistCrlf.status,
       invalidOption.status,
       conflictingWhatsApp.status,
     ],
-    [400, 400, 400, 400, 400]
+    [400, 400, 400, 400, 400, 400, 400]
   );
   assert.equal(calls, 0);
 });
@@ -298,6 +317,49 @@ test("enforces actor rate limits and HTTP method", async () => {
   assert.equal(limited.headers.get("Retry-After"), "60");
   assert.equal(wrongMethod.status, 405);
   assert.equal(wrongMethod.headers.get("Allow"), "POST");
+});
+
+test("keys rate limits by hashed actor and case-normalised email", async (context) => {
+  const originalFetch = globalThis.fetch;
+  const actorKeys = [];
+  const emailKeys = [];
+  globalThis.fetch = async () =>
+    Response.json({ messageId: "<rate-limit-key-test@example.com>" }, { status: 201 });
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const keyedEnv = env({
+    CONTACT_ACTOR_RATE_LIMIT: {
+      limit: async ({ key }) => {
+        actorKeys.push(key);
+        return { success: true };
+      },
+    },
+    CONTACT_EMAIL_RATE_LIMIT: {
+      limit: async ({ key }) => {
+        emailKeys.push(key);
+        return { success: true };
+      },
+    },
+  });
+  const secondSubmissionId = "223e4567-e89b-42d3-a456-426614174000";
+
+  await worker.fetch(request(validPayload({ email: "Jane@Example.com" })), keyedEnv);
+  await worker.fetch(
+    request(validPayload({ email: "jane@example.com", submissionId: secondSubmissionId })),
+    keyedEnv
+  );
+  await worker.fetch(
+    request(validPayload(), "POST", { "CF-Connecting-IP": "198.51.100.27" }),
+    keyedEnv
+  );
+
+  assert.equal(actorKeys[0], actorKeys[1]);
+  assert.notEqual(actorKeys[0], actorKeys[2]);
+  assert.ok(actorKeys.every((key) => !key.includes("203.0.113.5")));
+  assert.equal(new Set(emailKeys).size, 1);
+  assert.ok(emailKeys.every((key) => !key.includes("jane@example.com")));
 });
 
 test("verifies Turnstile before consuming the email quota", async (context) => {
@@ -357,6 +419,39 @@ test("requires the expected Turnstile action and hostname", async (context) => {
   );
   assert.equal(wrongAction.status, 400);
   assert.equal(wrongHost.status, 400);
+});
+
+test("rejects a replayed Turnstile token before a second delivery", async (context) => {
+  const originalFetch = globalThis.fetch;
+  let verificationCalls = 0;
+  let deliveryCalls = 0;
+  globalThis.fetch = async (url) => {
+    if (String(url).includes("siteverify")) {
+      verificationCalls += 1;
+      return verificationCalls === 1
+        ? Response.json({
+            success: true,
+            action: "booking_enquiry",
+            hostname: "aaaartists.co",
+          })
+        : Response.json({ success: false, "error-codes": ["timeout-or-duplicate"] });
+    }
+    deliveryCalls += 1;
+    return Response.json({ messageId: "<turnstile-replay-test@example.com>" }, { status: 201 });
+  };
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const securedEnv = env({ TURNSTILE_SECRET_KEY: "secret" });
+  const securedRequest = () => request(validPayload({ turnstileToken: "single-use-token" }));
+  const first = await worker.fetch(securedRequest(), securedEnv);
+  const replay = await worker.fetch(securedRequest(), securedEnv);
+
+  assert.equal(first.status, 200);
+  assert.equal(replay.status, 400);
+  assert.equal(verificationCalls, 2);
+  assert.equal(deliveryCalls, 1);
 });
 
 test("fails closed when production security bindings or secrets are missing", async () => {
