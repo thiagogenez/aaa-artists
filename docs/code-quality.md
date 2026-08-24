@@ -105,6 +105,50 @@ required gate past its 20-minute budget for a signal that is useful weekly, not 
 `thresholds.break` is `null`, so it reports rather than fails. If it ever becomes a gate, raise
 the floor as the score improves; never lower it to make a red run green.
 
+## Targeted public-surface review
+
+Issue #67 reviewed the public surface on 2026-08-24. The site is a static export with no login,
+database, session or user content; the only body-accepting route is `POST /api/enquiries`.
+
+- **Email content and headers:** every dynamic HTML value passes through `escapeHtml()`. Values
+  that reach the subject, recipient metadata or address fields must be bounded single-line text,
+  so CR/LF injection is rejected before Brevo is called. The Worker tests exercise HTML payloads
+  and CR/LF in the name, email and artist fields.
+- **Turnstile:** production fails closed without its secret and validates every token with
+  Siteverify, a five-second timeout, the `booking_enquiry` action and the canonical hostname.
+  Cloudflare documents tokens as single-use; the tests cover a replay response as well as the
+  wrong action, hostname and production testing key. See:
+  <https://developers.cloudflare.com/turnstile/get-started/server-side-validation/>.
+- **Rate limits:** the actor key is a SHA-256 hash of Cloudflare's connecting IP and the email key
+  hashes the lower-cased address. `submissionId` does not affect either key. Tests verify those
+  properties without retaining the raw values. An attacker can still rotate real source IPs and
+  Cloudflare's counters are deliberately permissive and per-location, so the actor limit reduces
+  abuse rather than identifying a person; Turnstile and the email limit remain separate gates.
+  See: <https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/>.
+- **Submission idempotency:** a browser-generated UUIDv4 is accepted, but provider-side
+  deduplication is not treated as proven. Brevo's current documentation and a recent upstream live
+  reproduction disagree about the supported placement and behaviour. Issue #86 owns verification
+  or removal of that guarantee; this review does not add a home-grown persistence layer.
+- **Redirects:** destinations are constructed from fixed canonical host and path values. Existing
+  tests prove that HTTP and `www` preserve path/query while `/events` changes only the fixed path
+  to `/artists`; no request value becomes a destination host.
+- **Errors and logs:** retained logs use an allowlist and responses expose only public fallback
+  copy plus a random request ID. Tests prove that enquiry fields, raw IPs and provider error text
+  do not survive the boundary.
+- **Body exhaustion:** the Worker rejects declared or streamed bodies over 64 KiB and never calls
+  `request.json()` on an unbounded body. Tests cover both an oversized stream and a dishonest
+  `Content-Length`. Cloudflare's proxy and DDoS protection own incomplete slow connections before
+  they can exhaust an origin. See:
+  <https://developers.cloudflare.com/ddos-protection/frequently-asked-questions/>.
+- **Build and deploy:** third-party event data can only produce validated artist YAML in a draft
+  pull request; it cannot merge or deploy. Production remains manual, check-gated and transactional
+  through an inactive candidate. Scheduled date refreshes may rebuild production only when `main`
+  matches the commit already live.
+
+Strix was rejected for this scope. An autonomous model-backed scanner would add another credential,
+spend and staging automation before this one-file surface has shown a gap that targeted tests cannot
+cover. Reconsider it only if a reproducible class of findings outgrows this review approach.
+
 ## Dead code
 
 ```bash
