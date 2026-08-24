@@ -377,6 +377,25 @@ test("opens the mobile menu and preserves footer contrast in dark mode", async (
   await expect(page.locator("footer")).toBeVisible();
 });
 
+test("persists light and dark themes across reloads", async ({ page }) => {
+  await page.goto("/");
+  const root = page.locator("html");
+
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await expect(root).toHaveClass(/dark/);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("aaa-theme"))).toBe("dark");
+
+  await page.reload();
+  await expect(root).toHaveClass(/dark/);
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await expect(root).toHaveClass(/light/);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("aaa-theme"))).toBe("light");
+
+  await page.reload();
+  await expect(root).toHaveClass(/light/);
+  await expect(page.getByRole("button", { name: "Switch to dark theme" })).toBeVisible();
+});
+
 test("keeps shared chrome inside common phone and desktop widths", async ({ page }) => {
   for (const width of [320, 375, 390, 412, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });

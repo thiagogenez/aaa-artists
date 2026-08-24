@@ -10,8 +10,6 @@ const eslintConfig = [
     rules: {
       // Apostrophes in plain copy are fine and render correctly.
       "react/no-unescaped-entities": "off",
-      // Theme provider intentionally syncs localStorage -> state on mount.
-      "react-hooks/set-state-in-effect": "warn",
     },
   },
   {
