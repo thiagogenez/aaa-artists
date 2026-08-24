@@ -6,10 +6,8 @@ name: Commit style
 # signed from the maintainer's own terminal, and a hook in that path risks breaking the
 # one place where signing works. CI is the enforcement point instead.
 #
-# Two things are checked:
-#   1. every commit in the pull request, and
-#   2. the pull request title, because squash-merging uses the title as the commit
-#      message on main.
+# The pull request title is checked because squash-merging uses it as the commit
+# message on main. Intermediate commits remain free to support local iteration.
 
 on:
   pull_request:
@@ -30,8 +28,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          # commitlint needs the range between the base branch and the head commit.
-          fetch-depth: 0
           persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -41,12 +37,6 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - name: Check every commit in the pull request
-        run: >-
-          npx --no-install commitlint
-          --from ${{ github.event.pull_request.base.sha }}
-          --to ${{ github.event.pull_request.head.sha }}
-          --verbose
       - name: Check the pull request title
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}

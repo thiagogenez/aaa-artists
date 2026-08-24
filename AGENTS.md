@@ -7,41 +7,35 @@
   through a pull request that references that issue (`Closes #N`, or `Refs #N` for partial
   work). No issue-less PRs, no direct pushes to `main`, no exceptions for small changes.
 - The repository is `thiagogenez/aaa-artists`. `--repo thiagogenez/webpage` returns 404.
-- One branch per issue, `<type>/<short-slug>`. Conventional Commit messages
-  (`feat|fix|docs|chore|refactor|test|perf|ci|build|style|revert`), enforced by commitlint in
-  CI on the PR title and on every commit. No AI attribution trailers.
+- One branch per issue, `<type>/<short-slug>`. The pull request title uses Conventional Commit
+  format (`feat|fix|docs|chore|refactor|test|perf|ci|build|style|revert`) because squash merge
+  makes it the commit on `main`; CI enforces the title. No AI attribution trailers.
 - Fill in `.github/pull_request_template.md` rather than deleting it. Write issue and PR bodies
   to a file and pass `--body-file`; never a long inline `--body`.
 - **Never hard-wrap text posted to GitHub.** Repository `.md` files wrap at 100 columns; issue,
   pull request and comment bodies must not, because GitHub turns a single newline into a real
   line break and wrapped prose renders as a staircase. One long line per paragraph and per list
   item.
-- **Every human pull request must contain all eight of these**, and
+- **Every human pull request must contain all four of these**, and
   `.github/workflows/commit-style.yml` fails the PR when one is missing or left empty:
   1. the related issue (`Closes #N`, or `Refs #N` for partial work);
-  2. `## Problem` — what was wrong or missing, with reproducible evidence;
-  3. `## Before` — an input and its result before the change;
-  4. `## After` — the same input and its result with the change;
-  5. `## Change` — how the new result was implemented, including anything deliberately left out;
-  6. `## Verification` — how it was validated, stating what was **actually run** and the
+  2. `## Change` — what changed, why this is the responsible scope, and anything deliberately
+     left out;
+  3. `## Verification` — how it was validated, stating what was **actually run** and the
      result, hand checks included ("not tested on a real phone" is a valid entry);
-  7. `## Risks and limitations` — what could break, what no test covers, what only fails in
+  4. `## Risks and limitations` — what could break, what no test covers, what only fails in
      production (Cloudflare, Brevo, Turnstile, real devices), and how to undo it;
-  8. `## Next steps` — follow-up work left out, as issue numbers where they exist, or "none".
-- Keep `## Root cause` for fixes; delete it when it does not apply. Before and After repeat the same
-  command, route and viewport, or reader task; output is copied, never invented. Dependabot is
-  exempt from the issue and full human record, but it still requires `## Before` and `## After`.
-  Full writing guidance and title rules live in `CONTRIBUTING.md`.
+- Dependabot is exempt from the issue and full human record, but it still requires `## Before`
+  and `## After` so dependency changes retain a concise comparison. Full writing guidance and
+  title rules live in `CONTRIBUTING.md`.
 - Deploys are managed through PRs: merging to `main` deploys staging automatically after
   `checks / verify` and `checks / browser`; production is a separate manual dispatch.
 - Commits are signed and signing only works in the maintainer's terminal. Stage the files, then
   hand over exact `git commit` / `git push` / `gh pr create` commands grouped by logical block.
-  Never bypass with `--no-gpg-sign`. `npm install` activates `.githooks/pre-commit`; never bypass
-  its `npm run check:pre-commit` gate with `--no-verify`. Never use `git checkout -- .` or
-  `git reset --hard` to undo a tool's edits; it discards unrelated work in the same tree.
-- Before handing over a commit command, verify that `git config --get core.hooksPath` returns
-  `.githooks`. If it does not, run `npm run hooks:install`. The agent runs and records
-  `npm run check:pre-commit` before staging; the maintainer's signed commit runs the hook again.
+  Never bypass with `--no-gpg-sign`. Run proportional checks before staging; `npm run check:local`
+  remains available for the complete local quality and tooling suite. Never use
+  `git checkout -- .` or `git reset --hard` to undo a tool's edits; either command discards
+  unrelated work in the same tree.
 - **Findings discovered while working are not optional paperwork.** Fixed inside the change →
   `## Change`, plus a comment on the issue when it was outside the original scope. Found but not
   fixed → **its own issue, before the PR is opened**. A limitation of what was built →

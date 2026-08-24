@@ -1,8 +1,0 @@
-#!/bin/sh
-set -eu
-
-repo_root=$(git rev-parse --show-toplevel)
-cd "$repo_root"
-
-echo "Running the pre-commit quality gate..."
-npm run check:pre-commit

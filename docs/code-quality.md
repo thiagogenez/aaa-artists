@@ -21,7 +21,7 @@ means a green gate.
 | `npm run knip` | Knip | Is anything here unused — files, exports, dependencies? |
 | `npm run arch` | arch-contract | Did a change cross an architectural boundary? |
 | `npm run test:mutation` | Stryker | Would the tests actually notice if the code were wrong? |
-| `npm run lint:commits` | commitlint | Are the commit messages Conventional Commits? |
+| Pull request title check | commitlint | Will the squash commit on `main` be Conventional? |
 
 ## Biome does not replace ESLint
 
@@ -62,27 +62,23 @@ generated artist JSON must be accessed through `data/artists.ts`.
 
 ## Commit messages
 
-`commitlint` runs in CI (`.github/workflows/commit-style.yml`) against every commit in a pull
-request *and* against the pull request title, because squash-merging turns the title into the
-commit on `main`.
+`commitlint` runs in CI (`.github/workflows/commit-style.yml`) against the pull request title,
+because squash-merging turns that title into the commit on `main`. Intermediate commits are not
+retained and are deliberately not linted.
 
-The repository does not install a `commit-msg` hook: commits here are signed from the maintainer's
-own terminal. To check a range locally before pushing:
-
-```bash
-npm run lint:commits
-```
+The repository does not install a local Git hook: commits here are signed from the maintainer's
+own terminal, and GitHub CI is the authoritative gate.
 
 The same workflow also fails a pull request whose description does not reference an issue
 (`Closes #N` or `Refs #N`), which is the enforcement behind the standard in `CLAUDE.md`.
 
-## Local pre-commit gate
+## Local checks
 
-`npm install` runs `prepare`, which points Git at the versioned `.githooks/` directory. The
-pre-commit hook then runs:
+Run checks in proportion to the change. The complete local quality and tooling suite remains one
+explicit command:
 
 ```bash
-npm run check:pre-commit   # check:quality + test:tooling
+npm run check:local   # check:quality + test:tooling
 ```
 
 The tooling suite includes a structural test for the PR-description job: checkout and Node setup
@@ -90,9 +86,9 @@ must happen before the job invokes `scripts/validate-pr-body.mjs`. That test cov
 first seen on PR #75, where ordinary linting passed but GitHub could not load the script because
 the job had no checkout step.
 
-The hook is a local feedback loop, not the merge authority. A new clone has no active hook until
-`npm install` runs, and local hooks can be removed from Git configuration; GitHub CI therefore
-repeats the gates and remains authoritative.
+Dependency installation does not change `core.hooksPath` or install repository hooks. This keeps
+local iteration and signed commits independent from project setup while GitHub CI remains the
+merge authority.
 
 ## Mutation testing
 
