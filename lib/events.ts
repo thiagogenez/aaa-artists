@@ -6,6 +6,12 @@ export function isUpcomingEventDate(date: string, today: string): boolean {
   return isExactEventDate(date) ? date >= today : date >= today.slice(0, 7);
 }
 
+/** Test builds freeze event classification so dated fixtures cannot expire.
+ *  Staging and production do not set this variable and always use real time. */
+export function currentEventDate(): string {
+  return process.env.NEXT_PUBLIC_E2E_DATE ?? new Date().toISOString().slice(0, 10);
+}
+
 export function formatEventDate(date: string): string {
   if (!isExactEventDate(date)) {
     return `${new Date(`${date}-01T00:00:00Z`).toLocaleDateString("en-GB", {

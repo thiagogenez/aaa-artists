@@ -4,7 +4,12 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Artist, Gig } from "@/data/artists";
-import { eventDateBadge, formatEventDate, isUpcomingEventDate } from "@/lib/events";
+import {
+  currentEventDate,
+  eventDateBadge,
+  formatEventDate,
+  isUpcomingEventDate,
+} from "@/lib/events";
 import SocialIcon from "@/components/SocialIcons";
 import MediaConsentBanner from "@/components/MediaConsentBanner";
 import MediaConsentSettings from "@/components/MediaConsentSettings";
@@ -12,10 +17,6 @@ import SpotifyPlayer from "@/components/SpotifyPlayer";
 import ThirdPartyEmbed from "@/components/ThirdPartyEmbed";
 import { useMediaConsent } from "@/components/useMediaConsent";
 import PastShowsDialog from "./PastShowsDialog";
-
-function currentDate() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function subscribeToDateChange(onChange: () => void) {
   const interval = window.setInterval(onChange, 60_000);
@@ -539,7 +540,7 @@ export default function EventsSection({
   buildNow: string;
   spotifySrc: string | null;
 }) {
-  const now = useSyncExternalStore(subscribeToDateChange, currentDate, () => buildNow);
+  const now = useSyncExternalStore(subscribeToDateChange, currentEventDate, () => buildNow);
 
   // `gigs` is guaranteed oldest → newest: scripts/gen-artists.mjs rejects any
   // artist file whose list is out of order, so `npm run check` fails before a

@@ -5,7 +5,7 @@ import SocialIcon from "@/components/SocialIcons";
 import { artists, getArtistBySlug } from "@/data/artists";
 import type { Metadata } from "next";
 import { SITE_URL, createPageMetadata, sentenceDescription, serializeJsonLd } from "@/lib/site";
-import { isExactEventDate, isUpcomingEventDate } from "@/lib/events";
+import { currentEventDate, isExactEventDate, isUpcomingEventDate } from "@/lib/events";
 import EventsSection from "./EventsSection";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
@@ -62,7 +62,7 @@ export default async function ArtistPage({ params }: Props) {
 
   // Build-time date, passed to EventsSection as the SSR baseline; the client
   // re-splits past/upcoming with the real current date after hydration.
-  const buildNow = new Date().toISOString().slice(0, 10);
+  const buildNow = currentEventDate();
 
   // Resolve media embeds (live players) and link-only platforms (cards).
   // Spotify: prefer an explicit spotifyEmbed, otherwise build a player from the
