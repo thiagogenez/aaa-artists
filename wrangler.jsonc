@@ -32,6 +32,16 @@
       "vars": {
         "ENVIRONMENT": "staging"
       },
+      // Retain every privacy-safe custom booking event, but not an invocation record
+      // for each static asset request. The Worker log allowlist is tested separately.
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": false
+        }
+      },
       // Staging uses Cloudflare's always-pass Turnstile test key pair. Outbound email
       // remains disabled unless a deliberately restricted staging BREVO_API_KEY is
       // added, preventing the public test-key form from emailing arbitrary recipients.
@@ -74,6 +84,14 @@
       ],
       "vars": {
         "ENVIRONMENT": "production"
+      },
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": false
+        }
       },
       "secrets": {
         "required": ["BREVO_API_KEY", "TURNSTILE_SECRET_KEY"]

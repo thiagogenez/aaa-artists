@@ -31,6 +31,17 @@ const ALLOWED_TICKETING = new Set(TICKETING_OPTIONS);
 const ALLOWED_CURRENCIES = new Set(CURRENCY_CODES);
 const ALLOWED_BUDGETS = new Set(BUDGET_RANGES);
 const ALLOWED_REFERRALS = new Set(HEAR_ABOUT_OPTIONS);
+const LOG_DETAIL_FIELDS = ["scope", "missing", "reason"];
+
+/** Build the complete allowlisted payload for a retained booking log. Enquiry fields,
+ *  email addresses and network identifiers are deliberately not accepted. */
+function enquiryLogRecord(event, requestId, details = {}) {
+  const record = { event, requestId };
+  for (const field of LOG_DETAIL_FIELDS) {
+    if (typeof details[field] === "string" && details[field]) record[field] = details[field];
+  }
+  return record;
+}
 
 function json(status, body, headers = {}) {
   return new Response(JSON.stringify(body), { status, headers: { ...JSON_HEADERS, ...headers } });
@@ -360,9 +371,7 @@ async function handleEnquiry(request, env) {
     const configurationIssue = productionConfigurationIssue(env);
     if (configurationIssue) {
       console.error(
-        JSON.stringify({
-          event: "enquiry_security_unconfigured",
-          requestId,
+        enquiryLogRecord("enquiry_security_unconfigured", requestId, {
           missing: configurationIssue,
         })
       );
@@ -372,7 +381,7 @@ async function handleEnquiry(request, env) {
     }
     const actorKey = await sha256(request.headers.get("CF-Connecting-IP") || "unknown-actor");
     if (!(await withinLimit(env.CONTACT_ACTOR_RATE_LIMIT, actorKey))) {
-      console.warn(JSON.stringify({ event: "enquiry_rate_limited", scope: "actor", requestId }));
+      console.warn(enquiryLogRecord("enquiry_rate_limited", requestId, { scope: "actor" }));
       return json(
         429,
         {
@@ -409,7 +418,7 @@ async function handleEnquiry(request, env) {
       return json(400, { error: "Please check the enquiry details and try again.", requestId });
 
     if (!(await verifyTurnstile(request, env, payload.turnstileToken))) {
-      console.warn(JSON.stringify({ event: "enquiry_turnstile_failed", requestId }));
+      console.warn(enquiryLogRecord("enquiry_turnstile_failed", requestId));
       return json(400, {
         error: "The security check expired or failed. Please try again.",
         requestId,
@@ -418,7 +427,7 @@ async function handleEnquiry(request, env) {
 
     const emailKey = await sha256(payload.email.toLowerCase());
     if (!(await withinLimit(env.CONTACT_EMAIL_RATE_LIMIT, emailKey))) {
-      console.warn(JSON.stringify({ event: "enquiry_rate_limited", scope: "email", requestId }));
+      console.warn(enquiryLogRecord("enquiry_rate_limited", requestId, { scope: "email" }));
       return json(
         429,
         {
@@ -429,7 +438,7 @@ async function handleEnquiry(request, env) {
       );
     }
     if (!env.BREVO_API_KEY) {
-      console.error(JSON.stringify({ event: "enquiry_delivery_unconfigured", requestId }));
+      console.error(enquiryLogRecord("enquiry_delivery_unconfigured", requestId));
       return json(503, {
         error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.`,
       });
@@ -468,7 +477,7 @@ async function handleEnquiry(request, env) {
       signal: AbortSignal.timeout(10_000),
     });
     if (response.status === 429) {
-      console.warn(JSON.stringify({ event: "enquiry_delivery_rate_limited", requestId }));
+      console.warn(enquiryLogRecord("enquiry_delivery_rate_limited", requestId));
       return json(
         429,
         { error: "The booking service is temporarily busy. Please wait and try again.", requestId },
@@ -478,13 +487,11 @@ async function handleEnquiry(request, env) {
       );
     }
     if (!response.ok) throw new Error(`Email delivery returned ${response.status}`);
-    console.log(JSON.stringify({ event: "enquiry_delivered", requestId }));
+    console.log(enquiryLogRecord("enquiry_delivered", requestId));
     return json(200, { ok: true, requestId });
   } catch (error) {
     console.error(
-      JSON.stringify({
-        event: "enquiry_delivery_failed",
-        requestId,
+      enquiryLogRecord("enquiry_delivery_failed", requestId, {
         reason: error instanceof Error ? error.name : "unknown",
       })
     );
