@@ -1,0 +1,43 @@
+# Coverage reporting for AAA Artists.
+#
+# Informational on purpose. Coverage is here so a reviewer can see what a change left
+# untested — above all in worker/index.js, which is the booking pipeline. It is NOT a
+# merge gate: a hard threshold on a repository this size turns into a ritual of writing
+# assertions that keep a number up, and the honest signal (mutation score, npm run
+# test:mutation) is measured elsewhere.
+#
+# Baseline recorded 2026-08-11 from `npm run test:coverage`:
+#   lines 95.01%   branches 72.58%   functions 94.29%
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        informational: true
+        target: 80%
+
+comment:
+  layout: "condensed_header, diff, flags, files"
+  require_changes: true
+
+flags:
+  unit:
+    paths:
+      - worker/
+      - config/
+      - scripts/
+    carryforward: false
+
+github_checks:
+  annotations: true
+
+ignore:
+  - "tests/**"
+  - "out/**"
+  - ".next/**"
+  - "app/roster-prototype/**"
+  - "public/cities/**"

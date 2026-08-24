@@ -1,0 +1,25 @@
+{
+  "$comment": [
+    "Per-route weight budgets, gzipped: the document plus the scripts and stylesheets it",
+    "actually references. Checked by scripts/check-performance-budget.mjs in CI.",
+    "",
+    "Baseline measured 2026-08-12. Each budget sits roughly 8-10% above what the route",
+    "weighs today: enough headroom for ordinary work, tight enough that adding a library",
+    "has to be a decision rather than an accident.",
+    "",
+    "Raising a number here is allowed and sometimes correct. Say why in the pull request.",
+    "Raising it silently is how a fast site stops being one."
+  ],
+  "routes": {
+    "/": { "file": "index.html", "totalKb": 230 },
+    "/artists": { "file": "artists.html", "totalKb": 230 },
+    "/artist/[slug]": { "file": "artist/xijaro-pitch.html", "totalKb": 245 },
+    "/contact": { "file": "contact.html", "totalKb": 265 },
+    "/about": { "file": "about.html", "totalKb": 230 },
+    "/privacy": { "file": "privacy.html", "totalKb": 230 }
+  },
+  "assets": {
+    "artist photography": { "directory": "public/artists", "totalKb": 260 },
+    "event flyers": { "directory": "public/flyers", "totalKb": 2048 }
+  }
+}
