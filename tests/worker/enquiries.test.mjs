@@ -63,6 +63,44 @@ function env(overrides = {}) {
   };
 }
 
+test("retained failure logs exclude enquiry data, error messages and raw IPs", async (context) => {
+  const originalFetch = globalThis.fetch;
+  const originalError = console.error;
+  const records = [];
+  globalThis.fetch = async () => {
+    throw new Error("Provider exposed private.person@example.com");
+  };
+  console.error = (record) => records.push(record);
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+    console.error = originalError;
+  });
+
+  const response = await worker.fetch(
+    request(
+      validPayload({
+        name: "Private Person",
+        email: "private.person@example.com",
+        message: "Private booking message",
+      }),
+      "POST",
+      { "CF-Connecting-IP": "198.51.100.27" }
+    ),
+    env()
+  );
+
+  assert.equal(response.status, 502);
+  assert.equal(records.length, 1);
+  assert.equal(records[0].event, "enquiry_delivery_failed");
+  assert.equal(records[0].reason, "Error");
+  assert.match(records[0].requestId, /^[0-9a-f-]{36}$/i);
+  assert.deepEqual(Object.keys(records[0]).sort(), ["event", "reason", "requestId"]);
+  assert.doesNotMatch(
+    JSON.stringify(records),
+    /Private Person|private\.person@example\.com|Private booking message|Provider exposed|198\.51\.100\.27/
+  );
+});
+
 test("validates and emails a clean enquiry with a stable threaded reference", async (context) => {
   const originalFetch = globalThis.fetch;
   let forwarded;
