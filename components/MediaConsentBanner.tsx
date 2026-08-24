@@ -28,8 +28,7 @@ export default function MediaConsentBanner() {
   if (!hydrated || consent !== "unset") return null;
 
   return (
-    <div
-      role="region"
+    <section
       aria-label="Media cookie choice"
       className="media-consent-banner fixed inset-x-0 bottom-0 z-[90] border-t px-6 py-4"
     >
@@ -62,6 +61,6 @@ export default function MediaConsentBanner() {
           </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

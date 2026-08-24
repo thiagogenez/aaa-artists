@@ -241,17 +241,18 @@ export default function CityCombobox({
       />
 
       {open && normalized && !loading && matches.length > 0 && (
-        <ul
+        <div
           id={listId}
           role="listbox"
           className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto border py-1 shadow-xl"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
         >
           {matches.map((city, index) => (
-            <li
+            <div
               id={`${listId}-${index}`}
               key={city}
               role="option"
+              tabIndex={-1}
               aria-selected={city === value}
               onMouseDown={(event) => {
                 event.preventDefault();
@@ -264,9 +265,9 @@ export default function CityCombobox({
               }}
             >
               {city}
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
 
       {(loading || loadFailed) && (

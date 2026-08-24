@@ -100,6 +100,23 @@ test("shows visible nested breadcrumbs and a compact, non-duplicated footer", as
   expect(width.content).toBeLessThanOrEqual(width.viewport);
 });
 
+test("reveals artist card actions to keyboard navigation", async ({ page }) => {
+  await page.goto("/artists");
+
+  const reveal = page.getByRole("button", { name: /Show actions for/ }).first();
+  const actionsId = await reveal.getAttribute("aria-controls");
+  const stableReveal = page.locator(`button[aria-controls="${actionsId}"]`);
+  await reveal.focus();
+  await reveal.press("Enter");
+  await expect(stableReveal).toHaveAttribute("aria-expanded", "true");
+
+  const profileLink = page.locator(`#${actionsId}`).getByRole("link", { name: /View .* profile/ });
+  await profileLink.focus();
+  await expect(profileLink).toBeFocused();
+  await profileLink.press("Enter");
+  await expect(page).toHaveURL(/\/artist\//);
+});
+
 test("pairs upcoming dates with the player in one row and keeps past shows behind a dialog", async ({
   page,
 }) => {

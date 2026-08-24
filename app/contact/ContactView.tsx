@@ -2203,12 +2203,11 @@ function EmailField({
             >
               Add email domain
             </p>
-            <div
+            <fieldset
               id={suggestionsId}
-              role="group"
-              aria-label="Email domain suggestions"
-              className={`mt-2 flex flex-wrap gap-2 ${showAll ? "max-h-64 overflow-y-auto overscroll-contain pr-1" : ""}`}
+              className={`mt-2 flex min-w-0 flex-wrap gap-2 border-0 p-0 ${showAll ? "max-h-64 overflow-y-auto overscroll-contain pr-1" : ""}`}
             >
+              <legend className="sr-only">Email domain suggestions</legend>
               {visibleCompletions.map((completion, index) => (
                 <button
                   key={completion.domain}
@@ -2263,7 +2262,7 @@ function EmailField({
                   Show fewer
                 </button>
               )}
-            </div>
+            </fieldset>
           </div>
         )}
       </div>

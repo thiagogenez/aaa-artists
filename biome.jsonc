@@ -86,19 +86,7 @@
         "useTemplate": "error"
       },
       "a11y": {
-        "preset": "recommended",
-        // These seven fire on the artist cards, the contact comboboxes and the
-        // events pager. They are real findings, not false positives, but fixing
-        // them safely is its own change — tracked in issue #45. They are warnings
-        // so they stay visible without blocking every unrelated pull request.
-        // Promote each back to "error" as #45 clears it.
-        "useSemanticElements": "warn",
-        "useKeyWithClickEvents": "warn",
-        "noStaticElementInteractions": "warn",
-        "noNoninteractiveElementToInteractiveRole": "warn",
-        "useFocusableInteractive": "warn",
-        "useAriaPropsSupportedByRole": "warn",
-        "noNoninteractiveTabindex": "warn"
+        "preset": "recommended"
       },
       "nursery": {
         "preset": "none"

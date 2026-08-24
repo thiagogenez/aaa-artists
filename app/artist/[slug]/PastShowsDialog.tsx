@@ -63,6 +63,12 @@ export default function PastShowsDialog({ gigs }: { gigs: Gig[] }) {
           // Clicking the backdrop closes; clicking the panel must not.
           if (event.target === dialogRef.current) setOpen(false);
         }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            setOpen(false);
+          }
+        }}
         className="m-auto w-[min(44rem,92vw)] max-w-none border p-0 backdrop:bg-black/60"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)", color: "var(--text)" }}
       >
