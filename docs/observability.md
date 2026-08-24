@@ -47,18 +47,33 @@ real booking-path request is needed before its first custom log appears. The cus
 the separate submission reference, not the internal request ID, so it cannot currently be used to
 look up a log record.
 
+Use this retained view for routine diagnosis and post-deploy verification. The Cloudflare telemetry
+query API is an equivalent option when the operator has the separate Workers Observability
+permission; filter the staging service and structured `event` field, and keep credentials out of
+shell history and saved output.
+
 Cloudflare currently documents three days of retention on the Workers Free plan and seven days on
 the Workers Paid plan, with seven days as the maximum. Confirm the plan and displayed retention in
 the dashboard when investigating an older incident. See the
 [Workers Logs documentation](https://developers.cloudflare.com/workers/observability/logs/workers-logs/).
 
-## Live debugging
+## Retained logs versus live Tail
 
-For a short-lived staging investigation, stream new events without changing retention:
+`invocation_logs: false` controls the records stored in Workers Logs. It does not remove Cloudflare's
+invocation envelope from the separate real-time Tail stream. Wrangler Tail can show request headers
+and network metadata, including a raw client IP, alongside the privacy-safe custom log object.
+
+Use Tail only for a short, authorised staging investigation when the retained view is insufficient:
 
 ```bash
 npx wrangler tail --env staging --format json
 ```
 
-Do not paste enquiry content into log filters, screenshots or issue comments. Record only the event,
-environment, request ID and time needed to investigate the failure.
+Stop the stream immediately after reproducing the event. Do not save, screenshot or paste the full
+Tail envelope into an issue, chat or pull request. If evidence must be shared, extract only the
+custom `event`, environment, request ID and time, then inspect the extract again for request headers,
+network metadata, enquiry content, tokens and secrets. Never run a production Tail merely to verify
+a deployment; a production incident needs explicit operator authorisation.
+
+Do not paste enquiry content into retained-log filters either. Search by the allowlisted event or
+the internal request ID returned by the API.
