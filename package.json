@@ -26,6 +26,7 @@
     "dev": "next dev",
     "prebuild": "npm run gen:data",
     "build": "next build",
+    "build:test": "NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key NEXT_PUBLIC_E2E_DATE=2026-08-01 npm run build",
     "build:production": "npm run check:production-env && npm run build",
     "deploy": "npm run build:production && npm run deploy:built",
     "deploy:built": "wrangler deploy --env production",
@@ -53,10 +54,10 @@
     "test:events": "node --test tests/events/*.test.mjs",
     "test:tooling": "node --test tests/tooling/*.test.mjs",
     "test:mutation": "stryker run",
-    "test:e2e": "NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key npm run build && npm run test:e2e:run",
+    "test:e2e": "npm run build:test && npm run test:e2e:run",
     "test:e2e:run": "playwright test",
     "test:e2e:report": "playwright show-report",
-    "test:visual": "NEXT_PUBLIC_TURNSTILE_SITE_KEY=test-site-key npm run build && node scripts/run-visual-tests.mjs",
+    "test:visual": "npm run build:test && node scripts/run-visual-tests.mjs",
     "test:visual:run": "node scripts/run-visual-tests.mjs"
   },
   "dependencies": {
