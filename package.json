@@ -7,8 +7,6 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "prepare": "node scripts/install-git-hooks.mjs",
-    "hooks:install": "node scripts/install-git-hooks.mjs",
     "gen:artists": "node scripts/gen-artists.mjs",
     "gen:cities": "node scripts/gen-cities.mjs",
     "gen:data": "node scripts/gen-data.mjs",
@@ -18,7 +16,7 @@
     "check:cloudflare-access": "node scripts/check-cloudflare-deployment-access.mjs",
     "check:dependencies": "npm audit --omit=dev --audit-level=high",
     "check:quality": "npm run format:check && npm run lint && npm run knip && npm run arch",
-    "check:pre-commit": "npm run check:quality && npm run test:tooling",
+    "check:local": "npm run check:quality && npm run test:tooling",
     "check:deploy": "wrangler deploy --dry-run --env production",
     "check:deploy:staging": "wrangler deploy --dry-run --env staging",
     "check:release": "npm run check:privacy && npm test && npm run lint && npm run build:production",
@@ -43,7 +41,6 @@
     "lint": "npm run lint:eslint && npm run lint:biome",
     "lint:eslint": "eslint .",
     "lint:biome": "biome lint .",
-    "lint:commits": "commitlint --from origin/main --to HEAD --verbose",
     "knip": "knip --no-progress",
     "arch": "arch-contract check",
     "arch:graph": "arch-contract graph",

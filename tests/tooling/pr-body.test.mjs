@@ -4,17 +4,8 @@ import { validatePrBody } from "../../scripts/validate-pr-body.mjs";
 
 const COMPLETE_BODY = `Closes #73
 
-## Problem
-The validator accepted pull requests without comparative evidence.
-
-## Before
-The same fixture passed without these sections.
-
-## After
-The fixture fails when either comparison is absent.
-
 ## Change
-- Validate every required section.
+- Require the issue reference and the three sections used to review the change.
 
 ## Verification
 | Check | Command | Result |
@@ -23,9 +14,6 @@ The fixture fails when either comparison is absent.
 
 ## Risks and limitations
 - Markdown inside fenced code is not parsed as a separate document.
-
-## Next steps
-- none
 `;
 
 describe("pull request body validation", () => {
@@ -34,15 +22,7 @@ describe("pull request body validation", () => {
   });
 
   it("requires the issue reference and every human section", () => {
-    const headings = [
-      "Problem",
-      "Before",
-      "After",
-      "Change",
-      "Verification",
-      "Risks and limitations",
-      "Next steps",
-    ];
+    const headings = ["Change", "Verification", "Risks and limitations"];
 
     assert.match(validatePrBody(COMPLETE_BODY.replace("Closes #73", ""))[0], /issue reference/i);
     for (const heading of headings) {
@@ -55,8 +35,8 @@ describe("pull request body validation", () => {
   });
 
   it("rejects comments, bare bullets, and empty verification results", () => {
-    const emptyBefore = COMPLETE_BODY.replace(
-      "The same fixture passed without these sections.",
+    const emptyChange = COMPLETE_BODY.replace(
+      "- Require the issue reference and the three sections used to review the change.",
       "<!-- add evidence -->\n-"
     );
     const emptyVerification = COMPLETE_BODY.replace(
@@ -64,20 +44,17 @@ describe("pull request body validation", () => {
       "| Fixture | `node --test tests/tooling/pr-body.test.mjs` | |"
     );
 
-    assert.ok(validatePrBody(emptyBefore).some((error) => error.includes("## Before")));
+    assert.ok(validatePrBody(emptyChange).some((error) => error.includes("## Change")));
     assert.ok(validatePrBody(emptyVerification).some((error) => error.includes("## Verification")));
   });
 
   it("does not treat a heading inside a code fence as a real section", () => {
-    const withoutBefore = COMPLETE_BODY.replace(
-      /\n## Before\nThe same fixture passed without these sections\.\n/,
-      ""
-    ).replace(
-      "The validator accepted pull requests without comparative evidence.",
-      "The validator accepted pull requests without comparative evidence.\n\n```md\n## Before\nnot a real section\n```"
+    const withoutChange = COMPLETE_BODY.replace(
+      /\n## Change\n- Require the issue reference and the three sections used to review the change\.\n/,
+      "\n```md\n## Change\nnot a real section\n```\n"
     );
 
-    assert.ok(validatePrBody(withoutBefore).some((error) => error.includes("## Before")));
+    assert.ok(validatePrBody(withoutChange).some((error) => error.includes("## Change")));
   });
 
   it("requires Before and After on Dependabot pull requests", () => {

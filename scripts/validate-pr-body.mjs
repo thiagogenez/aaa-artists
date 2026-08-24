@@ -1,12 +1,4 @@
-const HUMAN_REQUIRED_SECTIONS = [
-  "Problem",
-  "Before",
-  "After",
-  "Change",
-  "Verification",
-  "Risks and limitations",
-  "Next steps",
-];
+const HUMAN_REQUIRED_SECTIONS = ["Change", "Verification", "Risks and limitations"];
 
 const AUTOMATED_REQUIRED_SECTIONS = ["Before", "After"];
 

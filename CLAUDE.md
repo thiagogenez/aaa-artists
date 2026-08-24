@@ -38,30 +38,25 @@ Repository: **`thiagogenez/aaa-artists`** (the local checkout directory is `webp
 2. **One branch per issue**, named `<type>/<short-slug>` (`fix/`, `improve/`, `feat/`, `docs/`,
    `chore/`). Branch from an up-to-date `main`.
 
-3. **Conventional Commits** for every commit message: `type(scope): summary`. Allowed types are
+3. **Conventional Commit title** for the pull request: `type(scope): summary`. Allowed types are
    `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`, `ci`, `build`, `style`, `revert`.
-   `commitlint` enforces this on the PR title and on every commit in CI. Never add AI or
-   assistant attribution trailers.
+   `commitlint` enforces the title in CI because squash merge makes it the commit on `main`.
+   Intermediate commits remain free to support local iteration. Never add AI or assistant
+   attribution trailers.
 
 4. **Open a PR that references the issue.** `.github/pull_request_template.md` is filled in, not
-   deleted. **Every human pull request must contain all eight of these**, and
+   deleted. **Every human pull request must contain all four of these**, and
    `.github/workflows/commit-style.yml` fails the PR when one is missing or left empty:
 
    | Required | Section | What it must say |
    | --- | --- | --- |
    | The related issue | `Closes #N` / `Refs #N` | `Closes` when the PR finishes the issue, `Refs` for one step of it |
-   | The problem | `## Problem` | What was wrong or missing, with a reproducible input or concrete evidence |
-   | Previous result | `## Before` | The input and its wrong or missing result before this PR |
-   | New result | `## After` | The same input and the result produced by this PR |
-   | What changed | `## Change` | How this PR produces the new result, including anything deliberately left out |
+   | What changed | `## Change` | What changed, why this is the responsible scope, and anything deliberately left out |
    | How it was validated | `## Verification` | What was **actually run** and the result — not what should pass in theory. Hand checks count, and "not tested on a real phone" is a valid, useful entry |
    | Risks and limitations | `## Risks and limitations` | What could break, what no test covers, what only fails in production (Cloudflare, Brevo, Turnstile, real devices), and how to undo it. "None known" only when true |
-   | Next steps | `## Next steps` | Follow-up work left out, each as an issue number where one exists; "none" if the issue is fully closed |
 
-   Keep `## Root cause` for a fix; delete it when it does not apply. Before and After use the same
-   command, route and viewport, or reader task. Copy command output instead of reconstructing it
-   from memory. Dependabot has no issue reference, but still requires non-empty `## Before` and
-   `## After` sections before merge. See `CONTRIBUTING.md` for examples and title rules.
+   Dependabot has no issue reference, but still requires non-empty `## Before` and `## After`
+   sections before merge. See `CONTRIBUTING.md` for examples and title rules.
 
    ```bash
    gh pr create --repo thiagogenez/aaa-artists --base main --body-file <path>.md
@@ -90,12 +85,10 @@ Repository: **`thiagogenez/aaa-artists`** (the local checkout directory is `webp
 Agent-specific note: commits in this repository are **signed**, and signing only works in
 Thiago's own terminal. An agent stages the files and hands over the exact
 `git commit` / `git push` / `gh pr create` commands, grouped by logical block. Never bypass
-signing with `--no-gpg-sign`. `npm install` activates `.githooks/pre-commit`, which runs
-`npm run check:pre-commit`; never bypass it with `--no-verify`. Never use `git checkout -- .` or
-`git reset --hard` to undo a tool's edits — it silently discards unrelated work in the same tree.
-Before handing over a commit command, verify that `git config --get core.hooksPath` returns
-`.githooks`; run `npm run hooks:install` if it does not. The agent runs and records
-`npm run check:pre-commit` before staging, and the maintainer's signed commit runs it again.
+signing with `--no-gpg-sign`. Run proportional checks before staging; `npm run check:local`
+remains available for the complete local quality and tooling suite. Never use
+`git checkout -- .` or `git reset --hard` to undo a tool's edits — either command silently
+discards unrelated work in the same tree.
 
 ## Code quality
 
