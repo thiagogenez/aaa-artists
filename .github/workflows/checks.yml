@@ -67,9 +67,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - name: Build test export
-        env:
-          NEXT_PUBLIC_TURNSTILE_SITE_KEY: test-site-key
-        run: npm run build
+        run: npm run build:test
       - name: Validate Cloudflare deployment bundle
         run: npm run check:deploy
       - name: Run browser tests
