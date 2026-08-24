@@ -223,7 +223,7 @@ function UpcomingSlider({
     Math.min(page * PER_VIEW, desktopMaxIndex)
   ).filter((start, page, starts) => page === 0 || start !== starts[page - 1]);
   const [desktopIndex, setDesktopIndex] = useState(0);
-  const viewportRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   function moveTo(nextIndex: number) {
@@ -304,10 +304,9 @@ function UpcomingSlider({
       </div>
 
       <div className="relative">
-        <div
+        <section
           ref={viewportRef}
           data-testid="upcoming-slider"
-          tabIndex={0}
           aria-label="Upcoming events slider"
           onScroll={syncIndexFromScroll}
           /* Grid on smaller screens, switching to a swipeable row at md. */
@@ -328,14 +327,11 @@ function UpcomingSlider({
               <FlyerCard artist={artist} gig={gig} />
             </div>
           ))}
-        </div>
+        </section>
 
         {gigs.length > PER_VIEW && (
-          <div
-            role="group"
-            className="pointer-events-none absolute inset-y-0 left-3 right-3 hidden items-center justify-between md:flex"
-            aria-label="Upcoming event controls"
-          >
+          <fieldset className="pointer-events-none absolute inset-y-0 left-3 right-3 hidden min-w-0 items-center justify-between border-0 p-0 md:flex">
+            <legend className="sr-only">Upcoming event controls</legend>
             <button
               type="button"
               onClick={() => moveByPage(-1)}
@@ -382,7 +378,7 @@ function UpcomingSlider({
                 />
               </svg>
             </button>
-          </div>
+          </fieldset>
         )}
       </div>
     </div>

@@ -146,7 +146,7 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
       />
 
       {open && (
-        <ul
+        <div
           id={listId}
           role="listbox"
           className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto border py-1 shadow-xl"
@@ -154,10 +154,11 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
         >
           {matches.length ? (
             matches.map((country, index) => (
-              <li
+              <div
                 id={`${listId}-${index}`}
                 key={country}
                 role="option"
+                tabIndex={-1}
                 aria-selected={country === value}
                 onMouseDown={(event) => {
                   event.preventDefault();
@@ -171,14 +172,14 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
               >
                 <CountryFlag country={country} />
                 <span>{country}</span>
-              </li>
+              </div>
             ))
           ) : (
-            <li className="px-4 py-3 text-sm" style={{ color: "var(--text-40)" }}>
+            <div className="px-4 py-3 text-sm" style={{ color: "var(--text-40)" }}>
               No matching country
-            </li>
+            </div>
           )}
-        </ul>
+        </div>
       )}
     </div>
   );
