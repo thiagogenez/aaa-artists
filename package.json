@@ -66,7 +66,8 @@
   },
   "overrides": {
     "sharp": "^0.35.3",
-    "postcss": "^8.5.22"
+    "postcss": "^8.5.22",
+    "qs": "^6.15.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.8",
@@ -86,6 +87,6 @@
     "playwright": "^1.62.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "wrangler": "4.115.0"
+    "wrangler": "4.125.0"
   }
 }

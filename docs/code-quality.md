@@ -37,8 +37,9 @@ ESLint contributes no formatting rules here, so the two never fight over the sam
 
 Biome's first run found 87 formatting deviations and 22 lint findings, including an unused
 import in `worker/index.js`, two dead duplicated option lists in `data/formOptions.ts`, and 14
-accessibility problems that ESLint never checked for. Those a11y rules are set to `"warn"` with
-a comment in `biome.jsonc` pointing at issue #45; promote each back to `"error"` as it clears.
+accessibility problems that ESLint never checked for. Issue #45 replaced the improvised
+semantics and removed the temporary warning overrides, so the recommended accessibility rules
+now fail CI when they regress.
 
 ## One contract, two enforcement tools
 
