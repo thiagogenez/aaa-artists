@@ -85,7 +85,7 @@ ruleset:
   tooling:
     mayDependOn:
       - shared
-      - worker
+      - app-shared
       - tooling
 
 expectations:

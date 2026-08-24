@@ -137,7 +137,7 @@ export default function CountryCombobox({ value, onChange, error, ...rest }: Cou
             setQuery("");
           }
         }}
-        className={`w-full border py-3 pr-4 text-base outline-none transition-all ${!open && selectedIso ? "pl-12" : "pl-4"}`}
+        className={`w-full border py-3 pr-4 text-base outline-none transition-[border-color,padding-left] duration-[var(--motion-fast)] ${!open && selectedIso ? "pl-12" : "pl-4"}`}
         style={{
           borderColor: error ? "var(--error)" : "var(--border)",
           backgroundColor: "var(--surface)",

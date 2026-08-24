@@ -173,11 +173,6 @@ function PaginationMarks({
   label: string;
   testId: string;
 }) {
-  const marks = Array.from({ length: count }, (_, mark) => ({
-    id: `pagination-mark-${mark + 1}`,
-    position: mark,
-  }));
-
   return (
     <div
       data-testid={testId}
@@ -185,14 +180,16 @@ function PaginationMarks({
       aria-label={`${label} ${index + 1} of ${count}`}
       className="flex h-11 items-center gap-2"
     >
-      {marks.map((mark) => (
+      {/* The marks have no identity beyond their position, so the key is derived from
+          the testId rather than from the raw array index. */}
+      {Array.from({ length: count }, (_, mark) => `${testId}-${mark}`).map((key, mark) => (
         <span
-          key={mark.id}
+          key={key}
           aria-hidden="true"
-          className="h-1.5 rounded-full transition-[width,background-color] duration-200"
+          className="h-1.5 rounded-full transition-[width,background-color] duration-[var(--motion-fast)]"
           style={{
-            width: mark.position === index ? "1.25rem" : "0.3125rem",
-            backgroundColor: mark.position === index ? "var(--text)" : "var(--text-30)",
+            width: mark === index ? "1.25rem" : "0.3125rem",
+            backgroundColor: mark === index ? "var(--text)" : "var(--text-30)",
           }}
         />
       ))}
@@ -470,9 +467,14 @@ function MediaColumn({
       <div className="relative min-h-0 flex-1">
         {/* min-h-0 lets the flex child actually shrink to the row height, which
             makes the player end level with the flyer cards. */}
+        {/* Keying on the provider gives the swap a visible enter: without it the
+            new player replaces the old one in the same frame, which reads as a
+            flicker rather than as a switch the visitor asked for. The provider's
+            own loading skeleton then covers the wait for the new frame. */}
         <div
+          key={active.label}
           data-testid="media-player"
-          className="h-full min-h-0 overflow-hidden"
+          className="panel-enter h-full min-h-0 overflow-hidden"
           style={{ minHeight: "420px" }}
         >
           {active.node}
@@ -511,7 +513,7 @@ function MediaLinkCard({
         <span className="text-sm font-semibold uppercase tracking-widest">{label}</span>
       </span>
       <svg
-        className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+        className="h-4 w-4 transition-transform duration-[var(--motion-fast)] group-hover:translate-x-1"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"

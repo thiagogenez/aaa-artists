@@ -273,13 +273,13 @@ export default async function ArtistPage({ params }: Props) {
                     src={a.image}
                     alt={a.name}
                     fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.05]"
+                    className="object-cover transition-transform duration-[var(--motion-base)] group-hover:scale-[1.05]"
                     style={{ filter: "var(--artist-photo-filter)" }}
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                   />
                   {/* Hover wash */}
                   <div
-                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--motion-base)] group-hover:opacity-100"
                     style={{ backgroundColor: "var(--card-wash)" }}
                   />
                   {/* Label */}
@@ -294,7 +294,7 @@ export default async function ArtistPage({ params }: Props) {
                   </div>
                   {/* Hover line sweep */}
                   <div
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-[var(--motion-base)] group-hover:scale-x-100"
                     style={{ backgroundColor: "var(--card-line)" }}
                   />
                 </Link>

@@ -28,10 +28,15 @@ export default function MediaConsentBanner() {
   if (!hydrated || consent !== "unset") return null;
 
   return (
+    // The banner rises from the edge it is docked to, once, at 420ms — this is a
+    // "rare" interaction in the frequency sense: most visitors see it a single time,
+    // and it is asking for something, so it should register rather than blink in.
+    // There is no exit animation: answering removes the question, and the answer is
+    // the point, not the departure.
     <div
       role="region"
       aria-label="Media cookie choice"
-      className="media-consent-banner fixed inset-x-0 bottom-0 z-[90] border-t px-6 py-4"
+      className="media-consent-banner banner-enter fixed inset-x-0 bottom-0 z-[90] border-t px-6 py-4"
     >
       <div className="site-shell flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p

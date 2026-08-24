@@ -49,7 +49,7 @@ export default function PhoneField({
           inputMode: "tel",
           onBlur,
           className:
-            "aaa-phone-input w-full border px-4 py-3 text-base outline-none transition-all",
+            "aaa-phone-input w-full border px-4 py-3 text-base outline-none transition-[border-color] duration-[var(--motion-fast)]",
           style: {
             borderColor: error ? "var(--error)" : "var(--border)",
             backgroundColor: "var(--surface)",

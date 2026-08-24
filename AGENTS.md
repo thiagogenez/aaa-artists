@@ -37,6 +37,11 @@
   `## Risks and limitations`, and an issue too if someone could later mistake it for a
   guarantee. Never leave a finding in prose only; if it is not fixed and it is not an issue, it
   does not exist. A `TODO` comment in the code is not a substitute for either.
+- Before writing a new component, read the inventory in `docs/architecture-principles.md`. This
+  repository has already shipped two components that each built their own iframe, so a loading
+  skeleton added to one never appeared in the other.
+- `docs/quality-pipeline.md` states exactly what gates `main`, what runs after merge, and which
+  tools were evaluated and rejected. Do not re-propose a rejected tool without reading why.
 - The full version of this standard lives in `CLAUDE.md` under "Issue and PR workflow".
 
 ## Project architecture

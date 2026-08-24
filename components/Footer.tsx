@@ -8,7 +8,7 @@ import { SITE_NAME, SOCIAL_LINKS } from "@/lib/site";
 export default function Footer() {
   return (
     <footer
-      className="border-t"
+      className="site-footer border-t"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
     >
       <div className="site-shell px-6 py-10 sm:py-12">

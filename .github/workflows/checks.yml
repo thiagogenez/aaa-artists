@@ -29,8 +29,16 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Validate artist and event data
         run: npm run check
-      - name: Run Worker tests
-        run: npm test
+      - name: Run Worker and events tests with coverage
+        run: npm run test:coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          files: ./coverage/lcov.info
+          flags: unit
+          # The repository is public, so tokenless upload works. Codecov reporting is
+          # informational (codecov.yml) — a flaky upload must never fail the required gate.
+          fail_ci_if_error: false
       - name: Check formatting
         run: npm run format:check
       - name: Lint source
@@ -70,6 +78,8 @@ jobs:
         env:
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: test-site-key
         run: npm run build
+      - name: Check the performance budget
+        run: npm run check:performance
       - name: Validate Cloudflare deployment bundle
         run: npm run check:deploy
       - name: Run browser tests

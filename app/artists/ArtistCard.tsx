@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 // Only the fields the card renders — the page passes this slim shape so the
 // full artist dataset (bios, gig history) stays out of the client bundle.
@@ -21,6 +21,15 @@ export default function ArtistCard({
   priority?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // A cached photograph can finish loading before React hydrates, in which case the
+  // onLoad handler never fires and the fade would leave it invisible. Checking
+  // `complete` on the ref covers that race; `@media (scripting: none)` in globals.css
+  // covers the case where the handler never runs at all.
+  const markLoaded = useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete) setLoaded(true);
+  }, []);
 
   const profileHref = `/artist/${artist.slug}`;
   const actionsId = `artist-card-${artist.slug}-actions`;
@@ -30,7 +39,7 @@ export default function ArtistCard({
 
   return (
     <div
-      className="group relative mx-auto aspect-square w-full max-w-md touch-manipulation select-none overflow-hidden border sm:max-w-none lg:aspect-auto lg:h-[380px]"
+      className={`group relative mx-auto aspect-square w-full max-w-md touch-manipulation select-none overflow-hidden border sm:max-w-none lg:aspect-auto lg:h-[380px] ${loaded ? "" : "skeleton"}`}
       style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}
       onMouseEnter={() => {
         if (canHover()) setOpen(true);
@@ -51,23 +60,29 @@ export default function ArtistCard({
         alt={artist.name}
         fill
         priority={priority}
-        className="object-cover transition-transform duration-300"
-        style={{
-          filter: "var(--artist-photo-filter)",
-          transform: open ? "scale(1.04)" : "scale(1)",
-        }}
+        // Cards below the fold are not worth blocking the first paint for; only the
+        // first row is marked priority by the page.
+        loading={priority ? undefined : "lazy"}
+        ref={markLoaded}
+        onLoad={() => setLoaded(true)}
+        // A failed image is still a finished load. Without this the card shimmers
+        // forever and hides the broken state instead of showing it.
+        onError={() => setLoaded(true)}
+        data-loaded={loaded}
+        className="image-fade object-cover transition-transform duration-[var(--motion-base)]"
+        style={{ transform: open ? "scale(1.04)" : "scale(1)" }}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
       />
 
       {/* Darkening wash on reveal */}
       <div
-        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-[var(--motion-base)]"
         style={{ backgroundColor: "var(--card-wash)", opacity: open ? 1 : 0 }}
       />
 
       {/* Resting label — artist name + genre; fades out as the actions slide up */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 p-5 transition-opacity duration-300"
+        className="pointer-events-none absolute inset-x-0 bottom-0 p-5 transition-opacity duration-[var(--motion-base)]"
         style={{ background: "var(--artist-photo-gradient)", opacity: open ? 0 : 1 }}
       >
         <p className="text-xs font-semibold uppercase tracking-widest text-white/80">
@@ -89,7 +104,7 @@ export default function ArtistCard({
       {/* Slide-up action panel — View Profile + Book, revealed on hover/focus/tap */}
       <div
         id={actionsId}
-        className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-5 transition-transform duration-300 ease-out"
+        className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-5 transition-transform duration-[var(--motion-base)] ease-out"
         style={{
           background: "var(--artist-photo-gradient)",
           transform: open ? "translateY(0)" : "translateY(100%)",

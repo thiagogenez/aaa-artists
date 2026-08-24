@@ -232,13 +232,32 @@ export default function CityCombobox({
             setOpen(false);
           }
         }}
-        className="w-full border px-4 py-3 text-base outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full border px-4 py-3 text-base outline-none transition-[border-color,opacity] duration-[var(--motion-fast)] disabled:cursor-not-allowed disabled:opacity-60"
         style={{
           borderColor: error ? "var(--error)" : "var(--border)",
           backgroundColor: "var(--surface)",
           color: "var(--text)",
         }}
       />
+
+      {/* City suggestions are fetched per country, so there is a real wait here
+          the first time a country is chosen. Three skeleton rows occupy the box the
+          suggestions will fill, which stops the field jumping when they arrive.
+          The screen-reader status message below carries the same information as
+          text; this is decoration for the eye only. */}
+      {open && normalized && loading && (
+        <ul
+          aria-hidden="true"
+          className="panel-enter absolute z-30 mt-1 w-full border py-1 shadow-xl"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          {["first", "second", "third"].map((row, index) => (
+            <li key={row} className="px-4 py-3">
+              <span className="skeleton block h-3.5" style={{ width: `${70 - index * 14}%` }} />
+            </li>
+          ))}
+        </ul>
+      )}
 
       {open && normalized && !loading && matches.length > 0 && (
         <ul

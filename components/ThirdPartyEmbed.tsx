@@ -11,6 +11,10 @@ type ThirdPartyEmbedProps = {
   allowFullScreen?: boolean;
 };
 
+/** A consented third-party player.
+ *
+ *  The loading skeleton is not here — it lives in ThirdPartyConsent, which is the
+ *  gate Spotify's own player passes through as well. */
 export default function ThirdPartyEmbed({
   provider,
   src,
@@ -28,7 +32,7 @@ export default function ThirdPartyEmbed({
         referrerPolicy="no-referrer"
         allow={allow}
         allowFullScreen={allowFullScreen}
-        className={`block w-full ${className}`}
+        className={`block h-full w-full ${className}`}
         style={{ border: 0 }}
       />
     </ThirdPartyConsent>

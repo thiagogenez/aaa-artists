@@ -155,18 +155,18 @@ export default function HomePage() {
               ].map(([num, label]) => (
                 <div
                   key={label}
-                  className="group relative flex h-[120px] w-full flex-col items-center justify-center gap-1 overflow-hidden px-3 text-center transition-all duration-300 md:w-[180px]"
+                  className="group relative flex h-[120px] w-full flex-col items-center justify-center gap-1 overflow-hidden px-3 text-center transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)] md:w-[180px]"
                 >
                   <div
-                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--motion-base)] group-hover:opacity-100"
                     style={{ backgroundColor: "var(--surface)" }}
                   />
                   <div
-                    className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                    className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-[var(--motion-base)] group-hover:scale-x-100"
                     style={{ backgroundColor: "var(--card-line)" }}
                   />
                   <p
-                    className="relative text-2xl font-bold transition-all duration-300 group-hover:-translate-y-0.5"
+                    className="relative text-2xl font-bold transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)] group-hover:-translate-y-0.5"
                     style={{ color: "var(--text)" }}
                   >
                     {num}
@@ -258,14 +258,14 @@ export default function HomePage() {
                   <Link
                     key={artist.slug}
                     href={`/artist/${artist.slug}`}
-                    className="group relative aspect-square overflow-hidden border transition-all duration-300"
+                    className="group relative aspect-square overflow-hidden border transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)]"
                     style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
                   >
                     <Image
                       src={artist.image}
                       alt={artist.name}
                       fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                      className="object-cover transition-transform duration-[var(--motion-base)] group-hover:scale-[1.04]"
                       style={{ filter: "var(--artist-photo-filter)" }}
                       sizes="(max-width: 1024px) 0px, 25vw"
                     />
@@ -277,7 +277,7 @@ export default function HomePage() {
                       <p className="text-xs text-white/75">{artist.genre}</p>
                     </div>
                     <div
-                      className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                      className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-[var(--motion-base)] group-hover:scale-x-100"
                       style={{ backgroundColor: "var(--card-line)" }}
                     />
                   </Link>
@@ -318,25 +318,25 @@ export default function HomePage() {
             ].map(({ genre, desc }) => (
               <div
                 key={genre}
-                className="group relative flex flex-col gap-2 overflow-hidden p-8 text-center transition-all duration-300"
+                className="group relative flex flex-col gap-2 overflow-hidden p-8 text-center transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)]"
                 style={{ backgroundColor: "var(--bg)" }}
               >
                 <div
-                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--motion-base)] group-hover:opacity-100"
                   style={{ backgroundColor: "var(--surface)" }}
                 />
                 <div
-                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-[var(--motion-base)] group-hover:scale-x-100"
                   style={{ backgroundColor: "var(--card-line)" }}
                 />
                 <p
-                  className="relative text-xl font-bold transition-all duration-300 group-hover:-translate-y-0.5"
+                  className="relative text-xl font-bold transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)] group-hover:-translate-y-0.5"
                   style={{ color: "var(--text)" }}
                 >
                   {genre}
                 </p>
                 <p
-                  className="relative text-sm transition-all duration-300"
+                  className="relative text-sm transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)]"
                   style={{ color: "var(--text-30)" }}
                 >
                   {desc}

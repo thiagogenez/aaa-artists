@@ -87,20 +87,35 @@ Thiago's own terminal. An agent stages the files and hands over the exact
 signing with `--no-gpg-sign`, and never use `git checkout -- .` or `git reset --hard` to undo a
 tool's edits — it silently discards unrelated work in the same tree.
 
-## Code quality
+## Engineering standards
 
-Run `npm run check:quality` after changing source, configuration or dependencies. It checks
-formatting, ESLint and Biome rules, dead code and the architecture contract; the same commands
-gate every pull request in `checks / verify`. Run `npm run format` to apply the repository's
-Biome format before committing.
+Four standards apply to every change. Each has its own document; read the relevant one before
+touching that area rather than re-deriving the decisions.
 
-`arch-contract.yaml` defines the allowed dependency graph. Because arch-contract analyses
-TypeScript only, matching ESLint rules enforce the Worker `.js` and tooling `.mjs` boundaries.
-Keep the contract, ESLint rules and `docs/code-quality.md` aligned when a boundary changes.
-Stryker mutation testing is available through `npm run test:mutation`, but is intentionally
-on-demand rather than a required pull-request gate.
+| Area | Command | Document |
+| --- | --- | --- |
+| Code quality, lint, dead code, architecture | `npm run check:quality` | `docs/code-quality.md` |
+| Tests, coverage, mutation | `npm test`, `npm run test:coverage`, `npm run test:e2e` | `docs/code-quality.md` |
+| Observability and logging | `npx wrangler tail --env <env>` | `docs/observability.md` |
+| Motion, skeletons, loading states | — | `docs/motion.md` |
+| Page weight | `npm run check:performance` | `performance-budget.json` |
+| Architecture, and what NOT to rebuild | `npm run arch` | `docs/architecture-principles.md` |
+| What gates `main`, and what was rejected | all of the above | `docs/quality-pipeline.md` |
 
-See `docs/code-quality.md` for the ownership and limitations of every tool.
+**Before writing a new component, read the inventory in `docs/architecture-principles.md`.**
+It exists because this has already gone wrong once: `ThirdPartyEmbed` and `SpotifyPlayer` each
+built their own iframe, so a loading skeleton added to one never appeared in the other.
+
+Three things that are settled, and should not be re-opened without a reason:
+
+- **Motion is not applied to everything.** Skeletons and animation go where a visitor actually
+  waits — media frames, images, the booking submit. A skeleton in front of content that is
+  already in the pre-rendered HTML makes the site slower. See `docs/motion.md`.
+- **Observability stays inside Cloudflare.** Workers Logs plus OpenTelemetry-shaped records.
+  No browser-side error or analytics SDK without a decision from the data controller, because
+  that ships visitor IPs to a third party and this site has no analytics consent path.
+- **Two linters on purpose.** Biome formats and catches correctness/accessibility; ESLint keeps
+  the Next.js-specific rules Biome has no equivalent for. They do not overlap.
 
 ## Tech stack
 

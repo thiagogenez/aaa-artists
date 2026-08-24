@@ -1,6 +1,10 @@
 // Dropdown option lists for the booking form (app/contact/page.tsx).
-// Capacity and budget ranges live in config/booking.js because the form and Worker
-// must share exactly the values that the API accepts.
+// Kept here so the form copy stays readable and the lists are easy to edit.
+//
+// Capacity and budget brackets are NOT here: the Worker validates submitted values
+// against the same lists, so they live once in `config/booking.js` and are imported
+// by both sides. Copies of them lived here until Knip found that nothing read them —
+// editing the copy would have silently produced values the Worker rejects.
 
 // value = ISO code used on submit, label = what the user sees.
 export const CURRENCIES = [

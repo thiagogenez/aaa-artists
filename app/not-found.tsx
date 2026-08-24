@@ -30,14 +30,14 @@ export default function NotFound() {
       <div className="flex flex-col items-center gap-4 sm:flex-row">
         <Link
           href="/"
-          className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
+          className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-[color,background-color,border-color,opacity,transform]"
           style={{ backgroundColor: "var(--cta-bg)", color: "var(--cta-text)" }}
         >
           Back home
         </Link>
         <Link
           href="/artists"
-          className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-all"
+          className="px-8 py-3.5 text-sm font-semibold uppercase tracking-widest transition-[color,background-color,border-color,opacity,transform]"
           style={{ border: "1px solid var(--border)", color: "var(--text-40)" }}
         >
           View artists

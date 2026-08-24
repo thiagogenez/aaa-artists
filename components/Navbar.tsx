@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { PRIMARY_NAV_LINKS } from "@/config/navigation";
 
@@ -41,7 +41,18 @@ function MoonIcon() {
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // The panel stays mounted for the length of its exit animation. Without this it
+  // would vanish instantly, which reads as a glitch next to a menu that slid in.
+  const [closing, setClosing] = useState(false);
   const { theme, toggle } = useTheme();
+
+  // Escape and every link close through here, so the exit plays wherever it starts.
+  const closeMenu = useCallback(() => {
+    setOpen((wasOpen) => {
+      if (wasOpen) setClosing(true);
+      return false;
+    });
+  }, []);
 
   // Same rule for desktop and mobile: section links stay highlighted on
   // sub-pages too (e.g. /artist/<slug> keeps "Artists" active).
@@ -54,22 +65,22 @@ export default function Navbar() {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") closeMenu();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, closeMenu]);
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md"
+      className="site-header fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-nav)" }}
     >
       <nav className="site-shell flex items-center justify-between px-6 py-4">
         {/* Logo = home link; same underline-sweep affordance as the nav links */}
         <Link
           href="/"
-          className="group relative flex items-center transition-transform duration-300 hover:-translate-y-px"
+          className="group relative flex items-center transition-transform duration-[var(--motion-base)] hover:-translate-y-px"
         >
           <Image
             src="/logo.png"
@@ -80,7 +91,7 @@ export default function Navbar() {
             style={{ filter: "var(--logo-filter)" }}
           />
           <span
-            className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+            className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-[var(--motion-base)] group-hover:scale-x-100"
             style={{ backgroundColor: "var(--text-20)" }}
           />
         </Link>
@@ -97,13 +108,13 @@ export default function Navbar() {
                 <Link
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className="group relative inline-block text-sm font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
+                  className="group relative inline-block text-sm font-medium tracking-widest uppercase transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)] hover:-translate-y-px"
                   style={{ color: active ? "var(--text)" : "var(--text-60)" }}
                 >
                   {label}
                   {/* Bottom sweep — persistent for the active page, hover-reveal otherwise */}
                   <span
-                    className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
+                    className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-[var(--motion-base)] ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
                     style={{ backgroundColor: active ? "var(--text)" : "var(--text-20)" }}
                   />
                 </Link>
@@ -148,24 +159,24 @@ export default function Navbar() {
           <button
             type="button"
             className="-mr-2 flex h-11 w-11 flex-col items-center justify-center gap-1.5"
-            onClick={() => setOpen(!open)}
+            onClick={() => (open ? closeMenu() : setOpen(true))}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="mobile-menu"
           >
             <span
-              className="h-px w-6 transition-all"
+              className="h-px w-6 transition-[color,background-color,border-color,opacity,transform]"
               style={{
                 backgroundColor: "var(--text)",
                 transform: open ? "translateY(8px) rotate(45deg)" : "none",
               }}
             />
             <span
-              className="h-px w-6 transition-all"
+              className="h-px w-6 transition-[color,background-color,border-color,opacity,transform]"
               style={{ backgroundColor: "var(--text)", opacity: open ? 0 : 1 }}
             />
             <span
-              className="h-px w-6 transition-all"
+              className="h-px w-6 transition-[color,background-color,border-color,opacity,transform]"
               style={{
                 backgroundColor: "var(--text)",
                 transform: open ? "translateY(-8px) rotate(-45deg)" : "none",
@@ -175,11 +186,15 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
-      {open && (
+      {/* Mobile menu. Enter is 260ms; the exit is faster and moves half as far —
+          attention is already on wherever the tap is taking the visitor. */}
+      {(open || closing) && (
         <div
           id="mobile-menu"
-          className="border-t px-6 py-6 lg:hidden"
+          className={`overflow-hidden border-t px-6 py-6 lg:hidden ${open ? "panel-enter" : "panel-exit"}`}
+          onAnimationEnd={() => {
+            if (!open) setClosing(false);
+          }}
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}
         >
           <ul className="flex flex-col gap-2">
@@ -189,15 +204,15 @@ export default function Navbar() {
                 <li key={href}>
                   <Link
                     href={href}
-                    onClick={() => setOpen(false)}
+                    onClick={closeMenu}
                     aria-current={active ? "page" : undefined}
-                    className="group flex min-h-[44px] items-center text-base font-medium tracking-widest uppercase transition-all duration-300 hover:-translate-y-px"
+                    className="group flex min-h-[44px] items-center text-base font-medium tracking-widest uppercase transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)] hover:-translate-y-px"
                     style={{ color: active ? "var(--text)" : "var(--text-60)" }}
                   >
                     <span className="relative inline-block">
                       {label}
                       <span
-                        className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
+                        className={`absolute -bottom-1 left-0 h-px w-full origin-left transition-transform duration-[var(--motion-base)] ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
                         style={{ backgroundColor: active ? "var(--text)" : "var(--text-20)" }}
                       />
                     </span>
@@ -208,7 +223,7 @@ export default function Navbar() {
             <li>
               <Link
                 href="/contact"
-                onClick={() => setOpen(false)}
+                onClick={closeMenu}
                 className="btn-outline mt-2 inline-flex min-h-[44px] items-center px-5 text-sm uppercase tracking-widest"
               >
                 Book Artists

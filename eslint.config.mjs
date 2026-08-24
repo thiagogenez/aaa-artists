@@ -4,7 +4,7 @@ import next from "eslint-config-next";
 const eslintConfig = [
   ...next,
   {
-    ignores: [".next/**", "out/**", "node_modules/**", "next-env.d.ts"],
+    ignores: [".next/**", "out/**", "node_modules/**", "next-env.d.ts", "scripts/**"],
   },
   {
     rules: {
@@ -15,8 +15,16 @@ const eslintConfig = [
     },
   },
   {
-    // arch-contract analyses TypeScript only. The Worker is JavaScript, so ESLint
-    // enforces the same boundary for the runtime that receives public requests.
+    // Architecture boundary for the Worker.
+    //
+    // arch-contract.yaml declares this same boundary, but that tool analyses TypeScript
+    // only — worker/index.js is invisible to it (verified 2026-08-11 with a deliberate
+    // probe import that it did not flag). ESLint does read this file, so the rule that
+    // actually enforces the boundary lives here. Keep the two in sync: if you widen one,
+    // widen the other and say why in the pull request.
+    //
+    // The Worker runs in the Cloudflare Workers runtime and is deployed separately from
+    // the static export. It may share validation constants from config/ and nothing else.
     files: ["worker/**/*.js"],
     rules: {
       "no-restricted-imports": [
@@ -24,13 +32,13 @@ const eslintConfig = [
         {
           patterns: [
             {
-              group: ["../app/**", "../components/**", "../lib/**", "../data/**", "@/**"],
+              group: ["../app/*", "../components/*", "../lib/*", "../data/*", "@/*"],
               message:
-                "The Worker may only import from config/. App code is part of the static export and is unavailable in the Workers runtime.",
+                "The Worker may only import from config/. app/, components/, lib/ and data/ are part of the static export and do not exist in the Workers runtime.",
             },
             {
-              group: ["react", "react-dom", "next", "next/**"],
-              message: "React and Next.js are unavailable in the Cloudflare Workers runtime.",
+              group: ["react", "react-dom", "next", "next/*"],
+              message: "React and Next.js are not available in the Cloudflare Workers runtime.",
             },
           ],
         },
@@ -38,67 +46,9 @@ const eslintConfig = [
     },
   },
   {
-    // arch-contract also cannot see .mjs. Tooling may reuse config/, worker/ and
-    // other scripts, but it must not couple deployment code to the static app.
-    files: ["scripts/*.mjs"],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: [
-                "../app/**",
-                "../components/**",
-                "../lib/**",
-                "../data/**",
-                "@/app/**",
-                "@/components/**",
-                "@/lib/**",
-                "@/data/**",
-              ],
-              message:
-                "Tooling may import config/, worker/ and scripts/, but not code shipped with the static app.",
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    // Nested source adapters and helpers may import siblings under scripts/, so their
-    // paths need one more parent segment before they can cross into shipped app code.
-    files: ["scripts/*/**/*.mjs"],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: [
-                "../../app/**",
-                "../../../app/**",
-                "../../components/**",
-                "../../../components/**",
-                "../../lib/**",
-                "../../../lib/**",
-                "../../data/**",
-                "../../../data/**",
-                "@/app/**",
-                "@/components/**",
-                "@/lib/**",
-                "@/data/**",
-              ],
-              message:
-                "Tooling may import config/, worker/ and scripts/, but not code shipped with the static app.",
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    // Nothing shipped to a browser may import deployment or generation tooling.
+    // The mirror of the rule above: nothing shipped to a browser may pull in the
+    // deployment or generation tooling, which uses node:fs, node:child_process and
+    // Cloudflare credentials.
     files: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.ts"],
     rules: {
       "no-restricted-imports": [
@@ -106,14 +56,14 @@ const eslintConfig = [
         {
           patterns: [
             {
-              group: ["@/scripts/**", "../scripts/**", "../../scripts/**", "../../../scripts/**"],
+              group: ["@/scripts/*", "../scripts/*", "../../scripts/*", "../../../scripts/*"],
               message:
-                "Build and deploy scripts must not reach the browser bundle. Move shared code into config/ or lib/.",
+                "Build and deploy scripts must not reach the browser bundle. Move the shared part into config/ or lib/.",
             },
             {
               group: ["@/data/artists.data.json", "*/artists.data.json"],
               message:
-                "Read generated artist data through data/artists.ts, which owns its types and lookup helpers.",
+                "Read generated artist data through data/artists.ts, which owns the types and the lookup helpers.",
             },
           ],
         },

@@ -91,25 +91,25 @@ export default function AboutPage() {
             {stats.map(({ value, label }) => (
               <div
                 key={label}
-                className="group relative overflow-hidden px-8 py-10 text-center transition-all duration-300"
+                className="group relative overflow-hidden px-8 py-10 text-center transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)]"
                 style={{ backgroundColor: "var(--bg)" }}
               >
                 <div
-                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--motion-base)] group-hover:opacity-100"
                   style={{ backgroundColor: "var(--surface)" }}
                 />
                 <div
-                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-[var(--motion-base)] group-hover:scale-x-100"
                   style={{ backgroundColor: "var(--card-line)" }}
                 />
                 <p
-                  className="relative text-4xl font-bold transition-all duration-300 group-hover:-translate-y-0.5"
+                  className="relative text-4xl font-bold transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)] group-hover:-translate-y-0.5"
                   style={{ color: "var(--text)" }}
                 >
                   {value}
                 </p>
                 <p
-                  className="relative mt-1 text-sm transition-all duration-300"
+                  className="relative mt-1 text-sm transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)]"
                   style={{ color: "var(--text-40)" }}
                 >
                   {label}
@@ -234,25 +234,25 @@ export default function AboutPage() {
             {values.map(({ title, desc }) => (
               <div
                 key={title}
-                className="group relative overflow-hidden p-8 transition-all duration-300"
+                className="group relative overflow-hidden p-8 transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)]"
                 style={{ backgroundColor: "var(--bg)" }}
               >
                 <div
-                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--motion-base)] group-hover:opacity-100"
                   style={{ backgroundColor: "var(--surface)" }}
                 />
                 <div
-                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                  className="absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-[var(--motion-base)] group-hover:scale-x-100"
                   style={{ backgroundColor: "var(--card-line)" }}
                 />
                 <h3
-                  className="relative mb-3 text-base font-bold transition-all duration-300 group-hover:-translate-y-0.5"
+                  className="relative mb-3 text-base font-bold transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)] group-hover:-translate-y-0.5"
                   style={{ color: "var(--text)" }}
                 >
                   {title}
                 </h3>
                 <p
-                  className="relative text-sm leading-relaxed transition-all duration-300"
+                  className="relative text-sm leading-relaxed transition-[color,background-color,border-color,opacity,transform] duration-[var(--motion-base)]"
                   style={{ color: "var(--text-40)" }}
                 >
                   {desc}

@@ -24,6 +24,7 @@ const commitlintConfig = {
         "build", // build system, Next.js or Wrangler configuration
         "style", // formatting only, no code meaning changed
         "revert", // reverts a previous commit
+        "content", // artist YAML and site copy — used throughout this repo's history
       ],
     ],
     // The repository wraps prose at 100 columns; commit subjects stay shorter than that.

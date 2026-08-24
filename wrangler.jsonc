@@ -32,6 +32,18 @@
       "vars": {
         "ENVIRONMENT": "staging"
       },
+      // Workers Logs. Without this block `console.*` output is discarded unless someone is
+      // running `wrangler tail`, which is what made the Worker's structured events
+      // write-only. Staging keeps a 100% head sampling rate: its traffic is our own.
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1
+      },
+      // Lets a log record name the exact deployed version that produced it — the same
+      // version id the deploy workflow uploads, smoke-tests and promotes.
+      "version_metadata": {
+        "binding": "CF_VERSION_METADATA"
+      },
       // Staging uses Cloudflare's always-pass Turnstile test key pair. Outbound email
       // remains disabled unless a deliberately restricted staging BREVO_API_KEY is
       // added, preventing the public test-key form from emailing arbitrary recipients.
@@ -74,6 +86,16 @@
       ],
       "vars": {
         "ENVIRONMENT": "production"
+      },
+      // Workers Logs, sampled at 100%. The booking API handles a handful of requests a day,
+      // so there is nothing to sample away, and a missing record is exactly the record that
+      // would have explained a lost enquiry.
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1
+      },
+      "version_metadata": {
+        "binding": "CF_VERSION_METADATA"
       },
       "secrets": {
         "required": ["BREVO_API_KEY", "TURNSTILE_SECRET_KEY"]

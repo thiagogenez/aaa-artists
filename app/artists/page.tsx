@@ -18,14 +18,14 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
   return (
     <Link
       href="/contact"
-      className={`group relative mx-auto flex aspect-square w-full max-w-md flex-col justify-between overflow-hidden border p-6 transition-all sm:max-w-none lg:aspect-auto lg:h-[380px] ${
+      className={`group relative mx-auto flex aspect-square w-full max-w-md flex-col justify-between overflow-hidden border p-6 transition-[color,background-color,border-color,opacity,transform] sm:max-w-none lg:aspect-auto lg:h-[380px] ${
         wide ? "sm:col-span-2 sm:aspect-auto sm:min-h-[280px]" : ""
       }`}
       style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
     >
       {/* Hover wash — same as the artist cards */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--motion-base)] group-hover:opacity-100"
         style={{ backgroundColor: "var(--card-wash)" }}
       />
 
@@ -61,7 +61,7 @@ function BookingCard({ wide = false }: { wide?: boolean }) {
 
       {/* Hover line sweep — bottom + center origin, matching the artist cards */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px scale-x-0 transition-transform duration-[var(--motion-base)] group-hover:scale-x-100"
         style={{ backgroundColor: "var(--card-line)" }}
       />
     </Link>
@@ -97,19 +97,27 @@ export default function ArtistsPage() {
           </p>
         </div>
 
-        {/* Artist grid */}
+        {/* Artist grid.
+            Each card reveals as it scrolls into view, using a CSS scroll-driven
+            animation (`animation-timeline: view()`) rather than an
+            IntersectionObserver. There is no JavaScript involved and no
+            "invisible until hydrated" state: browsers without support show the
+            finished page, which is the correct fallback for a static export.
+            The first card is excluded — it is above the fold and priority-loaded,
+            so animating it would delay the thing the visitor came for. */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
           {artists.map((artist, index) => (
-            <ArtistCard
-              key={artist.slug}
-              artist={{
-                slug: artist.slug,
-                name: artist.name,
-                genre: artist.genre,
-                image: artist.image,
-              }}
-              priority={index === 0}
-            />
+            <div key={artist.slug} className={index === 0 ? undefined : "reveal"}>
+              <ArtistCard
+                artist={{
+                  slug: artist.slug,
+                  name: artist.name,
+                  genre: artist.genre,
+                  image: artist.image,
+                }}
+                priority={index === 0}
+              />
+            </div>
           ))}
           {/* With an even roster the grid would end one short — let the booking
               card take two spots so every row closes full. */}

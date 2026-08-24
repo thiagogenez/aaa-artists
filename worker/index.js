@@ -15,6 +15,7 @@ import {
   formatDuration,
 } from "../config/booking.js";
 import { BOOKING_EMAIL, SITE_HOSTNAME, SITE_NAME } from "../config/site.js";
+import { createLogger } from "./observability.js";
 
 const JSON_HEADERS = {
   "Cache-Control": "no-store",
@@ -348,23 +349,19 @@ export function enquiryEmail(payload, bookingAddress = BOOKING_EMAIL) {
 
 async function handleEnquiry(request, env) {
   const requestId = crypto.randomUUID();
+  const log = createLogger({ env, requestId });
+  const startedAt = Date.now();
   try {
     const configurationIssue = productionConfigurationIssue(env);
     if (configurationIssue) {
-      console.error(
-        JSON.stringify({
-          event: "enquiry_security_unconfigured",
-          requestId,
-          missing: configurationIssue,
-        })
-      );
+      log.error("enquiry_security_unconfigured", { missing: configurationIssue });
       return json(503, {
         error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.`,
       });
     }
     const actorKey = await sha256(request.headers.get("CF-Connecting-IP") || "unknown-actor");
     if (!(await withinLimit(env.CONTACT_ACTOR_RATE_LIMIT, actorKey))) {
-      console.warn(JSON.stringify({ event: "enquiry_rate_limited", scope: "actor", requestId }));
+      log.warn("enquiry_rate_limited", { scope: "actor" });
       return json(
         429,
         {
@@ -401,7 +398,7 @@ async function handleEnquiry(request, env) {
       return json(400, { error: "Please check the enquiry details and try again.", requestId });
 
     if (!(await verifyTurnstile(request, env, payload.turnstileToken))) {
-      console.warn(JSON.stringify({ event: "enquiry_turnstile_failed", requestId }));
+      log.warn("enquiry_turnstile_failed");
       return json(400, {
         error: "The security check expired or failed. Please try again.",
         requestId,
@@ -410,7 +407,7 @@ async function handleEnquiry(request, env) {
 
     const emailKey = await sha256(payload.email.toLowerCase());
     if (!(await withinLimit(env.CONTACT_EMAIL_RATE_LIMIT, emailKey))) {
-      console.warn(JSON.stringify({ event: "enquiry_rate_limited", scope: "email", requestId }));
+      log.warn("enquiry_rate_limited", { scope: "email" });
       return json(
         429,
         {
@@ -421,7 +418,7 @@ async function handleEnquiry(request, env) {
       );
     }
     if (!env.BREVO_API_KEY) {
-      console.error(JSON.stringify({ event: "enquiry_delivery_unconfigured", requestId }));
+      log.error("enquiry_delivery_unconfigured");
       return json(503, {
         error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.`,
       });
@@ -460,7 +457,10 @@ async function handleEnquiry(request, env) {
       signal: AbortSignal.timeout(10_000),
     });
     if (response.status === 429) {
-      console.warn(JSON.stringify({ event: "enquiry_delivery_rate_limited", requestId }));
+      log.warn("enquiry_delivery_rate_limited", {
+        status: response.status,
+        retryAfter: response.headers.get("Retry-After") || "60",
+      });
       return json(
         429,
         { error: "The booking service is temporarily busy. Please wait and try again.", requestId },
@@ -470,16 +470,13 @@ async function handleEnquiry(request, env) {
       );
     }
     if (!response.ok) throw new Error(`Email delivery returned ${response.status}`);
-    console.log(JSON.stringify({ event: "enquiry_delivered", requestId }));
+    log.info("enquiry_delivered", { outcome: "sent", durationMs: Date.now() - startedAt });
     return json(200, { ok: true, requestId });
   } catch (error) {
-    console.error(
-      JSON.stringify({
-        event: "enquiry_delivery_failed",
-        requestId,
-        reason: error instanceof Error ? error.name : "unknown",
-      })
-    );
+    log.error("enquiry_delivery_failed", {
+      reason: error instanceof Error ? error.name : "unknown",
+      durationMs: Date.now() - startedAt,
+    });
     return json(502, {
       error: `Something went wrong sending your enquiry. Please email ${BOOKING_EMAIL} directly.`,
       requestId,

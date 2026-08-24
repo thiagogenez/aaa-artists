@@ -1052,7 +1052,11 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
 
   if (submitted) {
     return (
-      <div role="status" className="flex flex-col items-center justify-center py-32 text-center">
+      // The confirmation replaces the whole form, so it enters rather than appears.
+      <div
+        role="status"
+        className="panel-enter flex flex-col items-center justify-center py-32 text-center"
+      >
         <div
           className="mb-6 flex h-16 w-16 items-center justify-center border"
           style={{ borderColor: "var(--border)" }}
@@ -1269,7 +1273,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                   return (
                     <label
                       key={method.value}
-                      className="flex min-h-[44px] cursor-pointer items-center justify-center px-2 text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-200 has-[:focus-visible]:relative has-[:focus-visible]:z-10 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-inset"
+                      className="flex min-h-[44px] cursor-pointer items-center justify-center px-2 text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-[var(--motion-fast)] has-[:focus-visible]:relative has-[:focus-visible]:z-10 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-inset"
                       style={{
                         borderLeft: index > 0 ? "1px solid var(--border)" : undefined,
                         backgroundColor: selected ? "var(--text)" : "var(--surface)",
@@ -1302,7 +1306,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                 <div className="mt-3 space-y-3">
                   {form.phone && (
                     <label
-                      className="flex min-h-[50px] cursor-pointer items-center gap-3 border px-4 py-3 text-sm transition-colors duration-200"
+                      className="flex min-h-[50px] cursor-pointer items-center gap-3 border px-4 py-3 text-sm transition-colors duration-[var(--motion-fast)]"
                       style={{
                         borderColor: "var(--border)",
                         backgroundColor: "var(--surface)",
@@ -1464,7 +1468,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                         </span>
                         <svg
                           aria-hidden="true"
-                          className="h-4 w-4 shrink-0 transition-transform duration-200"
+                          className="h-4 w-4 shrink-0 transition-transform duration-[var(--motion-fast)]"
                           style={{
                             color: "var(--text-40)",
                             transform: expanded ? "rotate(180deg)" : "none",
@@ -1553,7 +1557,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                                 ).map(([value, label]) => (
                                   <label
                                     key={value}
-                                    className="flex min-h-[44px] cursor-pointer items-center gap-2 border px-2 py-2 text-xs transition-colors duration-200 sm:px-3 sm:text-sm"
+                                    className="flex min-h-[44px] cursor-pointer items-center gap-2 border px-2 py-2 text-xs transition-colors duration-[var(--motion-fast)] sm:px-3 sm:text-sm"
                                     style={{
                                       borderColor:
                                         booking.timingMode === value
@@ -1964,16 +1968,30 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       <div>
         <TurnstileWidget key={turnstileVersion} siteKey={TURNSTILE_SITE_KEY} />
         <div>
+          {/* The longest wait on the site: this round-trips through Turnstile, the
+              Worker, and Brevo. "Sending…" alone says the click registered but not
+              that anything is still happening, so the button also carries an
+              indeterminate progress bar for as long as the request is in flight.
+              It is the only looping motion in the system, and it stops when the
+              request does. */}
           <button
             type="submit"
             disabled={sending}
-            className="btn-cta w-full py-4 text-sm font-semibold uppercase tracking-widest sm:w-auto sm:px-12"
+            aria-busy={sending}
+            className="btn-cta relative w-full overflow-hidden py-4 text-sm font-semibold uppercase tracking-widest sm:w-auto sm:px-12"
             style={{
-              opacity: sending ? 0.6 : 1,
+              opacity: sending ? 0.75 : 1,
               cursor: sending ? "wait" : "pointer",
             }}
           >
             {sending ? "Sending…" : "Send Enquiry"}
+            {sending && (
+              <span
+                aria-hidden="true"
+                data-testid="submit-progress"
+                className="progress-track absolute inset-x-0 bottom-0 h-0.5"
+              />
+            )}
           </button>
         </div>
         {sendError && (
@@ -2028,7 +2046,7 @@ function Collapsible({
           onClick={onToggle}
           aria-expanded={Boolean(open)}
           aria-controls={contentId}
-          className="flex w-full cursor-pointer items-center justify-between gap-4 px-4 py-4 text-left transition-all sm:px-5"
+          className="flex w-full cursor-pointer items-center justify-between gap-4 px-4 py-4 text-left transition-[background-color,border-color] duration-[var(--motion-fast)] sm:px-5"
           style={{ backgroundColor: "var(--surface)" }}
         >
           <span className="flex items-center gap-3">
@@ -2057,7 +2075,7 @@ function Collapsible({
           </span>
           <svg
             aria-hidden="true"
-            className="h-5 w-5 shrink-0 transition-transform duration-300"
+            className="h-5 w-5 shrink-0 transition-transform duration-[var(--motion-base)]"
             style={{ color: "var(--text-40)", transform: open ? "rotate(45deg)" : "none" }}
             fill="none"
             viewBox="0 0 24 24"
@@ -2075,7 +2093,7 @@ function Collapsible({
       {open && (
         <div
           id={contentId}
-          className="min-w-0 space-y-6 border-t p-4 sm:p-5 md:p-6"
+          className="panel-enter min-w-0 space-y-6 border-t p-4 sm:p-5 md:p-6"
           style={{ borderColor: "var(--border)" }}
         >
           {children}
@@ -2097,7 +2115,7 @@ function Input({
   return (
     <input
       {...rest}
-      className={`w-full min-w-0 max-w-full border px-4 py-3 text-base outline-none transition-all ${className}`}
+      className={`w-full min-w-0 max-w-full border px-4 py-3 text-base outline-none transition-[border-color,background-color] duration-[var(--motion-fast)] ${className}`}
       style={{
         borderColor: error ? "var(--error)" : "var(--border)",
         backgroundColor: "var(--surface)",
@@ -2182,7 +2200,7 @@ function EmailField({
           onChange?.(event);
         }}
         onBlur={onBlur}
-        className="w-full min-w-0 max-w-full border px-4 py-3 text-base outline-none transition-all"
+        className="w-full min-w-0 max-w-full border px-4 py-3 text-base outline-none transition-[border-color,background-color] duration-[var(--motion-fast)]"
         style={{
           borderColor: error ? "var(--error)" : "var(--border)",
           backgroundColor: "var(--surface)",
@@ -2218,7 +2236,7 @@ function EmailField({
                     setShowAll(false);
                     onComplete(completion.email);
                   }}
-                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-200 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-[var(--motion-fast)] hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                   style={{
                     borderColor: index === 0 ? "var(--text)" : "var(--border)",
                     backgroundColor: index === 0 ? "var(--text)" : "var(--surface)",
@@ -2236,7 +2254,7 @@ function EmailField({
                   onClick={() => setShowAll(true)}
                   aria-expanded={false}
                   aria-controls={suggestionsId}
-                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-200 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-[var(--motion-fast)] hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                   style={{
                     borderColor: "var(--border)",
                     backgroundColor: "var(--bg)",
@@ -2253,7 +2271,7 @@ function EmailField({
                   onClick={() => setShowAll(false)}
                   aria-expanded="true"
                   aria-controls={suggestionsId}
-                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-200 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="min-h-[44px] cursor-pointer border px-3 py-2 text-sm font-semibold transition-opacity duration-[var(--motion-fast)] hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                   style={{
                     borderColor: "var(--border)",
                     backgroundColor: "var(--bg)",

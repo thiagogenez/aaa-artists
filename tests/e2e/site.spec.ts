@@ -154,6 +154,13 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   await expect(dialog.getByText("Grand Café Eighty-Four", { exact: true })).toBeVisible();
   await expect(dialog.getByText("2025", { exact: true })).toBeVisible();
 
+  // The dialog now animates in (translate + scale), so measuring the moment it
+  // becomes visible reads a position it is still travelling through. Wait for the
+  // transitions to settle before asserting where it came to rest.
+  await dialog.evaluate((node) =>
+    Promise.all(node.getAnimations().map((animation) => animation.finished.catch(() => undefined)))
+  );
+
   // Tailwind's preflight zeroes the `margin: auto` a modal <dialog> relies on,
   // so centring has to be asserted, not assumed.
   const dialogBox = (await dialog.boundingBox())!;

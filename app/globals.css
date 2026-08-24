@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Tailwind's own default easing is a generic cubic-bezier(0.4, 0, 0.2, 1). Pointing
+   its default at the site's easing token means every `transition-*` utility in the
+   codebase matches the hand-written motion without touching a single call site.
+   The duration tokens are defined in :root further down, next to the motion system. */
+@theme {
+  --default-transition-timing-function: var(--motion-ease-standard);
+  --default-transition-duration: var(--motion-fast);
+}
+
 /* ─── Light theme (default) ─────────────────────────────── */
 html.light {
   --bg: #f8f8f8;
@@ -111,8 +120,8 @@ body {
   color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard);
 }
 
 ::selection {
@@ -135,7 +144,7 @@ button:not(:disabled) {
    Used in the footer, back links, and secondary "→" links. */
 .link-quiet {
   color: var(--text-60);
-  transition: color 0.2s ease;
+  transition: color var(--motion-fast) var(--motion-ease-standard);
 }
 .link-quiet:hover,
 .link-quiet:focus-visible {
@@ -146,7 +155,9 @@ button:not(:disabled) {
 .btn-cta {
   background-color: var(--cta-bg);
   color: var(--cta-text);
-  transition: background-color 0.2s ease;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    transform 100ms var(--motion-ease-standard);
 }
 .btn-cta:hover {
   background-color: var(--cta-hover);
@@ -157,8 +168,9 @@ button:not(:disabled) {
   border: 1px solid var(--border);
   color: var(--text-60);
   transition:
-    border-color 0.2s ease,
-    color 0.2s ease;
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard),
+    transform 100ms var(--motion-ease-standard);
 }
 
 /* The media decision is intentionally inverted against the page theme so it
@@ -169,13 +181,13 @@ button:not(:disabled) {
   border-color: var(--media-banner-border);
   box-shadow: 0 -10px 30px var(--media-banner-shadow);
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard);
 }
 
 .media-consent-link {
   color: var(--media-banner-muted);
-  transition: color 0.2s ease;
+  transition: color var(--motion-fast) var(--motion-ease-standard);
 }
 .media-consent-link:hover,
 .media-consent-link:focus-visible {
@@ -186,8 +198,9 @@ button:not(:disabled) {
   border: 1px solid var(--media-banner-border);
   color: var(--media-banner-muted);
   transition:
-    border-color 0.2s ease,
-    color 0.2s ease;
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard),
+    transform 100ms var(--motion-ease-standard);
 }
 .media-consent-decline:hover,
 .media-consent-decline:focus-visible {
@@ -198,7 +211,9 @@ button:not(:disabled) {
 .media-consent-accept {
   background-color: var(--media-banner-action-bg);
   color: var(--media-banner-action-text);
-  transition: background-color 0.2s ease;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    transform 100ms var(--motion-ease-standard);
 }
 .media-consent-accept:hover {
   background-color: var(--media-banner-action-hover);
@@ -218,8 +233,9 @@ button:not(:disabled) {
   border: 1px solid rgba(255, 255, 255, 0.5);
   color: #ffffff;
   transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    transform 100ms var(--motion-ease-standard);
 }
 .btn-outline-photo:hover,
 .btn-outline-photo:focus-visible {
@@ -264,6 +280,333 @@ input[type="date"] {
 }
 .aaa-phone-field .iti__country {
   min-height: 44px;
+}
+
+/* ─── Motion tokens ─────────────────────────────────────────────────────────
+   One place for duration and easing so components stop hard-coding "0.2s ease".
+
+   The site is a marketing/booking site, so the motion register is Jakub Krehel's
+   production polish (200-500ms, subtle, no bounce) with Emil Kowalski's restraint
+   applied to anything repeated — navigation and form controls stay under 200ms.
+   Built-in `ease` is deliberately unused: it has no strength.
+
+   Rules that hold everywhere below:
+   - only transform / opacity / filter are animated (never width, height, top, left)
+   - an exit is always subtler than its enter
+   - nothing loops except a loading indicator, which stops when loading stops    */
+:root {
+  --motion-fast: 140ms; /* repeated interactions: nav, buttons, toggles */
+  --motion-base: 260ms; /* the default: panels, reveals, state changes */
+  --motion-slow: 420ms; /* something arriving for the first time */
+
+  /* Strong ease-out. Things arriving decelerate into place. */
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Gentle start, quick finish. Things leaving get out of the way. */
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  /* Symmetric, for elements changing while staying visible. */
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* These live in Tailwind's `components` layer so utility classes such as
+   `absolute`, `inset-0` and `h-0.5` win over them at the call site. Outside a
+   layer they would have equal specificity and, being later in the file, would
+   silently override the utility — which is exactly how the progress bar first
+   ended up 0px wide and inline. */
+@layer components {
+  /* ─── Skeletons ─────────────────────────────────────────────────────────────
+     Used ONLY where something genuinely loads: third-party media frames and
+     artist photography. Page copy is in the pre-rendered HTML already — putting a
+     skeleton in front of it would make the site slower, not faster.
+
+     The skeleton must reserve exactly the box the real content will occupy, or it
+     trades a blank frame for a layout shift.                                     */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--surface);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent 0%, var(--card-wash) 50%, transparent 100%);
+    animation: skeleton-sweep 1.6s var(--motion-ease-standard) infinite;
+  }
+
+  @keyframes skeleton-sweep {
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  /* The loaded frame materialises: opacity plus a short blur, which reads as
+     coming into focus rather than simply appearing. */
+  .media-frame-enter {
+    animation: media-frame-in var(--motion-slow) var(--motion-ease-out) both;
+  }
+
+  @keyframes media-frame-in {
+    from {
+      opacity: 0;
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  /* Artist photography fades up from its reserved box once decoded. Applied by
+     next/image's onLoad, so it never hides an image that is already cached. */
+  .image-fade {
+    opacity: 0;
+    transition:
+      opacity var(--motion-base) var(--motion-ease-out),
+      filter var(--motion-base) var(--motion-ease-out);
+    filter: var(--artist-photo-filter) blur(8px);
+  }
+  .image-fade[data-loaded="true"] {
+    opacity: 1;
+    filter: var(--artist-photo-filter) blur(0);
+  }
+
+  /* Safety net: the fade starts at opacity 0 and is cleared by a load handler, so
+     without scripting the photographs would never appear. Show them immediately
+     instead. */
+  @media (scripting: none) {
+    .image-fade {
+      opacity: 1;
+      filter: var(--artist-photo-filter);
+    }
+  }
+
+  /* ─── Enter / exit ──────────────────────────────────────────────────────────  */
+
+  /* Panels that open in place: the mobile menu, the booking result panel. */
+  .panel-enter {
+    animation: panel-in var(--motion-base) var(--motion-ease-out) both;
+    transform-origin: top center;
+  }
+  .panel-exit {
+    animation: panel-out var(--motion-fast) var(--motion-ease-in) both;
+    transform-origin: top center;
+  }
+
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Deliberately subtler than the enter: attention is already moving elsewhere. */
+  @keyframes panel-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  /* The consent banner rises from the bottom edge it is docked to. */
+  .banner-enter {
+    animation: banner-in var(--motion-slow) var(--motion-ease-out) both;
+  }
+
+  @keyframes banner-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ─── Scroll reveal ─────────────────────────────────────────────────────────
+     Scroll-driven animations, no JavaScript and no IntersectionObserver. Content
+     is visible by default and only animates where `animation-timeline` is
+     supported, so a browser without it shows a normal, complete page rather than
+     an empty one waiting for a script that will never run.                       */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal {
+        animation: reveal-in var(--motion-slow) var(--motion-ease-out) both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 55%;
+      }
+    }
+  }
+
+  @keyframes reveal-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ─── Modals ────────────────────────────────────────────────────────────────
+   A native <dialog> is `display: none` until it opens, so a plain transition has
+   nothing to run from. `@starting-style` supplies the "before" state and
+   `transition-behavior: allow-discrete` keeps the element painted long enough for
+   the exit to play — which is what lets dialog.close() animate at all.
+
+   The panel scales from 0.96, never from 0: starting near zero looks like a
+   glitch rather than a movement. The backdrop is the slower half, so the dim
+   arrives with the panel rather than snapping ahead of it.                       */
+  .dialog-panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity var(--motion-base) var(--motion-ease-out),
+      transform var(--motion-base) var(--motion-ease-out),
+      overlay var(--motion-base) allow-discrete,
+      display var(--motion-base) allow-discrete;
+  }
+  .dialog-panel:not([open]) {
+    opacity: 0;
+    /* Subtler than the enter — it is leaving, and attention is already back on the page. */
+    transform: translateY(4px) scale(0.99);
+  }
+  @starting-style {
+    .dialog-panel[open] {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.96);
+    }
+  }
+
+  .dialog-panel::backdrop {
+    background-color: rgb(0 0 0 / 60%);
+    opacity: 1;
+    transition:
+      opacity var(--motion-base) var(--motion-ease-out),
+      overlay var(--motion-base) allow-discrete,
+      display var(--motion-base) allow-discrete;
+  }
+  .dialog-panel:not([open])::backdrop {
+    opacity: 0;
+  }
+  @starting-style {
+    .dialog-panel[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  /* ─── Press feedback ────────────────────────────────────────────────────────
+   Every interactive element acknowledges the press itself, not just the hover.
+   Hover does not exist on a phone, which is where most of this site is read, so
+   without this a tap has no feedback at all until the next screen paints.
+
+   Deliberately tiny (1.5%) and fast (100ms): this is the highest-frequency
+   interaction on the site, and by Emil's frequency gate that means it must be
+   felt rather than watched. Text inputs are excluded — a field that flinches
+   when you click into it feels broken.                                          */
+  .pressable,
+  button:not(:disabled),
+  a[role="button"],
+  summary {
+    /* Base transition for plain buttons. The .btn-* classes above are unlayered,
+       so they win the `transition` property outright — each of them therefore
+       lists `transform` itself. Change one, change the other. */
+    transition: transform 100ms var(--motion-ease-standard);
+  }
+  .pressable:active,
+  button:not(:disabled):active,
+  a[role="button"]:active,
+  summary:active {
+    transform: scale(0.985);
+  }
+
+  /* ─── Progress ──────────────────────────────────────────────────────────────
+     The booking submit is the longest wait on the site: it round-trips through
+     Turnstile and the Worker. An indeterminate bar is the only looping motion in
+     the system, and it exists only while a request is in flight.                 */
+  .progress-track {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--text-20);
+  }
+  .progress-track::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background-color: var(--cta-text);
+    animation: progress-slide 1.1s var(--motion-ease-standard) infinite;
+  }
+
+  @keyframes progress-slide {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(350%);
+    }
+  }
+}
+
+/* ─── Between screens ───────────────────────────────────────────────────────
+   This is a static export: every navigation is a real document load, so React
+   route transitions do not apply. Cross-document view transitions give the whole
+   site one consistent screen change with no JavaScript and no router.
+
+   Kept to a short cross-fade on purpose. The navbar and footer are identical on
+   every page, so anything more elaborate would slide furniture that never moved.
+   Browsers without support navigate normally, which is the correct fallback.     */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: screen-out 120ms var(--motion-ease-in) both;
+}
+::view-transition-new(root) {
+  animation: screen-in var(--motion-base) var(--motion-ease-out) both;
+}
+
+@keyframes screen-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* The navbar and footer are the same object on every screen, so they must not
+   cross-fade with the content behind them. Naming them keeps them still. */
+@media (prefers-reduced-motion: no-preference) {
+  .site-header {
+    view-transition-name: site-header;
+  }
+  .site-footer {
+    view-transition-name: site-footer;
+  }
+}
+
+/* A view transition is a full-screen effect, so it is switched off entirely
+   rather than merely shortened for anyone who asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
 }
 
 /* Respect users who prefer reduced motion — kill animations, transitions and the card flip */

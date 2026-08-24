@@ -12,6 +12,14 @@
       "sourceType": "github",
       "skillPath": "guides/design/landing-page-design/SKILL.md",
       "computedHash": "19ed3be1e7ee1620ecc3b5801ddcb936add37750f7cadb437afdd7394472f34b"
+    },
+    "design-motion-principles": {
+      "source": "kylezantos/design-motion-principles",
+      "sourceType": "github",
+      "skillPath": "skills/design-motion-principles/SKILL.md",
+      "computedHash": "599f42dbf011df38f3fcaf1497533af447d91cf97443b92439455af103c25b2e",
+      "installedRef": "4a9ca879f24a361f4dca4174fe2da0f67b5ddee3",
+      "license": "MIT"
     }
   }
 }

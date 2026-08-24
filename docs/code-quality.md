@@ -20,6 +20,7 @@ means a green gate.
 | `npm run lint` | ESLint + Biome | Framework rules, correctness, accessibility, import boundaries |
 | `npm run knip` | Knip | Is anything here unused — files, exports, dependencies? |
 | `npm run arch` | arch-contract | Did a change cross an architectural boundary? |
+| `npm run test:coverage` | Node test runner | What did the tests not reach? |
 | `npm run test:mutation` | Stryker | Would the tests actually notice if the code were wrong? |
 | `npm run lint:commits` | commitlint | Are the commit messages Conventional Commits? |
 
@@ -40,25 +41,21 @@ import in `worker/index.js`, two dead duplicated option lists in `data/formOptio
 accessibility problems that ESLint never checked for. Those a11y rules are set to `"warn"` with
 a comment in `biome.jsonc` pointing at issue #45; promote each back to `"error"` as it clears.
 
-## One contract, two enforcement tools
+## The architecture contract has one blind spot — read this
 
 `arch-contract.yaml` declares six layers and the allowed dependencies between them. It works,
 and it caught a real boundary crossing while being written.
 
-**arch-contract analyses TypeScript only.** Deliberate probes in `worker/` (`.js`) and
-`scripts/` (`.mjs`) confirmed that it does not see those files. Their matching
-`no-restricted-imports` rules therefore live in `eslint.config.mjs`; ESLint does see both.
+**It analyses TypeScript only.** A deliberate probe — a `.js` file in `worker/` importing
+`../lib/site` and `react` — was *not* flagged (verified 2026-08-11). So the `worker` (`.js`) and
+`tooling` (`.mjs`) layers are documented by the contract but not enforced by it.
 
 The enforcement for those lives in `eslint.config.mjs` as `no-restricted-imports` rules, which
-were verified to fail on the same probes. **If you change one, change the other**, and say so
+*were* verified to fail on the same probe. **If you change one, change the other**, and say so
 in the pull request. The invariant either way is:
 
 > The Worker may import from `config/` and nothing else. It runs in the Cloudflare Workers
 > runtime, where React, Next.js, and the static export do not exist.
-
-Tooling may import from `config/`, `worker/` and other files in `scripts/`; it may not import
-from `app/`, `components/`, `lib/` or `data/`. Browser code may never import `scripts/`, and
-generated artist JSON must be accessed through `data/artists.ts`.
 
 ## Commit messages
 
@@ -76,6 +73,27 @@ npm run lint:commits
 
 The same workflow also fails a pull request whose description does not reference an issue
 (`Closes #N` or `Refs #N`), which is the enforcement behind the standard in `CLAUDE.md`.
+
+## Coverage
+
+```bash
+npm run test:coverage     # writes coverage/lcov.info, prints a table
+```
+
+Uploaded to Codecov from `checks / verify` under the `unit` flag. The repository is public, so
+the upload is tokenless, and `fail_ci_if_error` is `false` — a flaky third-party upload must
+never fail the required gate.
+
+Baseline on 2026-08-11: **95.01% lines, 72.58% branches, 94.29% functions** across `worker/`,
+`config/` and `scripts/lib/`.
+
+Codecov is **informational**, with no blocking threshold (`codecov.yml`). A hard coverage gate
+tends to produce assertions written to move a number. The honest question — *would the tests
+notice if this code were wrong?* — is what mutation testing answers.
+
+**Not yet covered:** the Playwright suite runs in CI but does not report coverage. Instrumenting
+a static export and mapping V8 coverage back to source needs more machinery than it is worth
+right now; tracked on issue #43.
 
 ## Mutation testing
 
