@@ -10,6 +10,7 @@ import {
   EVENT_TYPES,
   HEAR_ABOUT_OPTIONS,
   TICKETING_OPTIONS,
+  TIME_PATTERN,
   UUID_PATTERN,
   durationBetween,
   formatDuration,
@@ -78,6 +79,13 @@ function validateBookings(value) {
     const startTime = text(item.startTime, 5);
     const finishTime = text(item.finishTime, 5);
     if (!artist || !timingMode || seen.has(artist)) return null;
+    if (
+      startTime === null ||
+      finishTime === null ||
+      (startTime && !TIME_PATTERN.test(startTime)) ||
+      (finishTime && !TIME_PATTERN.test(finishTime))
+    )
+      return null;
     if (timingMode === "duration" && !ALLOWED_DURATIONS.has(durationMinutes)) return null;
     if (timingMode === "times" && Boolean(startTime) !== Boolean(finishTime)) return null;
     if (timingMode === "times" && startTime && !durationBetween(startTime, finishTime)) return null;

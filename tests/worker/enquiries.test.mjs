@@ -231,6 +231,25 @@ test("rejects invalid fields and honeypot submissions before delivery", async (c
   assert.equal(calls, 0);
 });
 
+test("rejects malformed non-empty times regardless of timing mode", async (context) => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return Response.json({ ok: true });
+  };
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  for (const timeFields of [{ startTime: "<b>x" }, { finishTime: "99:99" }]) {
+    const booking = { ...validPayload().bookings[0], ...timeFields };
+    const response = await worker.fetch(request(validPayload({ bookings: [booking] })), env());
+    assert.equal(response.status, 400);
+  }
+  assert.equal(calls, 0);
+});
+
 test("enforces actor rate limits and HTTP method", async () => {
   const limited = await worker.fetch(
     request(validPayload()),
