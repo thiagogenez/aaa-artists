@@ -107,7 +107,8 @@ test("validates and emails a clean enquiry with a stable threaded reference", as
   globalThis.fetch = async (url, init) => {
     assert.equal(String(url), "https://api.brevo.com/v3/smtp/email");
     assert.equal(init.headers["api-key"], "xkeysib-test-api-key");
-    assert.equal(init.headers["Idempotency-Key"], SUBMISSION_ID);
+    assert.equal(init.headers["Idempotency-Key"], undefined);
+    assert.equal(init.headers.idempotencyKey, undefined);
     forwarded = JSON.parse(init.body);
     return Response.json(
       { messageId: "<202607180101.123456789@smtp-relay.mailin.fr>" },
@@ -121,6 +122,7 @@ test("validates and emails a clean enquiry with a stable threaded reference", as
   const response = await worker.fetch(request(validPayload()), env());
   const result = await response.json();
   assert.equal(response.status, 200);
+  assert.equal(forwarded.headers, undefined);
   assert.deepEqual(forwarded.to, [{ email: "jane@example.com", name: "Jane Booker" }]);
   assert.deepEqual(forwarded.bcc, [{ email: "bookings@aaaartists.co" }]);
   assert.deepEqual(forwarded.replyTo, { email: "bookings@aaaartists.co" });

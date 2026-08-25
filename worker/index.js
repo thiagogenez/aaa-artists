@@ -444,8 +444,6 @@ async function handleEnquiry(request, env) {
       });
     }
 
-    // Carry the browser submission UUID as the provider idempotency key. Brevo-side
-    // deduplication remains unproven and is tracked in issue #86.
     // Local testing seam: `npm run dev:mail` runs a catcher that receives this POST
     // and writes the email to disk, so the whole form can be exercised without an
     // API key and without emailing anyone. Ignored outside non-production so a
@@ -460,7 +458,6 @@ async function handleEnquiry(request, env) {
         "api-key": env.BREVO_API_KEY,
         "Content-Type": "application/json",
         Accept: "application/json",
-        "Idempotency-Key": payload.submissionId,
       },
       // Outside production the booking copy can be redirected, so a local test
       // against a real Brevo key reaches only the tester and never the agency's

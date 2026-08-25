@@ -125,10 +125,10 @@ database, session or user content; the only body-accepting route is `POST /api/e
   Cloudflare's counters are deliberately permissive and per-location, so the actor limit reduces
   abuse rather than identifying a person; Turnstile and the email limit remain separate gates.
   See: <https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/>.
-- **Submission idempotency:** a browser-generated UUIDv4 is accepted, but provider-side
-  deduplication is not treated as proven. Brevo's current documentation and a recent upstream live
-  reproduction disagree about the supported placement and behaviour. Issue #86 owns verification
-  or removal of that guarantee; this review does not add a home-grown persistence layer.
+- **Submission reference:** a browser-generated UUIDv4 is accepted only as a stable customer and
+  mail thread reference. It is not forwarded as an idempotency control. Brevo's current
+  documentation and a recent upstream live reproduction disagree about the supported placement
+  and behaviour; issue #86 records why the project makes no provider-side deduplication guarantee.
 - **Redirects:** destinations are constructed from fixed canonical host and path values. Existing
   tests prove that HTTP and `www` preserve path/query while `/events` changes only the fixed path
   to `/artists`; no request value becomes a destination host.
