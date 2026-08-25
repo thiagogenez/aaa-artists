@@ -1,7 +1,7 @@
 # Architecture contract for AAA Artists.
 #
-# These are not style preferences — every rule below is an invariant that AGENTS.md and
-# CLAUDE.md already state in prose, turned into something CI can fail on. Prose gets
+# These are not style preferences — every rule below is an invariant that AGENTS.md states in
+# prose, turned into something CI can fail on. Prose gets
 # re-invented by whoever (or whatever) edits the repository next; a failing check does not.
 #
 #   npm run arch          validate

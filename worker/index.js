@@ -444,8 +444,8 @@ async function handleEnquiry(request, env) {
       });
     }
 
-    // Brevo deduplicates on a UUID Idempotency-Key for 30 minutes, which covers
-    // client retries of the same submission without double-emailing anyone.
+    // Carry the browser submission UUID as the provider idempotency key. Brevo-side
+    // deduplication remains unproven and is tracked in issue #86.
     // Local testing seam: `npm run dev:mail` runs a catcher that receives this POST
     // and writes the email to disk, so the whole form can be exercised without an
     // API key and without emailing anyone. Ignored outside non-production so a

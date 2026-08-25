@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Open this **before** starting work. The pull request that closes it must reference
-        this issue number. See the "Issue and PR workflow" section of `CLAUDE.md`.
+        this issue number. See `AGENTS.md` and `CONTRIBUTING.md`.
   - type: textarea
     id: goal
     attributes:
@@ -41,7 +41,7 @@ body:
       value: |
         - [ ]
         - [ ] Tests: unit / integration / e2e as appropriate
-        - [ ] Docs updated (`CLAUDE.md`, `AGENTS.md`, or `docs/`)
+        - [ ] Shared docs updated (`AGENTS.md`, `CONTRIBUTING.md`, or `docs/`)
     validations:
       required: true
   - type: dropdown

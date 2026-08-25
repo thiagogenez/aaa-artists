@@ -4,7 +4,7 @@ import type { Page } from "playwright/test";
  *
  *  "denied" is the default here on purpose: it keeps the banner out of the way
  *  AND keeps third-party players gated, so no test reaches out to SoundCloud,
- *  Spotify or YouTube. */
+ *  Spotify or SoundCloud. */
 export async function seedMediaConsent(page: Page, value: "granted" | "denied" = "denied") {
   await page.addInitScript((stored) => {
     window.localStorage.setItem("aaa-media-consent-v1", stored);

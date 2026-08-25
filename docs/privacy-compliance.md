@@ -35,7 +35,7 @@ Official guidance:
 | Confirmed booking | Enquiry, correspondence, contract, payment/accounting records | Administer the contract, resolve disputes, meet accounting/legal duties | Contract; legal obligation; legitimate interests | Booking staff, artists/representatives, accountants and advisers as needed | Up to 6 years |
 | Form security | IP-derived request context, token result, timing, hashed email rate-limit key, logs | Prevent spam, abuse, and security incidents | Legitimate interests | Cloudflare and Turnstile | Confirm provider/log retention |
 | Theme preference | Light/dark setting in browser local storage | Remember the visitor's interface choice | User-requested functionality | Stored in the visitor's browser | Until removed by the visitor |
-| Optional media | IP address, cookies/provider data after a user loads a player | Play third-party media | User action; provider terms apply | Spotify, SoundCloud, or YouTube | Provider-controlled |
+| Optional media | IP address, cookies/provider data after a user loads a player | Play third-party media | User action; provider terms apply | Spotify or SoundCloud | Provider-controlled |
 
 The Worker hashes the lower-cased email address before using it as a rate-limit key and does not write enquiry bodies to application logs.
 
@@ -107,4 +107,4 @@ Record the review date, reviewer, result, exceptions, corrective owner, and comp
 
 ## Cookies and consent
 
-The current site does not load Spotify, SoundCloud, or YouTube players until the visitor chooses to do so. Do not add analytics, advertising pixels, behavioural profiling, or other non-essential browser storage without first documenting it and implementing the consent controls required by UK PECR and, where applicable, EU rules.
+The current site does not load Spotify or SoundCloud players until the visitor chooses to do so. Do not add analytics, advertising pixels, behavioural profiling, or other non-essential browser storage without first documenting it and implementing the consent controls required by UK PECR and, where applicable, EU rules.

@@ -48,7 +48,7 @@ jobs:
   description-standard:
     # Human pull requests carry the complete project record. Dependabot has no issue to
     # reference, but still has to show the dependency state before and after its update.
-    # See "Issue and PR workflow" in CLAUDE.md.
+    # See the shared workflow in AGENTS.md and CONTRIBUTING.md.
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

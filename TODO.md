@@ -5,8 +5,8 @@ Updated: 2026-08-15
 > **GitHub issues are the live backlog. This file is history.**
 >
 > Every open task that used to live here is now an issue, so that work is visible before code
-> exists and traceable through the pull request that closes it. See "Issue and PR workflow" in
-> `CLAUDE.md`. Do not add new open items to this file — open an issue instead.
+> exists and traceable through the pull request that closes it. See `AGENTS.md` and
+> `CONTRIBUTING.md`. Do not add new open items to this file — open an issue instead.
 >
 > | Was in this file | Now |
 > | --- | --- |
