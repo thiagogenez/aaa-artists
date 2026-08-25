@@ -47,11 +47,34 @@ The enquiry API is intentionally fixed to same-origin `/api/enquiries`; there is
 ## Worker secrets and bindings
 
 Configure these on the deployed `aaa-artists` Worker. Never use a `NEXT_PUBLIC_` name for either secret.
-The `aaa-artists-staging` Worker requires only its Turnstile test secret. Outbound email is
-disabled there unless a deliberately restricted staging `BREVO_API_KEY` is added. Do not
-put the production Brevo key behind the public staging form, whose Turnstile test pair is
-designed to pass every challenge. The Worker accepts Turnstile testing-key verdicts only
-when `ENVIRONMENT` is not `production`.
+The `aaa-artists-staging` Worker normally requires only its Turnstile test secret, so outbound
+email is disabled. A deliberate live-email test requires both a staging-only `BREVO_API_KEY` and
+`STAGING_ENQUIRY_RECIPIENT` as Worker secrets. The Worker then forces `To` and `Reply-To` to that
+one address, omits BCC, and applies the shared email quota to the fixed recipient regardless of
+what was entered in the public form. Never put the production Brevo key behind staging, whose
+Turnstile test pair is designed to pass every challenge. The Worker accepts Turnstile testing-key
+verdicts only when `ENVIRONMENT` is not `production`.
+
+Add the recipient first and the restricted key second, using Wrangler's interactive prompts so
+neither value appears in shell history:
+
+```sh
+npx wrangler secret put STAGING_ENQUIRY_RECIPIENT --env staging
+npx wrangler secret put BREVO_API_KEY --env staging
+```
+
+Submit once at `https://aaa-artists-staging.thiagogenez.workers.dev/contact`, confirm the
+acknowledgement in the private mailbox, and then disable outbound staging email immediately:
+
+```sh
+npx wrangler secret delete BREVO_API_KEY --env staging
+npx wrangler secret delete STAGING_ENQUIRY_RECIPIENT --env staging
+```
+
+Deleting both secrets after the test restores the normal fail-closed staging configuration. A
+staging send proves the deployed Worker, Turnstile test path, Brevo delivery, and real-client
+rendering. It does not prove production BCC or reply routing, which still requires the controlled
+real-device pass tracked in issue #48.
 
 - Secret `BREVO_API_KEY`: a dedicated Brevo API key used only by the Worker, for the verified `aaaartists.co` sending domain. Brevo is EU-hosted, which keeps booking-email content inside the EU/EEA.
 - Secret `TURNSTILE_SECRET_KEY`: the secret paired with the public Turnstile site key.

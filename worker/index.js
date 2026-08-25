@@ -313,7 +313,14 @@ function escapeHtml(value) {
 
 /** Exported so `npm run preview:email` can render exactly what a customer receives,
  *  without a network call, an API key, or emailing a real person. */
-export function enquiryEmail(payload, bookingAddress = BOOKING_EMAIL) {
+export function enquiryEmail(
+  payload,
+  {
+    recipientAddress = payload.email,
+    bookingAddress = BOOKING_EMAIL,
+    replyAddress = BOOKING_EMAIL,
+  } = {}
+) {
   const details = enquiryDetails(payload);
   const detailLines = Object.entries(details).map(([label, value]) => `${label}: ${value}`);
   const textBody = [
@@ -355,9 +362,9 @@ export function enquiryEmail(payload, bookingAddress = BOOKING_EMAIL) {
 
   return {
     sender: { name: SITE_NAME, email: BOOKING_EMAIL },
-    to: [{ email: payload.email, name: payload.name }],
-    bcc: [{ email: bookingAddress }],
-    replyTo: { email: BOOKING_EMAIL },
+    to: [{ email: recipientAddress, name: payload.name }],
+    ...(bookingAddress && { bcc: [{ email: bookingAddress }] }),
+    replyTo: { email: replyAddress },
     subject: enquirySubject(payload),
     textContent: textBody,
     htmlContent: htmlBody,
@@ -425,7 +432,30 @@ async function handleEnquiry(request, env) {
       });
     }
 
-    const emailKey = await sha256(payload.email.toLowerCase());
+    const stagingRecipient =
+      env.ENVIRONMENT === "staging"
+        ? singleLine(env.STAGING_ENQUIRY_RECIPIENT, BOOKING_LIMITS.email, true)
+        : "";
+    const deliveryConfigurationIssue = [
+      !env.BREVO_API_KEY && "BREVO_API_KEY",
+      env.ENVIRONMENT === "staging" &&
+        (!stagingRecipient || !EMAIL_PATTERN.test(stagingRecipient)) &&
+        "STAGING_ENQUIRY_RECIPIENT",
+    ]
+      .filter(Boolean)
+      .join(",");
+    if (deliveryConfigurationIssue) {
+      console.error(
+        enquiryLogRecord("enquiry_delivery_unconfigured", requestId, {
+          missing: deliveryConfigurationIssue,
+        })
+      );
+      return json(503, {
+        error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.`,
+      });
+    }
+
+    const emailKey = await sha256((stagingRecipient || payload.email).toLowerCase());
     if (!(await withinLimit(env.CONTACT_EMAIL_RATE_LIMIT, emailKey))) {
       console.warn(enquiryLogRecord("enquiry_rate_limited", requestId, { scope: "email" }));
       return json(
@@ -437,13 +467,6 @@ async function handleEnquiry(request, env) {
         { "Retry-After": "60" }
       );
     }
-    if (!env.BREVO_API_KEY) {
-      console.error(enquiryLogRecord("enquiry_delivery_unconfigured", requestId));
-      return json(503, {
-        error: `Online delivery is temporarily unavailable. Please email ${BOOKING_EMAIL}.`,
-      });
-    }
-
     // Local testing seam: `npm run dev:mail` runs a catcher that receives this POST
     // and writes the email to disk, so the whole form can be exercised without an
     // API key and without emailing anyone. Ignored outside non-production so a
@@ -464,12 +487,15 @@ async function handleEnquiry(request, env) {
       // shared inbox. In production the override is ignored and the BCC is always
       // the real booking address.
       body: JSON.stringify(
-        enquiryEmail(
-          payload,
-          env.ENVIRONMENT !== "production" && env.BOOKING_BCC_OVERRIDE
-            ? env.BOOKING_BCC_OVERRIDE
-            : BOOKING_EMAIL
-        )
+        enquiryEmail(payload, {
+          recipientAddress: stagingRecipient || payload.email,
+          bookingAddress: stagingRecipient
+            ? ""
+            : env.ENVIRONMENT !== "production" && env.BOOKING_BCC_OVERRIDE
+              ? env.BOOKING_BCC_OVERRIDE
+              : BOOKING_EMAIL,
+          replyAddress: stagingRecipient || BOOKING_EMAIL,
+        })
       ),
       signal: AbortSignal.timeout(10_000),
     });
