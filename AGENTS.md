@@ -15,9 +15,9 @@ Obsidian vault for cross-agent handoffs; durable project knowledge remains in ve
   Commit format because squash merge makes the title the commit on `main`. Never add AI
   attribution trailers.
 - Fill in `.github/pull_request_template.md`. A human pull request needs the issue reference,
-  `## Change`, `## Verification`, and `## Risks and limitations`; Dependabot uses its documented
-  `## Before` and `## After` comparison. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the full writing
-  and title guide.
+  `## Change`, `## Verification`, `## Risks and limitations`, and `## Next steps`; Dependabot uses
+  its documented `## Before` and `## After` comparison. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the
+  full writing and title guide.
 - Write issue, pull-request, and comment bodies to a file and pass `--body-file`. Do not hard-wrap
   prose posted to GitHub: one physical line per paragraph or list item lets GitHub wrap it
   correctly. Repository Markdown remains wrapped at 100 columns.
