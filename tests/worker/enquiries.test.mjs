@@ -162,6 +162,63 @@ test("routes non-production delivery to the local catcher and optional test BCC"
   assert.deepEqual(forwarded.replyTo, { email: "bookings@aaaartists.co" });
 });
 
+test("fails closed when staging email lacks a fixed recipient", async (context) => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return Response.json({ messageId: "<unsafe-staging@example.com>" }, { status: 201 });
+  };
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const response = await worker.fetch(request(validPayload()), env({ ENVIRONMENT: "staging" }));
+
+  assert.equal(response.status, 503);
+  assert.equal(calls, 0);
+});
+
+test("locks staging delivery and rate limits to the configured recipient", async (context) => {
+  const originalFetch = globalThis.fetch;
+  const forwarded = [];
+  const emailKeys = [];
+  globalThis.fetch = async (_url, init) => {
+    forwarded.push(JSON.parse(init.body));
+    return Response.json({ messageId: "<staging@example.com>" }, { status: 201 });
+  };
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  const stagingEnv = env({
+    ENVIRONMENT: "staging",
+    BOOKING_BCC_OVERRIDE: "attacker@example.com",
+    STAGING_ENQUIRY_RECIPIENT: "staging.tester@example.com",
+    CONTACT_EMAIL_RATE_LIMIT: {
+      limit: async ({ key }) => {
+        emailKeys.push(key);
+        return { success: true };
+      },
+    },
+  });
+
+  const first = await worker.fetch(request(validPayload()), stagingEnv);
+  const second = await worker.fetch(
+    request(validPayload({ email: "someone.else@example.com" })),
+    stagingEnv
+  );
+
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 200);
+  assert.equal(emailKeys.length, 2);
+  assert.equal(emailKeys[0], emailKeys[1]);
+  for (const email of forwarded) {
+    assert.deepEqual(email.to, [{ email: "staging.tester@example.com", name: "Jane Booker" }]);
+    assert.equal(email.bcc, undefined);
+    assert.deepEqual(email.replyTo, { email: "staging.tester@example.com" });
+  }
+});
+
 test("ignores local email overrides in production", async (context) => {
   const originalFetch = globalThis.fetch;
   let deliveryUrl;
@@ -189,12 +246,15 @@ test("ignores local email overrides in production", async (context) => {
       TURNSTILE_SECRET_KEY: "production-secret",
       BREVO_API_BASE: "https://attacker.example",
       BOOKING_BCC_OVERRIDE: "attacker@example.com",
+      STAGING_ENQUIRY_RECIPIENT: "attacker@example.com",
     })
   );
 
   assert.equal(response.status, 200);
   assert.equal(deliveryUrl, "https://api.brevo.com/v3/smtp/email");
+  assert.deepEqual(forwarded.to, [{ email: "jane@example.com", name: "Jane Booker" }]);
   assert.deepEqual(forwarded.bcc, [{ email: "bookings@aaaartists.co" }]);
+  assert.deepEqual(forwarded.replyTo, { email: "bookings@aaaartists.co" });
 });
 
 test("escapes customer content in the HTML confirmation", async (context) => {
@@ -532,7 +592,11 @@ test("accepts Turnstile testing-key results only outside production", async (con
 
   const staging = await worker.fetch(
     request(validPayload({ turnstileToken: "XXXX.DUMMY.TOKEN.XXXX" })),
-    env({ ENVIRONMENT: "staging", TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA" })
+    env({
+      ENVIRONMENT: "staging",
+      STAGING_ENQUIRY_RECIPIENT: "staging.tester@example.com",
+      TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+    })
   );
   const production = await worker.fetch(
     request(validPayload({ turnstileToken: "XXXX.DUMMY.TOKEN.XXXX" })),

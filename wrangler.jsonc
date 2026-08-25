@@ -43,8 +43,9 @@
         }
       },
       // Staging uses Cloudflare's always-pass Turnstile test key pair. Outbound email
-      // remains disabled unless a deliberately restricted staging BREVO_API_KEY is
-      // added, preventing the public test-key form from emailing arbitrary recipients.
+      // remains disabled unless a deliberately restricted staging BREVO_API_KEY and
+      // STAGING_ENQUIRY_RECIPIENT are both added as secrets. The Worker then locks all
+      // deliveries and their shared email quota to that one private test recipient.
       "secrets": {
         "required": ["TURNSTILE_SECRET_KEY"]
       },
