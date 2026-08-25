@@ -16,6 +16,10 @@ next-env.d.ts
 .agents/
 .rtk/
 
+# Obsidian app state and local cross-agent context; never commit either
+/.obsidian/
+/.context/
+
 # Generated from data/artists/*.yml by scripts/gen-artists.mjs
 /data/artists.data.json
 

@@ -71,25 +71,24 @@ Before adding the key, authenticate `aaaartists.co` in Brevo with the exact DNS 
 generates (Brevo code, DKIM, and DMARC as offered). Brevo cannot fully disable tracking on
 transactional email, so enable anonymized tracking (its CNIL-aligned setting) and per-contact
 tracking consent. Click tracking is inert regardless, because the booking acknowledgement
-contains no links for Brevo to rewrite; only an anonymized open pixel remains. Configure
-Cloudflare Email Routing so incoming mail for
-`bookings@aaaartists.co` reaches the authorised booking inbox. To keep staff replies
-visibly within the same thread and identity, configure that mailbox to send as
-`bookings@aaaartists.co` using Brevo's SMTP relay or another authenticated outbound
-provider. Brevo issues SMTP credentials separately from API keys; never copy the Worker's
-production `BREVO_API_KEY` into an email client.
+contains no links for Brevo to rewrite; only an anonymized open pixel remains. Incoming mail for
+`bookings@aaaartists.co` uses the existing Microsoft 365 mailbox. Never enable Cloudflare Email
+Routing on this domain because it would replace the MX records and break Microsoft 365. Configure
+the mailbox's authorised **Send As** identity so staff replies leave as `bookings@aaaartists.co`.
+Never copy the Worker's production `BREVO_API_KEY` into an email client.
 
-The Worker sends one idempotent message to the customer, BCCs the booking mailbox, and sets
-`Reply-To: bookings@aaaartists.co`. Both parties therefore receive a copy of the same
-original message and subject reference. A customer reply returns to the booking mailbox;
-staff can then reply from the configured booking alias in that thread. If staff respond
-from the initial BCC copy before the customer has replied, they must use **Reply all** so
-the customer remains a recipient. Confirm this behaviour in the real booking mail client,
-because visual thread grouping is ultimately controlled by each client.
+The Worker requests one message to the customer, BCCs the booking mailbox, and sets `Reply-To` to
+`bookings@aaaartists.co`. Both parties therefore receive a copy of the same original message and
+subject reference. A customer reply returns to the booking mailbox; staff can then reply from the
+configured booking alias in that thread. If staff respond from the initial BCC copy before the
+customer has replied, they must use **Reply all** so the customer remains a recipient. Confirm
+this behaviour in the real booking mail client, because visual thread grouping is ultimately
+controlled by each client.
 
-The Worker sends each accepted enquiry with a UUID `Idempotency-Key` (the submission ID),
-which Brevo deduplicates for 30 minutes, so client retries of the same submission cannot
-double-email anyone.
+The Worker sends each accepted enquiry's UUID submission ID in Brevo's `Idempotency-Key` header.
+Provider-side deduplication is not treated as proven: current Brevo documentation and upstream
+observations disagree. Issue #86 owns verification or removal of this guarantee. Do not add a
+home-grown persistence layer unless that investigation proves one is necessary.
 
 In production, the enquiry endpoint returns `503` rather than accepting unprotected submissions if Turnstile, Brevo, or a rate-limit binding is missing.
 

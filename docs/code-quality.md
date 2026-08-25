@@ -71,7 +71,7 @@ The repository does not install a local Git hook: commits here are signed from t
 own terminal, and GitHub CI is the authoritative gate.
 
 The same workflow also fails a pull request whose description does not reference an issue
-(`Closes #N` or `Refs #N`), which is the enforcement behind the standard in `CLAUDE.md`.
+(`Closes #N` or `Refs #N`), which enforces the shared standard in `AGENTS.md`.
 
 ## Local checks
 

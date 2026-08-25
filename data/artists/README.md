@@ -32,9 +32,9 @@ socials:                      # all optional
   soundcloud: https://…       # a SoundCloud player appears on the artist page
   facebook: https://…
   spotify: https://…          # a live Spotify player appears (light/dark follows the theme)
-  youtube: https://…          # shown as a link card
-  beatport: https://…
-# youtubeEmbed: https://…     # optional — a YouTube URL renders a live video player
+  youtube: https://…          # accepted but currently hidden on artist pages
+  beatport: https://…         # shown as a social link; never embedded
+# spotifyEmbed: https://…     # optional explicit Spotify player URL
 
 gigs:                         # ONE list, oldest → newest; the date decides
   - date: "2025-10-18"        # past date → shown dimmed in the history list
@@ -50,6 +50,23 @@ gigs:                         # ONE list, oldest → newest; the date decides
     ticketStatus: available   # optional; only when availability is verified
     flyer: /flyers/asot.webp  # optional — real poster art (omit → auto-generated poster)
 ```
+
+## Media behaviour
+
+The artist page is audio-first. SoundCloud renders from `socials.soundcloud`; Spotify uses
+`spotifyEmbed` when present, otherwise `socials.spotify`, and falls back to a link card when the
+URL cannot become a player. When both providers exist, Spotify is first and one named control
+switches to SoundCloud. Only one third-party player is mounted at a time.
+
+`socials.youtube` remains accepted so content is not lost, but it is intentionally hidden from
+artist pages. `youtubeEmbed` is rejected by `npm run check` because the Listen section no longer
+renders video. Beatport remains a social link: it has no reliable artist-level embed or
+unauthenticated API suitable for this static site.
+
+At desktop `xl` widths, upcoming flyers and Listen share a flexible row. One or two 340px flyer
+slots are reserved and the player uses the remaining width; do not restore a fixed 50/50 split or
+mount stacked players. Below `xl`, the sections stack. All provider frames remain behind the
+shared media-consent state and use `referrerPolicy="no-referrer"`.
 
 ## Tips
 
