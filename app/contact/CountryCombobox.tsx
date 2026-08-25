@@ -2,7 +2,6 @@
 
 import { useId, useState } from "react";
 import { COUNTRIES } from "@/data/formOptions";
-import allPhoneCountries from "intl-tel-input/data";
 import "intl-tel-input/styles";
 
 const COUNTRY_ALIASES: Record<string, string[]> = {
@@ -32,15 +31,28 @@ const COUNTRY_ISO_OVERRIDES: Record<string, string> = {
 };
 
 const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
-const COUNTRY_ISO = new Map(
-  allPhoneCountries.map((country) => [
-    regionNames.of(country.iso2.toUpperCase()) ?? "",
-    country.iso2,
-  ])
-);
+let countryIsoByName: Map<string, string> | undefined;
+
+function getCountryIsoByName(): Map<string, string> {
+  if (countryIsoByName) return countryIsoByName;
+
+  const namesToFind = new Set(COUNTRIES.filter((country) => !COUNTRY_ISO_OVERRIDES[country]));
+  countryIsoByName = new Map();
+  for (let first = 65; first <= 90 && namesToFind.size > 0; first += 1) {
+    for (let second = 65; second <= 90 && namesToFind.size > 0; second += 1) {
+      const iso = String.fromCharCode(first, second);
+      const name = regionNames.of(iso);
+      if (!name || !namesToFind.has(name)) continue;
+      countryIsoByName.set(name, iso.toLowerCase());
+      namesToFind.delete(name);
+    }
+  }
+  return countryIsoByName;
+}
 
 function countryIso(country: string): string {
-  return COUNTRY_ISO_OVERRIDES[country] ?? COUNTRY_ISO.get(country) ?? "";
+  if (!country) return "";
+  return COUNTRY_ISO_OVERRIDES[country] ?? getCountryIsoByName().get(country) ?? "";
 }
 
 function CountryFlag({ country }: { country: string }) {

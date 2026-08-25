@@ -4,7 +4,7 @@ import IntlTelInput from "@intl-tel-input/react";
 import type { Iso2 } from "intl-tel-input";
 import "intl-tel-input/styles";
 
-type PhoneFieldProps = {
+export type PhoneFieldProps = {
   value: string;
   error?: string;
   initialCountry?: Iso2;
