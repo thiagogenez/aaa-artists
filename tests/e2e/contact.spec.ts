@@ -77,6 +77,36 @@ test.describe("booking form regression coverage", () => {
     await context.close();
   });
 
+  test("enhances the optional phone field only after visitor intent", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 375, height: 500 } });
+    const page = await context.newPage();
+    await seedMediaConsent(page);
+    await page.goto("/contact");
+
+    const enhancement = page.locator('[data-phone-enhancement="pending"]');
+    await expect(enhancement).toBeAttached();
+
+    const phoneInput = page.locator('input[name="phone"]');
+    await phoneInput.focus();
+    await expect(page.locator('[data-phone-enhancement="ready"]')).toBeAttached();
+    await expect(phoneInput).toBeFocused();
+
+    await context.close();
+  });
+
+  test("keeps the optional phone input usable if enhancement loading fails", async ({ page }) => {
+    await page.goto("/contact");
+    await page.waitForLoadState("networkidle");
+    await page.route("**/_next/static/chunks/*.js", (route) => route.abort());
+
+    const phoneInput = page.locator('input[name="phone"]');
+    await phoneInput.focus();
+    await expect(page.locator('[data-phone-enhancement="fallback"]')).toBeAttached();
+    await phoneInput.fill("+44 7400 123456");
+    await phoneInput.blur();
+    await expect(page.getByText("Enter a valid international phone number")).toHaveCount(0);
+  });
+
   test("keeps WhatsApp usernames clean while showing the fixed @ prefix", async ({ page }) => {
     await page.goto("/contact");
 
@@ -116,6 +146,7 @@ test.describe("booking form regression coverage", () => {
     const countryInput = page.locator('input[name="country"]');
     await countryInput.fill("Brazil");
     await countryInput.press("Enter");
+    await expect(countryInput.locator("xpath=..").locator(".iti__br")).toBeVisible();
 
     const cityInput = page.locator('input[name="city"]');
     await expect(cityInput).toBeEnabled();

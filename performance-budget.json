@@ -1,0 +1,8 @@
+{
+  "routes": {
+    "/contact": {
+      "maxJavaScriptGzipBytes": 220000,
+      "maxTotalGzipBytes": 240000
+    }
+  }
+}
