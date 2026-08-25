@@ -85,10 +85,11 @@ customer has replied, they must use **Reply all** so the customer remains a reci
 this behaviour in the real booking mail client, because visual thread grouping is ultimately
 controlled by each client.
 
-The Worker sends each accepted enquiry's UUID submission ID in Brevo's `Idempotency-Key` header.
-Provider-side deduplication is not treated as proven: current Brevo documentation and upstream
-observations disagree. Issue #86 owns verification or removal of this guarantee. Do not add a
-home-grown persistence layer unless that investigation proves one is necessary.
+The Worker uses each accepted enquiry's UUID submission ID only as a stable customer and mail
+thread reference. It does not configure or claim provider-side deduplication: current Brevo
+documentation and upstream observations disagree about the supported placement and behaviour.
+Issue #86 records that evidence. Do not add a home-grown persistence layer without proving that
+the extra machinery is necessary.
 
 In production, the enquiry endpoint returns `503` rather than accepting unprotected submissions if Turnstile, Brevo, or a rate-limit binding is missing.
 

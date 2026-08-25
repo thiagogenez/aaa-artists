@@ -39,7 +39,7 @@ Then fill in the form at <http://localhost:8787/contact>.
 The catcher accepts the exact POST the Worker sends to Brevo, writes the email to
 `.preview/`, prints a summary, and answers with a Brevo-shaped `201` so the Worker's
 success path runs for real. This exercises the form, Turnstile, the Worker's validation,
-the idempotency key, the email rendering, and the `enquiry_delivered` log record.
+the stable submission reference, the email rendering, and the `enquiry_delivered` log record.
 
 **Not** the rate limits. Rate Limit bindings only exist on the named environments, and
 `withinLimit()` returns `true` when the binding is absent, so every local submission is
