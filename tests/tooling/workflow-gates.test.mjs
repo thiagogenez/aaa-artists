@@ -6,6 +6,7 @@ import { load } from "js-yaml";
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const workflowSource = readFileSync(".github/workflows/commit-style.yml", "utf8");
 const workflow = load(workflowSource);
+const checksWorkflow = load(readFileSync(".github/workflows/checks.yml", "utf8"));
 
 describe("development workflow gates", () => {
   it("keeps the full local gate explicit instead of installing a Git hook", () => {
@@ -40,5 +41,14 @@ describe("development workflow gates", () => {
     assert.ok(validationIndex > nodeIndex, "validation must follow checkout and Node setup");
     assert.equal(steps[checkoutIndex].with["persist-credentials"], false);
     assert.equal(steps[nodeIndex].with["node-version-file"], ".node-version");
+  });
+
+  it("keeps the enquiry round-trip in the browser CI job", () => {
+    const steps = checksWorkflow.jobs.browser.steps;
+    const buildIndex = steps.findIndex((step) => step.run === "npm run build:test");
+    const roundTripIndex = steps.findIndex((step) => step.run === "npm run test:enquiry:run");
+
+    assert.ok(buildIndex >= 0, "the browser job must build the test export");
+    assert.ok(roundTripIndex > buildIndex, "the enquiry round-trip must use the shared test build");
   });
 });
