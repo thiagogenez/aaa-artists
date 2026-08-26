@@ -56,6 +56,8 @@
     "test:e2e": "npm run build:test && npm run test:e2e:run",
     "test:e2e:run": "playwright test",
     "test:e2e:report": "playwright show-report",
+    "test:enquiry": "npm run build:test && npm run test:enquiry:run",
+    "test:enquiry:run": "node scripts/check-enquiry-roundtrip.mjs",
     "test:visual": "npm run build:test && node scripts/run-visual-tests.mjs",
     "test:visual:run": "node scripts/run-visual-tests.mjs"
   },

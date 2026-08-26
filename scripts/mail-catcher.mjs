@@ -8,8 +8,8 @@
  * 201 so the Worker's success path runs for real.
  *
  * The whole round trip is therefore testable with no credentials and nobody
- * emailed: form, Turnstile, Worker validation, idempotency key, email rendering,
- * and the enquiry_delivered log record. Not the rate limits — those bindings only
+ * emailed: form, Turnstile, Worker validation, email rendering, and the
+ * enquiry_delivered log record. Not the rate limits — those bindings only
  * exist on the named environments, so tests/worker/enquiries.test.mjs covers them
  * with stubs instead.
  *
@@ -34,7 +34,7 @@ import { join } from "node:path";
 
 const PORT = Number.parseInt(process.env.MAIL_CATCHER_PORT ?? "8025", 10);
 const HOST = "127.0.0.1";
-const OUT_DIR = ".preview";
+const OUT_DIR = process.env.MAIL_CATCHER_OUT_DIR ?? ".preview";
 
 /** A real RFC 5322 message, so the file opens in Mail.app exactly as a received
  *  email: correct headers, and both the plain-text and HTML alternatives. */
@@ -118,7 +118,6 @@ const server = createServer(async (request, response) => {
       `Reply-To:    ${payload.replyTo?.email ?? ""}`,
       `From:        ${payload.sender?.name ?? ""} <${payload.sender?.email ?? ""}>`,
       `Subject:     ${payload.subject ?? ""}`,
-      `Idempotency: ${request.headers["idempotency-key"] ?? ""}`,
       "",
       payload.textContent ?? "",
     ].join("\n")

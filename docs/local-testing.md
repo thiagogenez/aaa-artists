@@ -26,6 +26,20 @@ form or the Worker.
 
 ### 2. The full round trip, still emailing nobody
 
+Run the automated regression whenever the contact form or enquiry pipeline changes:
+
+```bash
+npm run test:enquiry
+```
+
+It builds the test export, starts the Worker and the existing Brevo-shaped catcher on
+temporary local ports, submits a representative enquiry in headless Chromium, verifies the
+success screen and captured message, then removes every temporary file and process. It uses
+only dummy local variables: no Brevo key, Turnstile request, quota, inbox, or network service.
+
+The same runtime check runs in the browser CI job after the shared test build. For manual
+inspection of the generated `.eml`, use the longer-lived development setup instead:
+
 ```bash
 # terminal 1
 npm run dev:mail               # mail catcher on http://127.0.0.1:8025
@@ -40,6 +54,8 @@ The catcher accepts the exact POST the Worker sends to Brevo, writes the email t
 `.preview/`, prints a summary, and answers with a Brevo-shaped `201` so the Worker's
 success path runs for real. This exercises the form, Turnstile, the Worker's validation,
 the stable submission reference, the email rendering, and the `enquiry_delivered` log record.
+The automated command skips external Turnstile verification deliberately; its provider
+response is covered by Worker tests and the controlled staging check.
 
 **Not** the rate limits. Rate Limit bindings only exist on the named environments, and
 `withinLimit()` returns `true` when the binding is absent, so every local submission is
