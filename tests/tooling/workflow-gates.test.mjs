@@ -48,6 +48,10 @@ describe("development workflow gates", () => {
     const buildIndex = steps.findIndex((step) => step.run === "npm run build:test");
     const roundTripIndex = steps.findIndex((step) => step.run === "npm run test:enquiry:run");
 
+    assert.equal(
+      packageJson.scripts["test:enquiry:run"],
+      "node scripts/check-enquiry-roundtrip.mjs"
+    );
     assert.ok(buildIndex >= 0, "the browser job must build the test export");
     assert.ok(roundTripIndex > buildIndex, "the enquiry round-trip must use the shared test build");
   });
