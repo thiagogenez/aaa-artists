@@ -162,7 +162,7 @@ test("routes non-production delivery to the local catcher and optional test BCC"
   assert.deepEqual(forwarded.replyTo, { email: "bookings@aaaartists.co" });
 });
 
-test("fails closed when staging email lacks a fixed recipient", async (context) => {
+test("fails closed when staging email lacks a valid fixed recipient", async (context) => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
   globalThis.fetch = async () => {
@@ -173,9 +173,17 @@ test("fails closed when staging email lacks a fixed recipient", async (context) 
     globalThis.fetch = originalFetch;
   });
 
-  const response = await worker.fetch(request(validPayload()), env({ ENVIRONMENT: "staging" }));
+  for (const stagingRecipient of [undefined, "xkeysib-example-api-key"]) {
+    const response = await worker.fetch(
+      request(validPayload()),
+      env({
+        ENVIRONMENT: "staging",
+        STAGING_ENQUIRY_RECIPIENT: stagingRecipient,
+      })
+    );
 
-  assert.equal(response.status, 503);
+    assert.equal(response.status, 503);
+  }
   assert.equal(calls, 0);
 });
 
