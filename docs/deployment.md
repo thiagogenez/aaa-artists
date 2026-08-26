@@ -57,10 +57,39 @@ Turnstile testing-key verdicts only when `ENVIRONMENT` is not `production`.
 For the one-time setup, add the recipient first and the dedicated key second, using Wrangler's
 interactive prompts so neither value appears in shell history:
 
+| Worker binding | Value entered at the prompt | Source |
+| --- | --- | --- |
+| `STAGING_ENQUIRY_RECIPIENT` | A private test mailbox, such as `staging.tester@example.com` | The tester |
+| `BREVO_API_KEY` | The complete `xkeysib-…` value | The dedicated `aaa-artists-staging` key in Brevo |
+
+The first value is an **email address**, not an API key. Wrangler calls both values secrets and
+masks both prompts, but they are not interchangeable. Enter the private test mailbox when this
+command prompts for a value:
+
 ```sh
 npx wrangler secret put STAGING_ENQUIRY_RECIPIENT --env staging
+```
+
+Then enter the saved, complete staging Brevo key when this command prompts for a value. Never use
+the production key:
+
+```sh
 npx wrangler secret put BREVO_API_KEY --env staging
 ```
+
+Confirm that all three binding names exist after setup:
+
+```sh
+npx wrangler secret list --env staging
+```
+
+The list must contain `BREVO_API_KEY`, `STAGING_ENQUIRY_RECIPIENT`, and
+`TURNSTILE_SECRET_KEY`. It cannot display or validate encrypted values. If the names are present
+but the form returns `Online delivery is temporarily unavailable`, overwrite
+`STAGING_ENQUIRY_RECIPIENT` with the test mailbox and `BREVO_API_KEY` with the saved staging key;
+this 503 means a required value is missing or the recipient is not a valid email address. If the
+form instead returns `Something went wrong sending your enquiry`, the Worker reached Brevo but
+delivery failed; a deliberately deactivated or invalid Brevo key is one possible cause.
 
 Keep the staging API key **deactivated in Brevo** outside a controlled test window. To test,
 activate that key in Brevo, submit once at
