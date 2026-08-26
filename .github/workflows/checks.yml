@@ -72,3 +72,5 @@ jobs:
         run: npm run check:deploy
       - name: Run browser tests
         run: npm run test:e2e:run
+      - name: Run enquiry round-trip test
+        run: npm run test:enquiry:run
