@@ -397,9 +397,11 @@ test("persists light and dark themes across reloads", async ({ page }) => {
 });
 
 test("keeps shared chrome inside common phone and desktop widths", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/");
+
   for (const width of [320, 375, 390, 412, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
     const dimensions = await page.evaluate(() => ({
       viewport: document.documentElement.clientWidth,
       content: document.documentElement.scrollWidth,
