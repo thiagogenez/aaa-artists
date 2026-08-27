@@ -64,13 +64,12 @@
   "dependencies": {
     "@intl-tel-input/react": "^29.1.2",
     "intl-tel-input": "^29.1.2",
-    "next": "^16.2.12",
+    "next": "^16.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "overrides": {
     "sharp": "^0.35.3",
-    "postcss": "^8.5.22",
     "qs": "^6.15.3"
   },
   "devDependencies": {
@@ -85,7 +84,7 @@
     "all-countries-and-cities-json": "^1.0.0",
     "arch-contract": "^0.3.0",
     "eslint": "^9",
-    "eslint-config-next": "^16.2.12",
+    "eslint-config-next": "^16.3.3",
     "js-yaml": "^5.2.2",
     "knip": "^6.32.1",
     "playwright": "^1.62.0",
