@@ -15,6 +15,18 @@ function loadPhoneField() {
   return phoneFieldPromise;
 }
 
+function PendingCountryIcon() {
+  return (
+    <span className="aaa-phone-pending-country" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+      </svg>
+      <span className="aaa-phone-pending-arrow" />
+    </span>
+  );
+}
+
 /**
  * Keep the optional phone dependency out of the initial route. The native input
  * remains usable while the enhanced control loads, then hands its current value
@@ -100,6 +112,7 @@ export default function DeferredPhoneField({
       className="aaa-phone-field"
       data-phone-enhancement={enhancementFailed ? "fallback" : "pending"}
     >
+      {!enhancementFailed && <PendingCountryIcon />}
       <input
         {...inputProps}
         ref={fallbackRef}
