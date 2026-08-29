@@ -252,6 +252,23 @@ input[type="date"] {
   min-width: 44px;
   color: var(--text);
 }
+.aaa-phone-field
+  .iti__selected-country[aria-label="Select country for phone number"]
+  .iti__selected-country-primary::before {
+  content: "🌐";
+  display: block;
+  width: 20px;
+  margin-right: var(--iti-spacer-horizontal);
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+}
+.aaa-phone-field
+  .iti__selected-country[aria-label="Select country for phone number"]
+  .iti__selected-country-primary
+  > .iti__globe {
+  display: none;
+}
 .aaa-phone-field .iti__country-selector {
   color: var(--text);
   border-radius: 0;
