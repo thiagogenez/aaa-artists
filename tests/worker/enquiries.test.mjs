@@ -14,6 +14,7 @@ function validPayload(overrides = {}) {
     phone: "",
     whatsappNumber: "",
     whatsappUsername: "",
+    contactToDiscuss: false,
     bookings: [
       {
         artist: "Xijaro & Pitch",
@@ -31,7 +32,7 @@ function validPayload(overrides = {}) {
     country: "",
     capacity: "",
     ticketing: "",
-    currency: "GBP",
+    currency: "EUR",
     budgetRange: "",
     lineup: "",
     hearAbout: "",
@@ -132,6 +133,28 @@ test("validates and emails a clean enquiry with a stable threaded reference", as
   assert.match(forwarded.textContent, /Artist schedule:.*Xijaro & Pitch.*1 hour set/s);
   assert.match(forwarded.textContent, /not confirmation/i);
   assert.match(result.requestId, /^[0-9a-f-]{36}$/i);
+});
+
+test("accepts an artist discussion only when no booking is selected", async (context) => {
+  const originalFetch = globalThis.fetch;
+  let forwarded;
+  globalThis.fetch = async (_url, init) => {
+    forwarded = JSON.parse(init.body);
+    return Response.json({ messageId: "<artist-discussion@example.com>" }, { status: 201 });
+  };
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const response = await worker.fetch(
+    request(validPayload({ contactToDiscuss: true, bookings: [] })),
+    env()
+  );
+
+  assert.equal(response.status, 200);
+  assert.match(forwarded.subject, /Artist to discuss/);
+  assert.match(forwarded.textContent, /Artist selection: Contact me to discuss/);
+  assert.doesNotMatch(forwarded.textContent, /Artist schedule:/);
 });
 
 test("routes non-production delivery to the local catcher and optional test BCC", async (context) => {
@@ -343,6 +366,18 @@ test("rejects invalid fields, header injection and honeypot submissions before d
     ),
     env()
   );
+  const discussionWithArtist = await worker.fetch(
+    request(validPayload({ contactToDiscuss: true })),
+    env()
+  );
+  const missingArtistWithoutDiscussion = await worker.fetch(
+    request(validPayload({ bookings: [] })),
+    env()
+  );
+  const invalidDiscussionValue = await worker.fetch(
+    request(validPayload({ contactToDiscuss: "true", bookings: [] })),
+    env()
+  );
   assert.deepEqual(
     [
       invalidEmail.status,
@@ -352,8 +387,11 @@ test("rejects invalid fields, header injection and honeypot submissions before d
       artistCrlf.status,
       invalidOption.status,
       conflictingWhatsApp.status,
+      discussionWithArtist.status,
+      missingArtistWithoutDiscussion.status,
+      invalidDiscussionValue.status,
     ],
-    [400, 400, 400, 400, 400, 400, 400]
+    [400, 400, 400, 400, 400, 400, 400, 400, 400, 400]
   );
   assert.equal(calls, 0);
 });

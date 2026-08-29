@@ -7,9 +7,9 @@ import "intl-tel-input/styles";
 export type PhoneFieldProps = {
   value: string;
   error?: string;
-  initialCountry?: Iso2;
+  initialCountry?: Iso2 | "";
   onChange: (number: string) => void;
-  onCountryChange?: (country: Iso2) => void;
+  onCountryChange?: (country: Iso2 | "") => void;
   onValidityChange: (isValid: boolean) => void;
   onBlur: () => void;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "onBlur" | "value">;
@@ -20,7 +20,7 @@ export type PhoneFieldProps = {
 export default function PhoneField({
   value,
   error,
-  initialCountry = "gb",
+  initialCountry = "",
   onChange,
   onCountryChange,
   onValidityChange,
@@ -34,7 +34,7 @@ export default function PhoneField({
         loadUtils={() => import("intl-tel-input/utils")}
         value={value}
         onChangeNumber={onChange}
-        onChangeCountry={(country) => onCountryChange?.(country as Iso2)}
+        onChangeCountry={(country) => onCountryChange?.(country as Iso2 | "")}
         onChangeValidity={onValidityChange}
         countrySearch
         formatAsYouType

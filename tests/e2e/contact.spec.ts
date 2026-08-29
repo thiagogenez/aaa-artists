@@ -91,6 +91,13 @@ test.describe("booking form regression coverage", () => {
     await expect(page.locator('[data-phone-enhancement="ready"]')).toBeAttached();
     await expect(phoneInput).toBeFocused();
 
+    const countryButton = page.locator(".iti__selected-country");
+    await expect(countryButton).toHaveAttribute("aria-label", "Select country for phone number");
+    await expect(countryButton.locator(".iti__selected-dial-code")).toHaveText("");
+    await countryButton.click();
+    await expect(page.locator(".iti__country").first()).toContainText("Afghanistan");
+    await expect(page.locator(".iti__country").first()).toContainText("+93");
+
     await context.close();
   });
 
@@ -132,11 +139,55 @@ test.describe("booking form regression coverage", () => {
     await expect(firstArtistToggle).toHaveAttribute("aria-expanded", "false");
     await expect(secondArtistToggle).toHaveAttribute("aria-expanded", "true");
 
-    await page.locator('select[name="booking-1-artist"]').selectOption("Open to suggestions");
+    await page.locator('select[name="booking-1-artist"]').selectOption({ index: 2 });
     await page.locator('input[name="booking-1-timing-mode"][value="times"]').check();
     await page.locator('input[name="booking-1-start"]').fill("22:30");
     await page.locator('input[name="booking-1-finish"]').fill("00:00");
     await expect(page.getByRole("status").filter({ hasText: "1 hour 30 minutes" })).toBeVisible();
+  });
+
+  test("uses EUR by default and submits an artist discussion without a booking", async ({
+    page,
+  }) => {
+    let requestBody: Record<string, unknown> | undefined;
+    await page.route("**/api/enquiries", async (route) => {
+      requestBody = route.request().postDataJSON() as Record<string, unknown>;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true }),
+      });
+    });
+    await page.goto("/contact");
+
+    await page.locator('button[aria-controls="section-budget"]').click();
+    await expect(page.locator('select[name="currency"]')).toHaveValue("EUR");
+    await expect(page.getByRole("option", { name: "Open to suggestions" })).toHaveCount(0);
+
+    const firstArtist = page.locator('select[name="booking-0-artist"]');
+    await firstArtist.selectOption({ index: 1 });
+    const discuss = page.getByRole("checkbox", { name: /Contact me to discuss/ });
+    await discuss.check();
+    await expect(page.locator('select[name^="booking-"][name$="-artist"]')).toBeHidden();
+    await expect(page.getByRole("button", { name: "Add another artist" })).toBeHidden();
+
+    await discuss.uncheck();
+    await expect(firstArtist).toHaveValue("");
+    await discuss.check();
+    await page.locator('input[name="name"]').fill("Jane Booker");
+    await page.locator('input[name="email"]').fill("jane@example.com");
+    await page.locator('input[name="date"]').fill("2026-12-01");
+    await waitForTurnstileToken(page);
+    await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
+
+    await expect(page.getByRole("heading", { name: "Enquiry sent" })).toBeVisible({
+      timeout: 15_000,
+    });
+    expect(requestBody).toMatchObject({
+      contactToDiscuss: true,
+      bookings: [],
+      currency: "EUR",
+    });
   });
 
   test("loads local city suggestions and still accepts free text", async ({ page }) => {
@@ -191,7 +242,9 @@ test.describe("booking form regression coverage", () => {
       email: "jane@example.com",
       eventDate: "2026-12-01",
       website: "",
+      contactToDiscuss: false,
       bookings: [{ timingMode: "duration", durationMinutes: "60" }],
+      currency: "EUR",
     });
     expect(requestBody?.submissionId).toMatch(/^[0-9a-f-]{36}$/i);
     expect(requestBody).not.toHaveProperty("startedAt");
