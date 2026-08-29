@@ -238,6 +238,7 @@ button:not(:disabled) {
   --iti-icon-color: var(--text-60);
 }
 .aaa-phone-field {
+  --iti-icon-color: var(--text-60);
   min-width: 0;
   max-width: 100%;
 }
@@ -252,22 +253,38 @@ input[type="date"] {
   min-width: 44px;
   color: var(--text);
 }
-.aaa-phone-field
-  .iti__selected-country[aria-label="Select country for phone number"]
-  .iti__selected-country-primary::before {
-  content: "🌐";
-  display: block;
-  width: 20px;
-  margin-right: var(--iti-spacer-horizontal);
-  font-size: 16px;
-  line-height: 1;
-  text-align: center;
+.aaa-phone-field[data-phone-enhancement="pending"] {
+  position: relative;
 }
-.aaa-phone-field
-  .iti__selected-country[aria-label="Select country for phone number"]
-  .iti__selected-country-primary
-  > .iti__globe {
-  display: none;
+.aaa-phone-field[data-phone-enhancement="pending"] .aaa-phone-input {
+  padding-left: 56px;
+}
+.aaa-phone-pending-country {
+  position: absolute;
+  z-index: 1;
+  top: 1px;
+  bottom: 1px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  color: var(--iti-icon-color);
+  pointer-events: none;
+}
+.aaa-phone-pending-country svg {
+  width: var(--iti-globe-icon-size);
+  height: var(--iti-globe-icon-size);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+.aaa-phone-pending-arrow {
+  width: var(--iti-arrow-size);
+  height: var(--iti-arrow-size);
+  margin-top: -2px;
+  margin-left: var(--iti-arrow-padding);
+  border-right: var(--iti-arrow-width) solid currentColor;
+  border-bottom: var(--iti-arrow-width) solid currentColor;
+  transform: rotate(45deg);
 }
 .aaa-phone-field .iti__country-selector {
   color: var(--text);

@@ -85,6 +85,7 @@ test.describe("booking form regression coverage", () => {
 
     const enhancement = page.locator('[data-phone-enhancement="pending"]');
     await expect(enhancement).toBeAttached();
+    await expect(enhancement.locator(".aaa-phone-pending-country svg")).toBeVisible();
 
     const phoneInput = page.locator('input[name="phone"]');
     await phoneInput.focus();
@@ -94,13 +95,7 @@ test.describe("booking form regression coverage", () => {
     const countryButton = page.locator(".iti__selected-country");
     await expect(countryButton).toHaveAttribute("aria-label", "Select country for phone number");
     await expect(countryButton.locator(".iti__selected-dial-code")).toHaveText("");
-    await expect
-      .poll(() =>
-        page
-          .locator(".iti__selected-country-primary")
-          .evaluate((element) => getComputedStyle(element, "::before").content)
-      )
-      .toBe('"🌐"');
+    await expect(countryButton.locator(".iti__globe-svg")).toBeVisible();
     await countryButton.click();
     await expect(page.locator(".iti__country").first()).toContainText("Afghanistan");
     await expect(page.locator(".iti__country").first()).toContainText("+93");
