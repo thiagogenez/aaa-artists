@@ -108,10 +108,17 @@ function validateBookings(value) {
 
 function validatePayload(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  if (input.contactToDiscuss !== undefined && typeof input.contactToDiscuss !== "boolean")
+    return null;
   const name = singleLine(input.name, BOOKING_LIMITS.name, true);
   const email = singleLine(input.email, BOOKING_LIMITS.email, true);
   const eventDate = singleLine(input.eventDate, 10, true);
-  const bookings = validateBookings(input.bookings);
+  const contactToDiscuss = input.contactToDiscuss === true;
+  const bookings = contactToDiscuss
+    ? Array.isArray(input.bookings) && input.bookings.length === 0
+      ? []
+      : null
+    : validateBookings(input.bookings);
   const submissionId = singleLine(input.submissionId, BOOKING_LIMITS.submissionId, true);
   const website = text(input.website, 200);
   const turnstileToken = text(input.turnstileToken, 2048);
@@ -141,6 +148,7 @@ function validatePayload(input) {
     submissionId,
     eventDate,
     bookings,
+    contactToDiscuss,
     turnstileToken: turnstileToken ?? "",
     company: singleLine(input.company, BOOKING_LIMITS.company),
     phone,
@@ -253,6 +261,9 @@ function productionConfigurationIssue(env) {
 }
 
 function enquirySubject(payload) {
+  if (payload.contactToDiscuss) {
+    return `Booking enquiry [${payload.submissionId.slice(0, 8).toUpperCase()}]: Artist to discuss`;
+  }
   const artistNames = payload.bookings.map((booking) => booking.artist);
   const subjectArtists =
     artistNames.length > 2
@@ -288,7 +299,9 @@ function enquiryDetails(payload) {
     ...(payload.phone && { Phone: payload.phone }),
     ...(payload.whatsappNumber && { "WhatsApp number": payload.whatsappNumber }),
     ...(payload.whatsappUsername && { "WhatsApp username": payload.whatsappUsername }),
-    "Artist schedule": schedule,
+    ...(payload.contactToDiscuss
+      ? { "Artist selection": "Contact me to discuss" }
+      : { "Artist schedule": schedule }),
     ...(payload.eventName && { "Event name": payload.eventName }),
     ...(payload.eventType && { "Event type": payload.eventType }),
     "Event date": payload.eventDate,

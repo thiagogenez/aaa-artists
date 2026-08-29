@@ -403,6 +403,7 @@ const DRAFT_STORAGE_KEY = "aaa-booking-draft-v1";
 type DraftShape = {
   form: Record<string, string>;
   artistBookings: ArtistBooking[];
+  contactToDiscuss: boolean;
   dateTbc: boolean;
   whatsappMode: "none" | "same" | "different" | "username";
   phoneCountry: string;
@@ -451,14 +452,16 @@ function readDraft(validArtists: Set<string>): DraftShape | null {
     return {
       form,
       artistBookings: bookings.length > 0 ? bookings : [],
+      contactToDiscuss: parsed.contactToDiscuss === true,
       dateTbc: parsed.dateTbc === true,
       whatsappMode: ["none", "same", "different", "username"].includes(parsed.whatsappMode ?? "")
         ? (parsed.whatsappMode as DraftShape["whatsappMode"])
         : "none",
       phoneCountry:
-        typeof parsed.phoneCountry === "string" && /^[a-z]{2}$/.test(parsed.phoneCountry)
+        typeof parsed.phoneCountry === "string" &&
+        (parsed.phoneCountry === "" || /^[a-z]{2}$/.test(parsed.phoneCountry))
           ? parsed.phoneCountry
-          : "gb",
+          : "",
       currencyTouched: parsed.currencyTouched === true,
     };
   } catch {
@@ -510,7 +513,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     capacity: "",
     ticketing: "",
     // Budget & extras
-    currency: currencyForCountry(preselectedCountry) ?? "GBP",
+    currency: currencyForCountry(preselectedCountry) ?? "EUR",
     budgetRange: "",
     lineup: "",
     hearAbout: "",
@@ -529,6 +532,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   ];
   const [form, setForm] = useState(initialForm);
   const [artistBookings, setArtistBookings] = useState<ArtistBooking[]>(initialArtistBookings);
+  const [contactToDiscuss, setContactToDiscuss] = useState(false);
   const [expandedBookingIds, setExpandedBookingIds] = useState<Set<number>>(() => new Set([0]));
   const nextBookingId = useRef(1);
   const [submissionId, setSubmissionId] = useState(() => crypto.randomUUID());
@@ -541,7 +545,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [dateTbc, setDateTbc] = useState(false);
   const [phoneValid, setPhoneValid] = useState(true);
-  const [phoneCountry, setPhoneCountry] = useState<Iso2>("gb");
+  const [phoneCountry, setPhoneCountry] = useState<Iso2 | "">("");
   const [whatsappValid, setWhatsappValid] = useState(true);
   const [whatsappMode, setWhatsappMode] = useState<"none" | "same" | "different" | "username">(
     "none"
@@ -560,6 +564,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const isFormDirty =
     JSON.stringify(form) !== JSON.stringify(initialForm) ||
     JSON.stringify(artistBookings) !== JSON.stringify(initialArtistBookings) ||
+    contactToDiscuss ||
     dateTbc ||
     whatsappMode !== "none";
   const canResetForm = isFormDirty || submitAttempted || Boolean(sendError);
@@ -585,9 +590,10 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       setExpandedBookingIds(new Set(draft.artistBookings.map((booking) => booking.id)));
       nextBookingId.current = draft.artistBookings.length;
     }
+    setContactToDiscuss(draft.contactToDiscuss);
     setDateTbc(draft.dateTbc);
     setWhatsappMode(draft.whatsappMode);
-    setPhoneCountry(draft.phoneCountry as Iso2);
+    setPhoneCountry(draft.phoneCountry as Iso2 | "");
     setCurrencyTouched(draft.currencyTouched);
     /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only restore
@@ -616,6 +622,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
             version: 1,
             form,
             artistBookings,
+            contactToDiscuss,
             dateTbc,
             whatsappMode,
             phoneCountry,
@@ -630,6 +637,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   }, [
     form,
     artistBookings,
+    contactToDiscuss,
     dateTbc,
     whatsappMode,
     phoneCountry,
@@ -657,7 +665,8 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     ([key, value]) => key.startsWith("booking-") && Boolean(value)
   );
   const canAddArtist =
-    artistBookings.length < artistOptions.length + 1 &&
+    !contactToDiscuss &&
+    artistBookings.length < artistOptions.length &&
     artistBookings.every((booking) => booking.artist);
 
   // Move focus to the confirmation heading when the form is replaced by the
@@ -694,13 +703,10 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
         e.whatsappUsername = "Enter the username without @ or spaces";
       }
     }
-    const allowedArtists = new Set([
-      ...artistOptions.map((artist) => artist.name),
-      "Open to suggestions",
-    ]);
+    const allowedArtists = new Set(artistOptions.map((artist) => artist.name));
     const allowedDurations = new Set(SET_DURATIONS.map(String));
     const seenArtists = new Set<string>();
-    for (const booking of artistBookings) {
+    for (const booking of contactToDiscuss ? [] : artistBookings) {
       const artistKey = `booking-${booking.id}-artist`;
       const durationKey = `booking-${booking.id}-duration`;
       const startKey = `booking-${booking.id}-start`;
@@ -821,6 +827,18 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     setErrors((current) => ({ ...current, date: "" }));
   }
 
+  function handleContactToDiscussChange(checked: boolean) {
+    setContactToDiscuss(checked);
+    if (checked) {
+      setArtistBookings(initialArtistBookings);
+      setExpandedBookingIds(new Set([0]));
+      nextBookingId.current = 1;
+    }
+    setErrors((current) =>
+      Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith("booking-")))
+    );
+  }
+
   function updateArtistBooking(
     id: number,
     field: "artist" | "timingMode" | "durationMinutes" | "startTime" | "finishTime",
@@ -870,7 +888,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   }
 
   function addArtistBooking() {
-    if (artistBookings.length >= artistOptions.length + 1) return;
+    if (contactToDiscuss || artistBookings.length >= artistOptions.length) return;
     const id = nextBookingId.current;
     nextBookingId.current += 1;
     setArtistBookings((current) => [
@@ -923,6 +941,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
 
     setForm(initialForm);
     setArtistBookings(initialArtistBookings);
+    setContactToDiscuss(false);
     setExpandedBookingIds(new Set([0]));
     nextBookingId.current = 1;
     setSubmitted(false);
@@ -933,7 +952,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     setSubmitAttempted(false);
     setDateTbc(false);
     setPhoneValid(true);
-    setPhoneCountry("gb");
+    setPhoneCountry("");
     setWhatsappValid(true);
     setWhatsappMode("none");
     setCurrencyTouched(false);
@@ -1002,15 +1021,18 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           whatsappNumber,
           whatsappUsername,
           submissionId,
-          bookings: artistBookings.map(
-            ({ artist, timingMode, durationMinutes, startTime, finishTime }) => ({
-              artist,
-              timingMode,
-              durationMinutes,
-              startTime,
-              finishTime,
-            })
-          ),
+          contactToDiscuss,
+          bookings: contactToDiscuss
+            ? []
+            : artistBookings.map(
+                ({ artist, timingMode, durationMinutes, startTime, finishTime }) => ({
+                  artist,
+                  timingMode,
+                  durationMinutes,
+                  startTime,
+                  finishTime,
+                })
+              ),
           eventName: form.eventName,
           eventType: form.eventType,
           eventDate: dateTbc ? "TBC" : form.date,
@@ -1419,6 +1441,29 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                 </p>
               </div>
 
+              <label
+                className="flex min-h-[50px] cursor-pointer items-start gap-3 border px-4 py-3 text-sm transition-colors duration-200"
+                style={{
+                  borderColor: contactToDiscuss ? "var(--text)" : "var(--border)",
+                  backgroundColor: "var(--surface)",
+                  color: "var(--text)",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  name="contactToDiscuss"
+                  checked={contactToDiscuss}
+                  onChange={(event) => handleContactToDiscussChange(event.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-current"
+                />
+                <span>
+                  <span className="block font-medium">Contact me to discuss</span>
+                  <span className="mt-1 block text-xs" style={{ color: "var(--text-40)" }}>
+                    Choose this if you are unsure which artist would suit your event.
+                  </span>
+                </span>
+              </label>
+
               {artistBookings.map((booking, index) => {
                 const exactDuration =
                   booking.timingMode === "times"
@@ -1435,7 +1480,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                 return (
                   <div
                     key={booking.id}
-                    className="min-w-0 border p-3 sm:p-4 md:p-5"
+                    className={`${contactToDiscuss ? "hidden" : ""} min-w-0 border p-3 sm:p-4 md:p-5`}
                     style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
                   >
                     <div
@@ -1523,15 +1568,6 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                                     {artist.name}
                                   </option>
                                 ))}
-                                <option
-                                  value="Open to suggestions"
-                                  disabled={
-                                    booking.artist !== "Open to suggestions" &&
-                                    selectedArtists.has("Open to suggestions")
-                                  }
-                                >
-                                  Open to suggestions
-                                </option>
                               </Select>
                             </Field>
                           </div>
@@ -1739,7 +1775,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                 type="button"
                 onClick={addArtistBooking}
                 disabled={!canAddArtist}
-                className="btn-outline inline-flex min-h-[44px] w-full items-center justify-center px-5 py-3 text-xs font-semibold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40"
+                className={`btn-outline ${contactToDiscuss ? "hidden" : "inline-flex"} min-h-[44px] w-full items-center justify-center px-5 py-3 text-xs font-semibold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40`}
               >
                 Add another artist
               </button>
