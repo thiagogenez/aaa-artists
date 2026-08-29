@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-29T00:00:00.000Z",
+  "title": "Design System: AAA Artists",
+  "extensions": {
+    "colorMeta": {
+      "signal-black": {
+        "role": "primary",
+        "displayName": "Signal Black",
+        "canonical": "#0a0a0a",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5"
+        ]
+      },
+      "gallery-white": {
+        "role": "primary",
+        "displayName": "Gallery White",
+        "canonical": "#f8f8f8",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f8f8f8"
+        ]
+      },
+      "stage-white": {
+        "role": "primary",
+        "displayName": "Stage White",
+        "canonical": "#ebebeb",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#ebebeb"
+        ]
+      },
+      "light-surface": {
+        "role": "neutral",
+        "displayName": "Light Surface",
+        "canonical": "#e8e8e8",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#e8e8e8"
+        ]
+      },
+      "light-border": {
+        "role": "neutral",
+        "displayName": "Light Border",
+        "canonical": "#d0d0d0",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d0d0d0",
+          "#f5f5f5"
+        ]
+      },
+      "dark-surface": {
+        "role": "neutral",
+        "displayName": "Dark Surface",
+        "canonical": "#141414",
+        "tonalRamp": [
+          "#141414",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5"
+        ]
+      },
+      "dark-border": {
+        "role": "neutral",
+        "displayName": "Dark Border",
+        "canonical": "#2a2a2a",
+        "tonalRamp": [
+          "#171717",
+          "#2a2a2a",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5"
+        ]
+      },
+      "error-light": {
+        "role": "error",
+        "displayName": "Error Light",
+        "canonical": "#c0341d",
+        "tonalRamp": [
+          "#3b0d08",
+          "#5e160e",
+          "#842014",
+          "#a72a19",
+          "#c0341d",
+          "#db5f4d",
+          "#ef9c8f",
+          "#fbe0dc"
+        ]
+      },
+      "error-dark": {
+        "role": "error",
+        "displayName": "Error Dark",
+        "canonical": "#f87171",
+        "tonalRamp": [
+          "#450a0a",
+          "#7f1d1d",
+          "#991b1b",
+          "#dc2626",
+          "#ef4444",
+          "#f87171",
+          "#fca5a5",
+          "#fee2e2"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero and major page statements." },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section statements and mobile page titles."
+      },
+      "title": { "displayName": "Title", "purpose": "Cards and strong local headings." },
+      "body": { "displayName": "Body", "purpose": "Explanatory and booking copy." },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Navigation, genres, fields, steps, and compact actions."
+      }
+    },
+    "shadows": [
+      {
+        "name": "consent-lift",
+        "value": "0 -10px 30px var(--media-banner-shadow)",
+        "purpose": "Separates the fixed media-consent decision from page content."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "200ms ease",
+        "purpose": "Colour and border state changes."
+      },
+      {
+        "name": "reveal-standard",
+        "value": "300ms ease-out",
+        "purpose": "Artist actions and directional reveals."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary CTA",
+      "kind": "button",
+      "refersTo": "button-primary-light",
+      "description": "Theme-inverted, square, uppercase primary action.",
+      "html": "<button class=\"ds-btn-primary\">BOOK ARTISTS</button>",
+      "css": ".ds-btn-primary { min-height: 44px; border: 0; border-radius: 0; padding: 12px 20px; background: var(--cta-bg, #0a0a0a); color: var(--cta-text, #f8f8f8); font: 600 12px/1.25 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; transition: background-color .2s ease; } .ds-btn-primary:hover { background: var(--cta-hover, #333); } .ds-btn-primary:focus-visible { outline: 2px solid var(--text-60, #666); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline CTA",
+      "kind": "button",
+      "description": "Secondary action with a structural one-pixel rule.",
+      "html": "<button class=\"ds-btn-outline\">SEND AN ENQUIRY</button>",
+      "css": ".ds-btn-outline { min-height: 44px; border: 1px solid var(--border, #d0d0d0); border-radius: 0; padding: 12px 20px; background: transparent; color: var(--text-60, #555); font: 600 12px/1.25 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; transition: border-color .2s ease, color .2s ease; } .ds-btn-outline:hover, .ds-btn-outline:focus-visible { border-color: var(--text, #0a0a0a); color: var(--text, #0a0a0a); } .ds-btn-outline:focus-visible { outline: 2px solid var(--text-60, #666); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-light",
+      "description": "Square, full-width booking field with a quiet tonal surface.",
+      "html": "<label class=\"ds-field\"><span>EVENT NAME</span><input placeholder=\"Your event\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; color: var(--text-60, #555); font: 600 12px/1.25 system-ui, sans-serif; letter-spacing: .1em; } .ds-field input { min-height: 50px; border: 1px solid var(--border, #d0d0d0); border-radius: 0; padding: 12px 16px; background: var(--surface, #e8e8e8); color: var(--text, #0a0a0a); font: 400 16px/1.5 system-ui, sans-serif; letter-spacing: normal; } .ds-field input:focus-visible { outline: 2px solid var(--text-60, #666); outline-offset: 2px; }"
+    },
+    {
+      "name": "Navigation Link",
+      "kind": "nav",
+      "description": "Tracked uppercase link with an underline sweep.",
+      "html": "<a class=\"ds-nav-link\" href=\"#\">ARTISTS</a>",
+      "css": ".ds-nav-link { position: relative; display: inline-block; color: var(--text-60, #555); font: 500 14px/1.25 system-ui, sans-serif; letter-spacing: .1em; text-decoration: none; transition: color .3s ease, transform .3s ease; } .ds-nav-link::after { content: ''; position: absolute; right: 0; bottom: -4px; left: 0; height: 1px; background: var(--text-20, #bbb); transform: scaleX(0); transform-origin: left; transition: transform .3s ease; } .ds-nav-link:hover { color: var(--text, #0a0a0a); transform: translateY(-1px); } .ds-nav-link:hover::after, .ds-nav-link:focus-visible::after { transform: scaleX(1); } .ds-nav-link:focus-visible { outline: 2px solid var(--text-60, #666); outline-offset: 2px; }"
+    },
+    {
+      "name": "Surface Card",
+      "kind": "card",
+      "description": "Flat square container using tone and a thin structural border.",
+      "html": "<article class=\"ds-card\"><span>BOOKINGS</span><h3>Find the right artist.</h3><p>Tell us the sound and event you are planning.</p></article>",
+      "css": ".ds-card { max-width: 320px; border: 1px solid var(--border, #d0d0d0); border-radius: 0; padding: 24px; background: var(--bg-subtle, #f0f0f0); color: var(--text, #0a0a0a); font-family: system-ui, sans-serif; } .ds-card span { color: var(--text-30, #777); font-size: 12px; font-weight: 600; letter-spacing: .4em; } .ds-card h3 { margin: 12px 0; font-size: 24px; line-height: 1.25; } .ds-card p { margin: 0; color: var(--text-60, #555); font-size: 14px; line-height: 1.625; } .ds-card:focus-within { outline: 2px solid var(--text-60, #666); outline-offset: 2px; }"
+    },
+    {
+      "name": "Booking Section",
+      "kind": "custom",
+      "description": "Bordered collapsible section with a tonal control header.",
+      "html": "<section class=\"ds-booking-section\"><button><span><b>01</b> QUICK ENQUIRY</span><i>+</i></button><div>SECTION CONTENT</div></section>",
+      "css": ".ds-booking-section { border: 1px solid var(--border, #d0d0d0); border-radius: 0; color: var(--text, #0a0a0a); font-family: system-ui, sans-serif; } .ds-booking-section button { display: flex; width: 100%; align-items: center; justify-content: space-between; border: 0; padding: 16px 20px; background: var(--surface, #e8e8e8); color: var(--text-60, #555); font-size: 14px; font-weight: 600; letter-spacing: .1em; text-align: left; } .ds-booking-section b { margin-right: 12px; color: var(--text-30, #777); font-size: 12px; } .ds-booking-section i { font-size: 20px; font-style: normal; font-weight: 400; } .ds-booking-section > div { border-top: 1px solid var(--border, #d0d0d0); padding: 24px; font-size: 14px; } .ds-booking-section button:focus-visible { outline: 2px solid var(--text-60, #666); outline-offset: 2px; }"
+    },
+    {
+      "name": "Media Consent Banner",
+      "kind": "custom",
+      "description": "Theme-inverted fixed decision surface with restrained overlay depth.",
+      "html": "<section class=\"ds-consent\"><p>Choose whether to load third-party music players.</p><div><button>DECLINE</button><button class=\"ds-consent-accept\">ACCEPT</button></div></section>",
+      "css": ".ds-consent { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--media-banner-border, #777); padding: 16px 24px; background: var(--media-banner-bg, #0a0a0a); color: var(--media-banner-text, #f8f8f8); box-shadow: 0 -10px 30px var(--media-banner-shadow, rgba(0,0,0,.24)); font-family: system-ui, sans-serif; } .ds-consent p { margin: 0; color: var(--media-banner-muted, #ccc); font-size: 14px; line-height: 1.625; } .ds-consent div { display: flex; gap: 12px; } .ds-consent button { min-height: 44px; border: 1px solid var(--media-banner-border, #777); border-radius: 0; padding: 0 20px; background: transparent; color: var(--media-banner-muted, #ccc); font-size: 12px; font-weight: 600; letter-spacing: .1em; } .ds-consent .ds-consent-accept { background: var(--media-banner-action-bg, #f8f8f8); color: var(--media-banner-action-text, #0a0a0a); } .ds-consent button:focus-visible { outline: 2px solid var(--media-banner-text, #f8f8f8); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Curated Signal",
+    "overview": "AAA Artists uses a monochrome visual signal to help visitors focus on artists, sound, and booking decisions. The identity is precise, restrained, confident, underground, and useful: editorial hierarchy and deliberate spacing carry more weight than decoration. It should feel connected to a serious promoter and artist agency, never like a generic marketplace.\n\nThe existing logo, black-and-white palette, and equal light/dark themes are the anchors. Future work should refine their clarity and craft rather than replace them. Colourful festival graphics, corporate software styling, and luxury-agency ornament are anti-references.",
+    "keyCharacteristics": [
+      "Monochrome contrast led by the AAA Artists logo.",
+      "Equal-quality light and dark experiences.",
+      "Square geometry, thin rules, and tonal surfaces.",
+      "Bold headlines paired with compact uppercase labels.",
+      "Artist imagery and audio provide the expressive content."
+    ],
+    "rules": [
+      {
+        "name": "The Theme Parity Rule",
+        "body": "Light and dark are equal products. Neither may be treated as an afterthought or simple colour inversion.",
+        "section": "colors"
+      },
+      {
+        "name": "The Monochrome Signal Rule",
+        "body": "Product chrome remains black, white, and grey; artist media supplies colour when the experience deliberately reveals it.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Typeface Rule",
+        "body": "Hierarchy comes from disciplined scale, weight, and spacing; do not introduce a decorative display face without an explicit identity decision.",
+        "section": "typography"
+      },
+      {
+        "name": "The Proximity Before Boxes Rule",
+        "body": "Use spacing to establish related groups before adding another bordered container. A border must communicate a real structural boundary or state.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-by-Default Rule",
+        "body": "Persistent surfaces use borders and tone. Shadow communicates temporary overlay depth, not decoration.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square Instrument Rule",
+        "body": "Booking controls, CTAs, navigation controls, and content containers remain square unless the function itself calls for a circle.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do preserve the logo as a black-and-white identity anchor in both themes.",
+      "Do refine the existing monochrome system through hierarchy, spacing, imagery, and interaction craft.",
+      "Do verify every visual change in light and dark, on mobile and desktop.",
+      "Do use artist media and audio as the expressive layer while interface chrome stays restrained.",
+      "Do keep interaction, keyboard focus, and touch state visible."
+    ],
+    "donts": [
+      "Don't replace the incumbent identity when the task asks for refinement.",
+      "Don't introduce decorative colour into product chrome without an explicit identity decision.",
+      "Don't imitate a corporate dashboard, colourful festival campaign, or luxury-agency aesthetic.",
+      "Don't round every surface or use shadows to make ordinary containers feel important.",
+      "Don't create extra bordered cards when proximity can express the relationship."
+    ]
+  }
+}
