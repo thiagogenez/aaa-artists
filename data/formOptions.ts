@@ -4,8 +4,8 @@
 
 // value = ISO code used on submit, label = what the user sees.
 export const CURRENCIES = [
-  { code: "GBP", label: "£ GBP" },
   { code: "EUR", label: "€ EUR" },
+  { code: "GBP", label: "£ GBP" },
   { code: "USD", label: "$ USD" },
 ];
 

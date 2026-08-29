@@ -94,6 +94,13 @@ test.describe("booking form regression coverage", () => {
     const countryButton = page.locator(".iti__selected-country");
     await expect(countryButton).toHaveAttribute("aria-label", "Select country for phone number");
     await expect(countryButton.locator(".iti__selected-dial-code")).toHaveText("");
+    await expect
+      .poll(() =>
+        page
+          .locator(".iti__selected-country-primary")
+          .evaluate((element) => getComputedStyle(element, "::before").content)
+      )
+      .toBe('"🌐"');
     await countryButton.click();
     await expect(page.locator(".iti__country").first()).toContainText("Afghanistan");
     await expect(page.locator(".iti__country").first()).toContainText("+93");
@@ -162,6 +169,10 @@ test.describe("booking form regression coverage", () => {
 
     await page.locator('button[aria-controls="section-budget"]').click();
     await expect(page.locator('select[name="currency"]')).toHaveValue("EUR");
+    await expect(page.locator('select[name="currency"] option').first()).toHaveAttribute(
+      "value",
+      "EUR"
+    );
     await expect(page.getByRole("option", { name: "Open to suggestions" })).toHaveCount(0);
 
     const firstArtist = page.locator('select[name="booking-0-artist"]');
