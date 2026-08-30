@@ -3,6 +3,7 @@
 import IntlTelInput from "@intl-tel-input/react";
 import type { Iso2 } from "intl-tel-input";
 import "intl-tel-input/styles";
+import { useState } from "react";
 
 export type PhoneFieldProps = {
   value: string;
@@ -27,14 +28,23 @@ export default function PhoneField({
   onBlur,
   ...inputProps
 }: PhoneFieldProps) {
+  const [selectedCountry, setSelectedCountry] = useState<Iso2 | "">(initialCountry);
+  const [selectorVersion, setSelectorVersion] = useState(0);
+  const canClearCountry = Boolean(onCountryChange && selectedCountry && !value);
+
   return (
-    <div className="aaa-phone-field">
+    <div className={`aaa-phone-field${canClearCountry ? " aaa-phone-field--clearable" : ""}`}>
       <IntlTelInput
+        key={selectorVersion}
         initialCountry={initialCountry}
         loadUtils={() => import("intl-tel-input/utils")}
         value={value}
         onChangeNumber={onChange}
-        onChangeCountry={(country) => onCountryChange?.(country as Iso2 | "")}
+        onChangeCountry={(country) => {
+          const nextCountry = country as Iso2 | "";
+          setSelectedCountry(nextCountry);
+          onCountryChange?.(nextCountry);
+        }}
         onChangeValidity={onValidityChange}
         countrySearch
         formatAsYouType
@@ -57,6 +67,22 @@ export default function PhoneField({
           },
         }}
       />
+      {canClearCountry && (
+        <button
+          type="button"
+          className="aaa-phone-country-clear"
+          aria-label="Clear country selection"
+          onClick={() => {
+            setSelectedCountry("");
+            onCountryChange?.("");
+            // intl-tel-input supports an empty country only during initialisation,
+            // so remount this one selector to restore that supported state.
+            setSelectorVersion((version) => version + 1);
+          }}
+        >
+          Clear
+        </button>
+      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { CURRENCIES, COUNTRIES } from "@/data/formOptions";
 import { Suspense } from "react";
 import CountryCombobox from "./CountryCombobox";
 import CityCombobox from "./CityCombobox";
-import PhoneField from "./DeferredPhoneField";
+import PhoneField from "./PhoneField";
 import TurnstileWidget from "./TurnstileWidget";
 import type { Iso2 } from "intl-tel-input";
 import {
