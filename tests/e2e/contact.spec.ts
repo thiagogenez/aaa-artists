@@ -77,43 +77,32 @@ test.describe("booking form regression coverage", () => {
     await context.close();
   });
 
-  test("enhances the optional phone field only after visitor intent", async ({ browser }) => {
+  test("renders the country selector without waiting for visitor intent", async ({ browser }) => {
     const context = await browser.newContext({ viewport: { width: 375, height: 500 } });
     const page = await context.newPage();
     await seedMediaConsent(page);
     await page.goto("/contact");
 
-    const enhancement = page.locator('[data-phone-enhancement="pending"]');
-    await expect(enhancement).toBeAttached();
-    await expect(enhancement.locator(".aaa-phone-pending-country svg")).toBeVisible();
-
     const phoneInput = page.locator('input[name="phone"]');
-    await phoneInput.focus();
-    await expect(page.locator('[data-phone-enhancement="ready"]')).toBeAttached();
-    await expect(phoneInput).toBeFocused();
-
     const countryButton = page.locator(".iti__selected-country");
     await expect(countryButton).toHaveAttribute("aria-label", "Select country for phone number");
     await expect(countryButton.locator(".iti__selected-dial-code")).toHaveText("");
     await expect(countryButton.locator(".iti__globe-svg")).toBeVisible();
+    await expect(phoneInput).not.toBeFocused();
     await countryButton.click();
     await expect(page.locator(".iti__country").first()).toContainText("Afghanistan");
     await expect(page.locator(".iti__country").first()).toContainText("+93");
+    await page.locator(".iti__country").first().click();
+    await expect(countryButton).toHaveAttribute(
+      "aria-label",
+      "Change country for phone number, currently selected Afghanistan (+93)"
+    );
+
+    await page.getByRole("button", { name: "Clear country selection" }).click();
+    await expect(countryButton).toHaveAttribute("aria-label", "Select country for phone number");
+    await expect(countryButton.locator(".iti__globe-svg")).toBeVisible();
 
     await context.close();
-  });
-
-  test("keeps the optional phone input usable if enhancement loading fails", async ({ page }) => {
-    await page.goto("/contact");
-    await page.waitForLoadState("networkidle");
-    await page.route("**/_next/static/chunks/*.js", (route) => route.abort());
-
-    const phoneInput = page.locator('input[name="phone"]');
-    await phoneInput.focus();
-    await expect(page.locator('[data-phone-enhancement="fallback"]')).toBeAttached();
-    await phoneInput.fill("+44 7400 123456");
-    await phoneInput.blur();
-    await expect(page.getByText("Enter a valid international phone number")).toHaveCount(0);
   });
 
   test("keeps WhatsApp usernames clean while showing the fixed @ prefix", async ({ page }) => {
