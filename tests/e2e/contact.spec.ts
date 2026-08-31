@@ -128,6 +128,65 @@ test.describe("booking form regression coverage", () => {
     await context.close();
   });
 
+  test("keeps explicit countries stable across shared calling codes", async ({ page }) => {
+    await page.goto("/contact");
+
+    const phoneInput = page.locator('input[name="phone"]');
+    const phoneField = page.locator(".aaa-phone-field").filter({ has: phoneInput });
+    const phoneCountry = phoneField.locator(".iti__selected-country");
+
+    await phoneInput.fill("+358 18 12345");
+    await expect(phoneCountry).toHaveAttribute(
+      "aria-label",
+      "Change country for phone number, currently selected Åland Islands (+358)"
+    );
+    await phoneInput.fill("");
+    await phoneField.getByRole("button", { name: "Clear country selection" }).click();
+
+    await phoneCountry.click();
+    await page.locator(".iti__search-input").fill("Jersey");
+    await page.locator(".iti__country").filter({ hasText: "Jersey" }).click();
+
+    await phoneInput.fill("01534 123456");
+    await expect(phoneCountry).toHaveAttribute(
+      "aria-label",
+      "Change country for phone number, currently selected Jersey (+44)"
+    );
+    await expect(phoneInput).not.toHaveValue(/^0/);
+    await phoneInput.blur();
+    await expect(phoneField.getByRole("status")).toHaveCount(0);
+    await expect(page.getByText("Enter a valid international phone number")).toHaveCount(0);
+
+    await phoneInput.fill("");
+    await page
+      .locator('input[name="whatsapp-contact-method"][value="number"]')
+      .check({ force: true });
+    const whatsappInput = page.locator('input[name="whatsapp"]');
+    const whatsappField = page.locator(".aaa-phone-field").filter({ has: whatsappInput });
+    const whatsappCountry = whatsappField.locator(".iti__selected-country");
+    await expect(whatsappCountry).toHaveAttribute(
+      "aria-label",
+      "Change country for phone number, currently selected Jersey (+44)"
+    );
+
+    await whatsappInput.fill("20 7946 0018");
+    await expect(whatsappCountry).toHaveAttribute(
+      "aria-label",
+      "Change country for phone number, currently selected Jersey (+44)"
+    );
+    await expect(whatsappField.getByRole("status")).toHaveCount(0);
+    await whatsappInput.blur();
+    const correction = whatsappField.getByRole("status");
+    await expect(correction).toContainText("This number looks like United Kingdom.");
+    await correction.getByRole("button", { name: "Use United Kingdom" }).click();
+    await expect(whatsappCountry).toHaveAttribute(
+      "aria-label",
+      "Change country for phone number, currently selected United Kingdom (+44)"
+    );
+    await expect(correction).toHaveCount(0);
+    await expect(page.getByText("Enter a valid international WhatsApp number")).toHaveCount(0);
+  });
+
   test("keeps WhatsApp usernames clean while showing the fixed @ prefix", async ({ page }) => {
     await page.goto("/contact");
 
