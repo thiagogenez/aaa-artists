@@ -30,7 +30,7 @@ export default function PhoneField({
 }: PhoneFieldProps) {
   const [selectedCountry, setSelectedCountry] = useState<Iso2 | "">(initialCountry);
   const [selectorVersion, setSelectorVersion] = useState(0);
-  const canClearCountry = Boolean(onCountryChange && selectedCountry && !value);
+  const canClearCountry = Boolean(selectedCountry && !value);
 
   return (
     <div className={`aaa-phone-field${canClearCountry ? " aaa-phone-field--clearable" : ""}`}>
