@@ -36,7 +36,7 @@ export default function PhoneField({
     <div className={`aaa-phone-field${canClearCountry ? " aaa-phone-field--clearable" : ""}`}>
       <IntlTelInput
         key={selectorVersion}
-        initialCountry={initialCountry}
+        initialCountry={selectedCountry}
         loadUtils={() => import("intl-tel-input/utils")}
         value={value}
         onChangeNumber={onChange}

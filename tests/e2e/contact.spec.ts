@@ -84,7 +84,8 @@ test.describe("booking form regression coverage", () => {
     await page.goto("/contact");
 
     const phoneInput = page.locator('input[name="phone"]');
-    const countryButton = page.locator(".iti__selected-country");
+    const phoneField = page.locator(".aaa-phone-field").filter({ has: phoneInput });
+    const countryButton = phoneField.locator(".iti__selected-country");
     await expect(countryButton).toHaveAttribute("aria-label", "Select country for phone number");
     await expect(countryButton.locator(".iti__selected-dial-code")).toHaveText("");
     await expect(countryButton.locator(".iti__globe-svg")).toBeVisible();
@@ -98,18 +99,12 @@ test.describe("booking form regression coverage", () => {
       "Change country for phone number, currently selected Afghanistan (+93)"
     );
 
-    await page.getByRole("button", { name: "Clear country selection" }).click();
-    await expect(countryButton).toHaveAttribute("aria-label", "Select country for phone number");
-    await expect(countryButton.locator(".iti__globe-svg")).toBeVisible();
-
     await page
       .locator('input[name="whatsapp-contact-method"][value="number"]')
       .check({ force: true });
     const whatsappInput = page.locator('input[name="whatsapp"]');
     const whatsappField = page.locator(".aaa-phone-field").filter({ has: whatsappInput });
     const whatsappCountryButton = whatsappField.locator(".iti__selected-country");
-    await whatsappCountryButton.click();
-    await page.locator(".iti__country").first().click();
     await expect(whatsappCountryButton).toHaveAttribute(
       "aria-label",
       "Change country for phone number, currently selected Afghanistan (+93)"
@@ -121,6 +116,14 @@ test.describe("booking form regression coverage", () => {
       "Select country for phone number"
     );
     await expect(whatsappCountryButton.locator(".iti__globe-svg")).toBeVisible();
+    await expect(countryButton).toHaveAttribute(
+      "aria-label",
+      "Change country for phone number, currently selected Afghanistan (+93)"
+    );
+
+    await phoneField.getByRole("button", { name: "Clear country selection" }).click();
+    await expect(countryButton).toHaveAttribute("aria-label", "Select country for phone number");
+    await expect(countryButton.locator(".iti__globe-svg")).toBeVisible();
 
     await context.close();
   });
