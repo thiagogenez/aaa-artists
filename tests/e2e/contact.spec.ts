@@ -228,14 +228,13 @@ test.describe("booking form regression coverage", () => {
     );
     await expect(whatsappField.getByRole("status")).toHaveCount(0);
     await whatsappInput.blur();
-    const correction = whatsappField.getByRole("status");
-    await expect(correction).toContainText("This number looks like United Kingdom.");
-    await correction.getByRole("button", { name: "Use United Kingdom" }).click();
     await expect(whatsappCountry).toHaveAttribute(
       "aria-label",
-      "Change country for phone number, currently selected United Kingdom (+44)"
+      "Change country for phone number, currently selected Jersey (+44)"
     );
-    await expect(correction).toHaveCount(0);
+    await expect(whatsappField.getByRole("status")).toHaveCount(0);
+    await expect(page.getByText(/This number looks like/)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Use .+/ })).toHaveCount(0);
     await expect(page.getByText("Enter a valid international WhatsApp number")).toHaveCount(0);
   });
 

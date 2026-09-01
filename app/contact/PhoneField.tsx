@@ -1,7 +1,7 @@
 "use client";
 
-import IntlTelInput, { intlTelInput, type IntlTelInputRef } from "@intl-tel-input/react";
-import type { Country, Iso2 } from "intl-tel-input";
+import IntlTelInput, { type IntlTelInputRef } from "@intl-tel-input/react";
+import type { Iso2 } from "intl-tel-input";
 import "intl-tel-input/styles";
 import { useRef, useState } from "react";
 
@@ -14,23 +14,6 @@ export type PhoneFieldProps = {
   onValidityChange: (isValid: boolean) => void;
   onBlur: () => void;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "onBlur" | "value">;
-
-type CountrySuggestion = Pick<Country, "iso2" | "name">;
-
-function matchesCountryAreaCode(number: string, countryIso: Iso2 | ""): boolean {
-  if (!countryIso) return false;
-  const country = intlTelInput.getAllCountries().find(({ iso2 }) => iso2 === countryIso);
-  if (!country?.areaCodes) return false;
-
-  let digits = number.replace(/\D/g, "");
-  if (number.trimStart().startsWith("+") && digits.startsWith(country.dialCode)) {
-    digits = digits.slice(country.dialCode.length);
-  }
-  if (country.nationalPrefix && digits.startsWith(country.nationalPrefix)) {
-    digits = digits.slice(country.nationalPrefix.length);
-  }
-  return country.areaCodes.some((areaCode) => digits.startsWith(areaCode));
-}
 
 /** International phone input with searchable countries and E.164 output.
  * Utilities are split into a lazy chunk so the large numbering-plan dataset is
@@ -50,13 +33,9 @@ export default function PhoneField({
   const selectorOpenRef = useRef(false);
   const [selectedCountry, setSelectedCountry] = useState<Iso2 | "">(initialCountry);
   const [selectorVersion, setSelectorVersion] = useState(0);
-  const [suggestedCountry, setSuggestedCountry] = useState<CountrySuggestion | null>(null);
-  const [showCountrySuggestion, setShowCountrySuggestion] = useState(false);
   const canClearCountry = Boolean(selectedCountry && !value);
 
   function handleNumberChange(number: string) {
-    setSuggestedCountry(null);
-    setShowCountrySuggestion(false);
     onChange(number);
   }
 
@@ -70,11 +49,6 @@ export default function PhoneField({
       return;
     }
     if (lockedCountry && nextCountry && nextCountry !== lockedCountry) {
-      const detectedCountry = instance?.getSelectedCountry();
-      if (detectedCountry) {
-        setSuggestedCountry({ iso2: detectedCountry.iso2, name: detectedCountry.name });
-      }
-
       // Changing only the flag through the library API also reformats the input.
       // Preserve the exact text and caret that the visitor entered, then emit one
       // country-change input event so the React wrapper recalculates its canonical
@@ -106,17 +80,6 @@ export default function PhoneField({
     if (!country) return;
     lockedCountryRef.current = country.iso2;
     setSelectedCountry(country.iso2);
-    setSuggestedCountry(null);
-    setShowCountrySuggestion(false);
-  }
-
-  function useSuggestedCountry() {
-    if (!suggestedCountry) return;
-    lockedCountryRef.current = suggestedCountry.iso2;
-    setSelectedCountry(suggestedCountry.iso2);
-    setSuggestedCountry(null);
-    setShowCountrySuggestion(false);
-    intlInputRef.current?.getInstance()?.setSelectedCountry(suggestedCountry.iso2);
   }
 
   return (
@@ -146,11 +109,6 @@ export default function PhoneField({
           autoComplete: "tel",
           inputMode: "tel",
           onBlur: () => {
-            const displayedNumber = intlInputRef.current?.getInput()?.value ?? "";
-            setShowCountrySuggestion(
-              Boolean(suggestedCountry) &&
-                !matchesCountryAreaCode(displayedNumber, lockedCountryRef.current)
-            );
             onBlur();
           },
           className:
@@ -170,8 +128,6 @@ export default function PhoneField({
           onClick={() => {
             lockedCountryRef.current = "";
             setSelectedCountry("");
-            setSuggestedCountry(null);
-            setShowCountrySuggestion(false);
             onCountryChange?.("");
             // intl-tel-input supports an empty country only during initialisation,
             // so remount this one selector to restore that supported state.
@@ -180,22 +136,6 @@ export default function PhoneField({
         >
           Clear
         </button>
-      )}
-      {showCountrySuggestion && suggestedCountry && (
-        <div
-          role="status"
-          className="mt-2 flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 text-xs"
-          style={{ color: "var(--text-60)" }}
-        >
-          <span>This number looks like {suggestedCountry.name}.</span>
-          <button
-            type="button"
-            className="min-h-11 font-semibold uppercase tracking-wider underline underline-offset-4 transition-colors duration-200 hover:text-[var(--text)] focus-visible:text-[var(--text)]"
-            onClick={useSuggestedCountry}
-          >
-            Use {suggestedCountry.name}
-          </button>
-        </div>
       )}
     </div>
   );
