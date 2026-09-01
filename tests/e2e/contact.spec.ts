@@ -1,5 +1,47 @@
-import { expect, test, type Page } from "playwright/test";
+import { expect, test, type Locator, type Page } from "playwright/test";
 import { seedMediaConsent } from "./helpers";
+
+const FICTIONAL_NATIONAL_NUMBERS = [
+  { country: "Guernsey", digits: "074740" },
+  { country: "Jersey", digits: "015340" },
+  { country: "Åland Islands", digits: "018012" },
+  { country: "Germany", digits: "030012" },
+  { country: "Australia", digits: "020123" },
+] as const;
+
+async function selectPhoneCountry(page: Page, field: Locator, country: string) {
+  const selector = field.locator(".iti__selected-country");
+  await selector.click();
+  await page.locator(".iti__search-input:visible").fill(country);
+  const filteredCountries = page.locator(".iti__country:visible");
+  await expect(filteredCountries).toHaveCount(1);
+  await expect(filteredCountries.first()).toContainText(country);
+  await filteredCountries.first().click();
+  await expect(selector).toHaveAttribute("aria-expanded", "false");
+}
+
+async function expectEveryTypedDigitPreserved(input: Locator, digits: string) {
+  await input.fill("");
+  await input.focus();
+  let typedDigits = "";
+  for (const digit of digits) {
+    typedDigits += digit;
+    await input.press(digit);
+    await expect.poll(async () => (await input.inputValue()).replace(/\D/g, "")).toBe(typedDigits);
+  }
+
+  for (let index = 0; index < 2; index += 1) {
+    typedDigits = typedDigits.slice(0, -1);
+    await input.press("Backspace");
+    await expect.poll(async () => (await input.inputValue()).replace(/\D/g, "")).toBe(typedDigits);
+  }
+
+  for (const digit of digits.slice(-2)) {
+    typedDigits += digit;
+    await input.press(digit);
+    await expect.poll(async () => (await input.inputValue()).replace(/\D/g, "")).toBe(typedDigits);
+  }
+}
 
 /** Waits for the Turnstile token before submitting, but only when the build
  *  actually renders a widget. Hermetic CI builds use the literal test-site-key
@@ -152,7 +194,17 @@ test.describe("booking form regression coverage", () => {
       "aria-label",
       "Change country for phone number, currently selected Jersey (+44)"
     );
-    await expect(phoneInput).not.toHaveValue(/^0/);
+    await expect
+      .poll(async () => (await phoneInput.inputValue()).replace(/\D/g, ""))
+      .toBe("01534123456");
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const draft = window.sessionStorage.getItem("aaa-booking-draft-v1");
+          return draft ? JSON.parse(draft).form.phone : null;
+        })
+      )
+      .toBe("+441534123456");
     await phoneInput.blur();
     await expect(phoneField.getByRole("status")).toHaveCount(0);
     await expect(page.getByText("Enter a valid international phone number")).toHaveCount(0);
@@ -185,6 +237,48 @@ test.describe("booking form regression coverage", () => {
     );
     await expect(correction).toHaveCount(0);
     await expect(page.getByText("Enter a valid international WhatsApp number")).toHaveCount(0);
+  });
+
+  test("never rewrites digits typed into phone number fields", async ({ page }) => {
+    await page.goto("/contact");
+
+    const phoneInput = page.locator('input[name="phone"]');
+    const phoneField = page.locator(".aaa-phone-field").filter({ has: phoneInput });
+    for (const { country, digits } of FICTIONAL_NATIONAL_NUMBERS) {
+      await phoneInput.fill("");
+      await expect(phoneInput).toHaveValue("");
+      await selectPhoneCountry(page, phoneField, country);
+      await expect(phoneField.locator(".iti__selected-country")).toHaveAttribute(
+        "aria-label",
+        new RegExp(`currently selected ${country}`)
+      );
+      await expectEveryTypedDigitPreserved(phoneInput, digits);
+      await expect(phoneField.locator(".iti__selected-country")).toHaveAttribute(
+        "aria-label",
+        new RegExp(`currently selected ${country}`)
+      );
+    }
+
+    await phoneInput.fill("");
+    await page
+      .locator('input[name="whatsapp-contact-method"][value="number"]')
+      .check({ force: true });
+    const whatsappInput = page.locator('input[name="whatsapp"]');
+    const whatsappField = page.locator(".aaa-phone-field").filter({ has: whatsappInput });
+    for (const { country, digits } of FICTIONAL_NATIONAL_NUMBERS) {
+      await whatsappInput.fill("");
+      await expect(whatsappInput).toHaveValue("");
+      await selectPhoneCountry(page, whatsappField, country);
+      await expect(whatsappField.locator(".iti__selected-country")).toHaveAttribute(
+        "aria-label",
+        new RegExp(`currently selected ${country}`)
+      );
+      await expectEveryTypedDigitPreserved(whatsappInput, digits);
+      await expect(whatsappField.locator(".iti__selected-country")).toHaveAttribute(
+        "aria-label",
+        new RegExp(`currently selected ${country}`)
+      );
+    }
   });
 
   test("keeps WhatsApp usernames clean while showing the fixed @ prefix", async ({ page }) => {

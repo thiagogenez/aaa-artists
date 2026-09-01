@@ -17,23 +17,19 @@ export type PhoneFieldProps = {
 
 type CountrySuggestion = Pick<Country, "iso2" | "name">;
 
-function normalizeDomesticPrefix(number: string, countryIso: Iso2 | ""): string | null {
-  if (!countryIso) return null;
-  const country = intlTelInput.getAllCountries().find(({ iso2 }) => iso2 === countryIso);
-  if (!country?.nationalPrefix) return null;
-
-  const digits = number.replace(/\D/g, "");
-  const domesticPrefix = `${country.dialCode}${country.nationalPrefix}`;
-  if (!digits.startsWith(domesticPrefix) || digits.length <= domesticPrefix.length) return null;
-
-  return `+${country.dialCode}${digits.slice(domesticPrefix.length)}`;
-}
-
 function matchesCountryAreaCode(number: string, countryIso: Iso2 | ""): boolean {
   if (!countryIso) return false;
   const country = intlTelInput.getAllCountries().find(({ iso2 }) => iso2 === countryIso);
-  const digits = number.replace(/\D/g, "");
-  return Boolean(country?.areaCodes?.some((areaCode) => digits.startsWith(areaCode)));
+  if (!country?.areaCodes) return false;
+
+  let digits = number.replace(/\D/g, "");
+  if (number.trimStart().startsWith("+") && digits.startsWith(country.dialCode)) {
+    digits = digits.slice(country.dialCode.length);
+  }
+  if (country.nationalPrefix && digits.startsWith(country.nationalPrefix)) {
+    digits = digits.slice(country.nationalPrefix.length);
+  }
+  return country.areaCodes.some((areaCode) => digits.startsWith(areaCode));
 }
 
 /** International phone input with searchable countries and E.164 output.
@@ -51,8 +47,7 @@ export default function PhoneField({
 }: PhoneFieldProps) {
   const intlInputRef = useRef<IntlTelInputRef>(null);
   const lockedCountryRef = useRef<Iso2 | "">(initialCountry);
-  const normalizationVersionRef = useRef(0);
-  const normalizedDomesticNumberRef = useRef<string | null>(null);
+  const selectorOpenRef = useRef(false);
   const [selectedCountry, setSelectedCountry] = useState<Iso2 | "">(initialCountry);
   const [selectorVersion, setSelectorVersion] = useState(0);
   const [suggestedCountry, setSuggestedCountry] = useState<CountrySuggestion | null>(null);
@@ -60,34 +55,44 @@ export default function PhoneField({
   const canClearCountry = Boolean(selectedCountry && !value);
 
   function handleNumberChange(number: string) {
-    const normalizationVersion = normalizationVersionRef.current + 1;
-    normalizationVersionRef.current = normalizationVersion;
-    if (normalizedDomesticNumberRef.current !== number) normalizedDomesticNumberRef.current = null;
     setSuggestedCountry(null);
     setShowCountrySuggestion(false);
     onChange(number);
-
-    const normalizedNumber = normalizeDomesticPrefix(number, lockedCountryRef.current);
-    if (!normalizedNumber || normalizedNumber === number) return;
-    normalizedDomesticNumberRef.current = normalizedNumber;
-    queueMicrotask(() => {
-      if (normalizationVersionRef.current !== normalizationVersion) return;
-      intlInputRef.current?.getInstance()?.setNumber(normalizedNumber);
-      setSuggestedCountry(null);
-      setShowCountrySuggestion(false);
-    });
   }
 
   function handleDetectedCountry(country: string) {
     const nextCountry = country as Iso2 | "";
     const lockedCountry = lockedCountryRef.current;
     const instance = intlInputRef.current?.getInstance();
+    if (selectorOpenRef.current) {
+      setSelectedCountry(nextCountry);
+      onCountryChange?.(nextCountry);
+      return;
+    }
     if (lockedCountry && nextCountry && nextCountry !== lockedCountry) {
       const detectedCountry = instance?.getSelectedCountry();
-      if (detectedCountry && !normalizedDomesticNumberRef.current) {
+      if (detectedCountry) {
         setSuggestedCountry({ iso2: detectedCountry.iso2, name: detectedCountry.name });
       }
+
+      // Changing only the flag through the library API also reformats the input.
+      // Preserve the exact text and caret that the visitor entered, then emit one
+      // country-change input event so the React wrapper recalculates its canonical
+      // number against the restored country without processing the text again.
+      const input = intlInputRef.current?.getInput();
+      const displayedNumber = input?.value;
+      const selectionStart = input?.selectionStart;
+      const selectionEnd = input?.selectionEnd;
       instance?.setSelectedCountry(lockedCountry);
+      if (input && displayedNumber !== undefined) {
+        input.value = displayedNumber;
+        if (document.activeElement === input && selectionStart != null && selectionEnd != null) {
+          input.setSelectionRange(selectionStart, selectionEnd);
+        }
+        input.dispatchEvent(
+          new CustomEvent("input", { bubbles: true, detail: { isCountryChange: true } })
+        );
+      }
       return;
     }
 
@@ -96,6 +101,7 @@ export default function PhoneField({
   }
 
   function handleCountrySelectorClose() {
+    selectorOpenRef.current = false;
     const country = intlInputRef.current?.getInstance()?.getSelectedCountry();
     if (!country) return;
     lockedCountryRef.current = country.iso2;
@@ -123,6 +129,9 @@ export default function PhoneField({
         value={value}
         onChangeNumber={handleNumberChange}
         onChangeCountry={handleDetectedCountry}
+        onOpenCountrySelector={() => {
+          selectorOpenRef.current = true;
+        }}
         onCloseCountrySelector={handleCountrySelectorClose}
         onChangeValidity={onValidityChange}
         countrySearch
@@ -160,8 +169,6 @@ export default function PhoneField({
           aria-label="Clear country selection"
           onClick={() => {
             lockedCountryRef.current = "";
-            normalizationVersionRef.current += 1;
-            normalizedDomesticNumberRef.current = null;
             setSelectedCountry("");
             setSuggestedCountry(null);
             setShowCountrySuggestion(false);
