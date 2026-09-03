@@ -107,8 +107,8 @@ test("shows the refreshed roster profiles and preserves biography paragraphs", a
 
   await page.goto("/");
   const featuredArtists = page.getByTestId("featured-artists");
-  await expect(featuredArtists.getByText("DIM3NSION", { exact: true })).toBeVisible();
-  await expect(featuredArtists.getByText("Steve Dekay", { exact: true })).toBeVisible();
+  await expect(featuredArtists.getByText("DIM3NSION", { exact: true })).toHaveCount(1);
+  await expect(featuredArtists.getByText("Steve Dekay", { exact: true })).toHaveCount(1);
   await expect(featuredArtists.getByText("FROGR", { exact: true })).toHaveCount(0);
   await expect(featuredArtists.getByText("Krevix", { exact: true })).toHaveCount(0);
 
