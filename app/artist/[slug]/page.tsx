@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** Convert a public Spotify URL into its embed equivalent. */
 function spotifyEmbedSrc(url: string): string | null {
   const m = url.match(
-    /open\.spotify\.com\/(artist|album|track|playlist|episode|show)\/([A-Za-z0-9]+)/
+    /open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(artist|album|track|playlist|episode|show)\/([A-Za-z0-9]+)/
   );
   if (!m) return null;
   // Theme (theme=0 dark / theme=1 light) is appended client-side in <SpotifyPlayer>.
@@ -76,6 +76,7 @@ export default async function ArtistPage({ params }: Props) {
   const socialLinks = Object.entries(artist.socials).filter(
     ([platform]) => !HIDDEN_SOCIAL_PLATFORMS.has(platform)
   );
+  const bioParagraphs = artist.bio.split(/\n+/);
 
   // Per-artist structured data for richer search results.
   const artistLd = {
@@ -230,12 +231,16 @@ export default async function ArtistPage({ params }: Props) {
               <p className="mb-6 text-lg italic" style={{ color: "var(--text-40)" }}>
                 {artist.tagline}
               </p>
-              <p
-                className="max-w-2xl text-base leading-relaxed"
-                style={{ color: "var(--text-60)" }}
+              <div
+                className="max-w-2xl space-y-4 text-base leading-relaxed"
+                data-testid="artist-bio"
               >
-                {artist.bio}
-              </p>
+                {bioParagraphs.map((paragraph) => (
+                  <p key={paragraph} style={{ color: "var(--text-60)" }}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
             </div>
           </div>
         </div>

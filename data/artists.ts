@@ -39,6 +39,7 @@ export interface Artist {
     spotify?: string;
     youtube?: string;
     beatport?: string;
+    website?: string;
   };
   /** Optional live-player embed shown as a media box on the artist page:
    *  a Spotify artist/album/track/playlist URL. The "Listen" section is

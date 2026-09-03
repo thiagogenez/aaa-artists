@@ -1,0 +1,25 @@
+name: Steve Dekay
+artistType: solo
+disabled: false               # set to true to hide this artist from the site
+slug: steve-dekay
+genre: Uplifting Trance / Tech Trance
+tagline: A trance music prodigy
+bio: >-
+  Hailing from Colombia, Steve Dekay is a trance music prodigy whose rhythms and beats have
+  reverberated across the globe. His esteemed reputation in the music industry is underscored by
+  affiliations with major record labels, including Armada Music, Vandit Records, FSOE, Black Hole,
+  Coldharbour, among others.
+
+  The magnetism of Steve’s music is evident in its universal appeal. Music icons such as Aly &
+  Fila, Armin van Buuren, Paul van Dyk, Solarstone, Giuseppe Ottaviani, Marco V, and Ferry Corsten,
+  to mention a few, have regularly played his tracks. This international acclaim has propelled
+  some of his works to the summit of the Beatport charts on multiple occasions.
+image: /artists/steve-dekay.jpeg
+socials:
+  instagram: https://www.instagram.com/steve_dekay/
+  website: https://stevedekaymusic.com/
+  soundcloud: https://soundcloud.com/stevedekay
+  spotify: https://open.spotify.com/artist/7lF2WmukgrCZa5pxW6q1IE
+  youtube: https://www.youtube.com/SteveDekaytv
+  beatport: https://www.beatport.com/artist/steve-dekay/305612
+gigs: []
