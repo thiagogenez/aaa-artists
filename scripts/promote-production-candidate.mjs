@@ -8,6 +8,7 @@ import {
   annotate,
   requiredEnvironment,
   runWrangler,
+  waitForProductionVersion,
 } from "./lib/wrangler-deploy.mjs";
 
 const RECONCILE_DELAYS_SECONDS = [0, 2, 4, 8, 12];
@@ -15,6 +16,14 @@ const RECONCILE_DELAYS_SECONDS = [0, 2, 4, 8, 12];
 const candidateVersionId = requiredEnvironment("CANDIDATE_VERSION_ID");
 const previousVersionId = requiredEnvironment("PREVIOUS_VERSION_ID");
 const commit = requiredEnvironment("GITHUB_SHA");
+
+if (!(await waitForProductionVersion(candidateVersionId))) {
+  annotate(
+    "error",
+    `Candidate ${candidateVersionId} did not become deployable before the bounded propagation wait expired`
+  );
+  process.exit(1);
+}
 
 const promotionExit = runWrangler([
   "versions",

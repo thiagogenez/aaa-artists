@@ -165,7 +165,10 @@ It first re-runs the reusable checks suite, then verifies its API permissions an
 that both production domains already target the Worker before uploading application code.
 It then uploads a commit-tagged Worker version without deploying it and smoke-tests that
 exact version through its `workers.dev` preview URL. Promotion to 100% production traffic
-is the final workflow action. A failed check, build, access check, upload, or candidate
+is the final workflow action. Before promotion, the workflow waits for the newly uploaded
+candidate to appear in Cloudflare's deployable-version list, covering the short propagation
+window where its Preview URL can already work while `versions deploy` cannot find it yet. A
+failed check, build, access check, upload, propagation wait, or candidate
 smoke test therefore leaves the active production deployment untouched; routine releases
 do not use automatic rollback. The canonical domains are not smoke-tested from the
 workflow because Cloudflare's zone bot protection returns 403 to GitHub-runner IPs; run
