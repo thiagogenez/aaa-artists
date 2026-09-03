@@ -56,6 +56,14 @@ async function waitForTurnstileToken(page: Page) {
   }
 }
 
+async function openDraftContact(page: Page, path = "/contact") {
+  const response = await page.goto(path, { waitUntil: "domcontentloaded" });
+  expect(response?.status(), `${path} did not return 200`).toBe(200);
+  const nameInput = page.locator('input[name="name"]');
+  await expect(nameInput).toBeVisible({ timeout: 15_000 });
+  return nameInput;
+}
+
 test.describe("booking form regression coverage", () => {
   // The consent banner is a fixed bottom bar; answering it up front keeps it
   // from overlapping the form controls these tests click.
@@ -422,38 +430,44 @@ test.describe("booking form regression coverage", () => {
     expect(requestBody).not.toHaveProperty("_subject");
   });
 
-  test("preserves an in-progress draft across navigation until reset or submit", async ({
-    page,
-  }) => {
+  test("preserves an in-progress draft across navigation and prefill", async ({ page }) => {
     const storedDraft = () =>
       page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"));
-    await page.goto("/contact");
-    const nameInput = page.locator('input[name="name"]');
+    const nameInput = await openDraftContact(page);
     await nameInput.fill("Jane Draft");
     await page.locator('input[name="email"]').fill("jane@example.com");
     await expect.poll(storedDraft).not.toBeNull();
 
     // Navigate away and back: the draft is restored.
-    await page.goto("/privacy");
-    await page.goto("/contact");
+    await page.goto("/privacy", { waitUntil: "domcontentloaded" });
+    await openDraftContact(page);
     await expect(nameInput).toHaveValue("Jane Draft");
     await expect(page.locator('input[name="email"]')).toHaveValue("jane@example.com");
 
     // A booking link with prefill parameters starts a fresh enquiry instead,
     // without destroying the stored draft.
-    await page.goto("/contact?artist=Krevix");
+    await openDraftContact(page, "/contact?artist=Krevix");
     await expect(page.locator('select[name="booking-0-artist"]')).toHaveValue("Krevix");
     await expect(nameInput).toHaveValue("");
-    await page.goto("/contact");
+    await openDraftContact(page);
     await expect(nameInput).toHaveValue("Jane Draft");
+  });
+
+  test("removes a cleared draft across navigation", async ({ page }) => {
+    const storedDraft = () =>
+      page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1"));
+    const nameInput = await openDraftContact(page);
+    await nameInput.fill("Jane Draft");
+    await page.locator('input[name="email"]').fill("jane@example.com");
+    await expect.poll(storedDraft).not.toBeNull();
 
     // Clearing the form removes the draft permanently.
     page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "Clear form", exact: true }).click();
     await expect(nameInput).toHaveValue("");
     await expect.poll(storedDraft).toBeNull();
-    await page.goto("/privacy");
-    await page.goto("/contact");
+    await page.goto("/privacy", { waitUntil: "domcontentloaded" });
+    await openDraftContact(page);
     await expect(nameInput).toHaveValue("");
   });
 
