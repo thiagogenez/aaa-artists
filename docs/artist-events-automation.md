@@ -105,6 +105,8 @@ unrelated to this fetch.
 1. Run the orchestrator with `--write --pr-body proposal.md`.
 2. If nothing changed, stop — no empty pull requests.
 3. Otherwise run `npm run check`, then open a **draft** PR on `bot/artist-events-<date>`.
+4. If opening the draft PR fails after its branch is pushed, remove that remote branch so a
+   failed run cannot leave an orphaned proposal behind.
 
 This is the only workflow with write access (`contents: write`, `pull-requests: write`),
 scoped to pushing a branch and opening a PR. It never deploys, so `DEPLOYMENT_AUTHORITY=github`

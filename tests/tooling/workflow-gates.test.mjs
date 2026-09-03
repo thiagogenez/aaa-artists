@@ -7,6 +7,9 @@ const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const workflowSource = readFileSync(".github/workflows/commit-style.yml", "utf8");
 const workflow = load(workflowSource);
 const checksWorkflow = load(readFileSync(".github/workflows/checks.yml", "utf8"));
+const eventProposalWorkflow = load(
+  readFileSync(".github/workflows/fetch-artist-events.yml", "utf8")
+);
 
 describe("development workflow gates", () => {
   it("keeps the full local gate explicit instead of installing a Git hook", () => {
@@ -54,5 +57,29 @@ describe("development workflow gates", () => {
     );
     assert.ok(buildIndex >= 0, "the browser job must build the test export");
     assert.ok(roundTripIndex > buildIndex, "the enquiry round-trip must use the shared test build");
+  });
+
+  it("removes a published event-proposal branch when draft PR creation fails", () => {
+    const steps = eventProposalWorkflow.jobs.propose.steps;
+    const checkout = steps.find((step) => step.name === "Check out repository");
+    const publish = steps.find((step) => step.name === "Open a draft pull request");
+
+    assert.deepEqual(eventProposalWorkflow.permissions, {});
+    assert.deepEqual(eventProposalWorkflow.jobs.propose.permissions, {
+      contents: "write",
+      "pull-requests": "write",
+    });
+    assert.equal(checkout.with["persist-credentials"], false);
+    assert.match(publish.run, /gh auth setup-git/);
+    assert.match(publish.run, /trap cleanup_branch ERR/);
+    assert.match(publish.run, /git push origin --delete "\$branch" \|\| true/);
+    assert.ok(
+      publish.run.indexOf("git push --set-upstream") < publish.run.indexOf("gh pr create"),
+      "the proposal branch must be pushed before its pull request is opened"
+    );
+    assert.ok(
+      publish.run.indexOf("gh pr create") < publish.run.indexOf("trap - ERR"),
+      "cleanup must remain armed until draft PR creation succeeds"
+    );
   });
 });
