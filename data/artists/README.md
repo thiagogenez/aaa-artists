@@ -34,6 +34,7 @@ socials:                      # all optional
   spotify: https://…          # a live Spotify player appears (light/dark follows the theme)
   youtube: https://…          # accepted but currently hidden on artist pages
   beatport: https://…         # shown as a social link; never embedded
+  website: https://…          # shown as the artist's official website
 # spotifyEmbed: https://…     # optional explicit Spotify player URL
 
 gigs:                         # ONE list, oldest → newest; the date decides

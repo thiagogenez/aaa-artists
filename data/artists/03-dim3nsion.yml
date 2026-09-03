@@ -1,0 +1,29 @@
+name: DIM3NSION
+artistType: solo
+disabled: false               # set to true to hide this artist from the site
+slug: dim3nsion
+genre: Trance / Progressive
+tagline: A versatile and forward-thinking approach
+bio: >-
+  DIM3NSION stands as a leading figure in the Spanish trance scene and one of the most influential
+  artists from Spain. A protege of Ferry Corsten, he reached a career defining milestone with
+  'Dopamina', becoming the only artist outside Gouryella featured on the 'From The Heavens' album,
+  while his breakthrough record 'Origami' helped spark renewed interest among top artists in
+  reviving classic trance aliases.
+
+  Founder of Bemind Records, DIM3NSION continues to expand his global presence with performances
+  at festivals like Untold and Luminosity, alongside a growing international reach following his
+  debut in Asia last year. With a versatile and forward-thinking approach, he consistently delivers
+  high-impact releases and performances, positioning himself among the leading artists of the new
+  generation.
+image: /artists/dim3nsion.jpg
+socials:
+  instagram: https://www.instagram.com/dim3nsionmusic/
+  website: https://www.dim3nsionacademy.com/en/
+  soundcloud: https://soundcloud.com/dim3nsionmusic
+  spotify: https://open.spotify.com/intl-es/artist/7vEd9uAqFgC4p4EOXiFuQL
+  youtube: https://www.youtube.com/dim3nsionmusic
+  beatport: https://www.beatport.com/artist/dim3nsion/99405
+sources:
+  bandsintown: id_14206829   # bandsintown.com/a/14206829-dim3nsion
+gigs: []

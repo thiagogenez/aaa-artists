@@ -100,6 +100,43 @@ test("shows visible nested breadcrumbs and a compact, non-duplicated footer", as
   expect(width.content).toBeLessThanOrEqual(width.viewport);
 });
 
+test("shows the refreshed roster profiles and preserves biography paragraphs", async ({ page }) => {
+  await page.goto("/artists");
+  await expect(page.getByText("DIM3NSION", { exact: true })).toBeVisible();
+  await expect(page.getByText("Steve Dekay", { exact: true })).toBeVisible();
+
+  await page.goto("/");
+  const featuredArtists = page.getByTestId("featured-artists");
+  await expect(featuredArtists.getByText("DIM3NSION", { exact: true })).toHaveCount(1);
+  await expect(featuredArtists.getByText("Steve Dekay", { exact: true })).toHaveCount(1);
+  await expect(featuredArtists.getByText("FROGR", { exact: true })).toHaveCount(0);
+  await expect(featuredArtists.getByText("Krevix", { exact: true })).toHaveCount(0);
+
+  await page.goto("/artist/dim3nsion");
+  await expect(page.getByRole("heading", { name: "DIM3NSION" })).toBeVisible();
+  await expect(page.getByTestId("artist-bio").locator("p")).toHaveCount(2);
+  await expect(page.getByRole("link", { name: "DIM3NSION on website" })).toHaveAttribute(
+    "href",
+    "https://www.dim3nsionacademy.com/en/"
+  );
+  await expect(page.getByTestId("player-label")).toContainText("Spotify");
+
+  await page.goto("/artist/steve-dekay");
+  await expect(page.getByRole("heading", { name: "Steve Dekay" })).toBeVisible();
+  await expect(page.getByTestId("artist-bio").locator("p")).toHaveCount(2);
+  await expect(page.getByRole("link", { name: "Steve Dekay on website" })).toHaveAttribute(
+    "href",
+    "https://stevedekaymusic.com/"
+  );
+
+  await page.goto("/artist/thiago");
+  await expect(page.getByTestId("artist-bio").locator("p")).toHaveCount(2);
+  await expect(page.getByAltText("Thiago Genez").first()).toHaveAttribute(
+    "src",
+    "/artists/thiago-genez.jpeg"
+  );
+});
+
 test("reveals artist card actions to keyboard navigation", async ({ page }) => {
   await page.goto("/artists");
 

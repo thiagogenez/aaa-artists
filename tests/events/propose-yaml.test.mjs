@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
 import * as yaml from "js-yaml";
 import {
@@ -207,7 +207,9 @@ test("reports rather than throws when a file has no gigs list", () => {
 });
 
 test("round-trips against a real artist file", () => {
-  const real = readFileSync("data/artists/04-frogr.yml", "utf8");
+  const frogrFile = readdirSync("data/artists").find((file) => file.endsWith("-frogr.yml"));
+  assert.ok(frogrFile, "the roster must include FROGR");
+  const real = readFileSync(`data/artists/${frogrFile}`, "utf8");
   const { text, applied } = insertGigsChecked(real, [
     candidate({ date: "2026-09-19", venue: "Egg London" }),
   ]);

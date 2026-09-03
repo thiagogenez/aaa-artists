@@ -253,7 +253,7 @@ export default function HomePage() {
 
             {/* Featured artist tiles */}
             <div className="relative hidden lg:block">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4" data-testid="featured-artists">
                 {featuredArtists.map((artist) => (
                   <Link
                     key={artist.slug}

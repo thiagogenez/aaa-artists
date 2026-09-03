@@ -17,6 +17,7 @@ const SOCIAL_FIELDS = new Set([
   "spotify",
   "youtube",
   "beatport",
+  "website",
 ]);
 // Ids used by scripts/fetch-artist-events.mjs to look this artist up on each
 // gig source. Build tooling only — stripped from the generated JSON below, so
