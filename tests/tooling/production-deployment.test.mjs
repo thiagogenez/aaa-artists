@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { waitForProductionVersion } from "../../scripts/lib/wrangler-deploy.mjs";
+import {
+  activeWorkerVersionId,
+  STAGING_TARGET,
+  versionPreviewDetails,
+  waitForProductionVersion,
+  waitForWorkerVersion,
+  workerVersionExists,
+} from "../../scripts/lib/wrangler-deploy.mjs";
 
 describe("production version propagation", () => {
   it("waits until an uploaded candidate becomes deployable", async () => {
@@ -50,5 +57,55 @@ describe("production version propagation", () => {
 
     assert.equal(visible, true);
     assert.equal(attempts, 2);
+  });
+});
+
+describe("staging deployment target", () => {
+  it("queries only the staging Worker and environment", () => {
+    const calls = [];
+    const versionId = "4062d7e9-70bc-40e5-8c70-908e28ef48d1";
+    const readJson = (args) => {
+      calls.push(args);
+      return args[0] === "deployments"
+        ? { versions: [{ percentage: 100, version_id: versionId }] }
+        : [{ id: versionId }];
+    };
+
+    assert.equal(activeWorkerVersionId(STAGING_TARGET, { readJson }), versionId);
+    assert.equal(workerVersionExists(versionId, STAGING_TARGET, { readJson }), true);
+    assert.deepEqual(calls, [
+      ["deployments", "status", "--name", "aaa-artists-staging", "--env", "staging"],
+      ["versions", "list", "--name", "aaa-artists-staging", "--env", "staging"],
+    ]);
+    assert.equal(calls.flat().includes("production"), false);
+    assert.equal(calls.flat().includes("aaa-artists"), false);
+  });
+
+  it("waits for the staging candidate with the shared bounded retry", async () => {
+    const results = [false, true];
+    const visible = await waitForWorkerVersion("candidate", STAGING_TARGET, {
+      delaysSeconds: [0, 2],
+      versionExists: () => results.shift(),
+      sleep: () => {},
+    });
+
+    assert.equal(visible, true);
+  });
+
+  it("derives the stable staging URL only from its matching version preview", () => {
+    assert.deepEqual(
+      versionPreviewDetails(
+        "https://4062d7e9-aaa-artists-staging.thiagogenez.workers.dev",
+        STAGING_TARGET
+      ),
+      {
+        previewUrl: "https://4062d7e9-aaa-artists-staging.thiagogenez.workers.dev",
+        workerUrl: "https://aaa-artists-staging.thiagogenez.workers.dev",
+      }
+    );
+    assert.equal(
+      versionPreviewDetails("https://4062d7e9-aaa-artists.thiagogenez.workers.dev", STAGING_TARGET),
+      null
+    );
   });
 });

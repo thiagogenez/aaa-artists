@@ -7,6 +7,7 @@ const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const workflowSource = readFileSync(".github/workflows/commit-style.yml", "utf8");
 const workflow = load(workflowSource);
 const checksWorkflow = load(readFileSync(".github/workflows/checks.yml", "utf8"));
+const stagingWorkflow = load(readFileSync(".github/workflows/deploy-staging.yml", "utf8"));
 const eventProposalWorkflow = load(
   readFileSync(".github/workflows/fetch-artist-events.yml", "utf8")
 );
@@ -57,6 +58,65 @@ describe("development workflow gates", () => {
     );
     assert.ok(buildIndex >= 0, "the browser job must build the test export");
     assert.ok(roundTripIndex > buildIndex, "the enquiry round-trip must use the shared test build");
+  });
+
+  it("smoke-tests and promotes an isolated staging candidate transactionally", () => {
+    const steps = stagingWorkflow.jobs.deploy.steps;
+    const recordIndex = steps.findIndex(
+      (step) => step.run === "node scripts/record-staging-version.mjs"
+    );
+    const uploadIndex = steps.findIndex(
+      (step) => step.run === "node scripts/upload-staging-candidate.mjs"
+    );
+    const candidateSmokeIndex = steps.findIndex(
+      (step) =>
+        step.name === "Smoke-test inactive staging candidate" &&
+        step.run === "npm run smoke:staging"
+    );
+    const promoteIndex = steps.findIndex(
+      (step) => step.run === "node scripts/promote-staging-candidate.mjs"
+    );
+    const promotedSmokeIndex = steps.findIndex(
+      (step) => step.name === "Smoke-test promoted staging" && step.run === "npm run smoke:staging"
+    );
+
+    assert.ok(recordIndex >= 0, "staging must record its current version before upload");
+    assert.ok(uploadIndex > recordIndex, "staging must upload after recording its current version");
+    assert.ok(candidateSmokeIndex > uploadIndex, "the inactive staging candidate must be tested");
+    assert.ok(promoteIndex > candidateSmokeIndex, "staging must promote only the tested candidate");
+    assert.ok(promotedSmokeIndex > promoteIndex, "the stable staging origin must be tested last");
+    assert.equal(
+      steps[candidateSmokeIndex].env.SMOKE_ORIGIN,
+      `\${{ steps.candidate.outputs.preview_url }}`
+    );
+    assert.equal(
+      steps[promotedSmokeIndex].env.SMOKE_ORIGIN,
+      `\${{ steps.candidate.outputs.staging_url }}`
+    );
+    assert.equal(
+      stagingWorkflow.jobs.deploy.environment.url,
+      `\${{ steps.candidate.outputs.staging_url }}`
+    );
+  });
+
+  it("keeps every staging version command isolated from production", () => {
+    for (const script of [
+      "scripts/record-staging-version.mjs",
+      "scripts/upload-staging-candidate.mjs",
+      "scripts/promote-staging-candidate.mjs",
+    ]) {
+      const source = readFileSync(script, "utf8");
+      assert.match(source, /STAGING_TARGET/);
+      assert.doesNotMatch(source, /PRODUCTION_TARGET/);
+      assert.doesNotMatch(source, /["']--env["'],\s*["']production["']/);
+    }
+
+    const uploadSource = readFileSync("scripts/upload-staging-candidate.mjs", "utf8");
+    const promoteSource = readFileSync("scripts/promote-staging-candidate.mjs", "utf8");
+    for (const source of [uploadSource, promoteSource]) {
+      assert.match(source, /"--name",\s*STAGING_TARGET\.workerName/);
+      assert.match(source, /"--env",\s*STAGING_TARGET\.environment/);
+    }
   });
 
   it("removes a published event-proposal branch when draft PR creation fails", () => {

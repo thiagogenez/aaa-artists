@@ -1,11 +1,9 @@
 name: Deploy staging
 
 # Deploys the aaa-artists-staging Worker and static assets to its workers.dev
-# origin. Staging is the pre-production test bed: it uses the Turnstile test key
-# pair, serves every page with X-Robots-Tag: noindex, and never touches the
-# production Worker or the custom domains. A plain `wrangler deploy` is
-# deliberate here — the transactional upload/promote flow is a production
-# safeguard, and staging exists to absorb failures.
+# origin. Staging uses the same upload, candidate smoke, propagation wait, and
+# promotion sequence as production, but every command is pinned to the staging
+# environment and Worker. It never touches production or the custom domains.
 
 on:
   workflow_call:
@@ -26,7 +24,7 @@ jobs:
       cancel-in-progress: false
     environment:
       name: staging
-      url: ${{ steps.publish.outputs.staging_url }}
+      url: ${{ steps.candidate.outputs.staging_url }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -60,13 +58,30 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npm run check:deploy:staging
-      - name: Deploy staging Worker and assets
-        id: publish
+      - name: Record current staging version
+        id: previous
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node scripts/deploy-staging-worker.mjs
-      - name: Smoke-test staging
+        run: node scripts/record-staging-version.mjs
+      - name: Upload inactive staging candidate
+        id: candidate
         env:
-          SMOKE_ORIGIN: ${{ steps.publish.outputs.staging_url }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node scripts/upload-staging-candidate.mjs
+      - name: Smoke-test inactive staging candidate
+        env:
+          SMOKE_ORIGIN: ${{ steps.candidate.outputs.preview_url }}
+        run: npm run smoke:staging
+      - name: Promote verified staging candidate
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CANDIDATE_VERSION_ID: ${{ steps.candidate.outputs.version_id }}
+          PREVIOUS_VERSION_ID: ${{ steps.previous.outputs.version_id }}
+        run: node scripts/promote-staging-candidate.mjs
+      - name: Smoke-test promoted staging
+        env:
+          SMOKE_ORIGIN: ${{ steps.candidate.outputs.staging_url }}
         run: npm run smoke:staging

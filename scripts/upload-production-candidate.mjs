@@ -7,13 +7,13 @@ import { join } from "node:path";
 import {
   annotate,
   lastWranglerOutputEntry,
+  PRODUCTION_TARGET,
   requiredEnvironment,
   runWrangler,
   setGithubOutput,
   VERSION_ID_PATTERN,
+  versionPreviewDetails,
 } from "./lib/wrangler-deploy.mjs";
-
-const PREVIEW_URL_PATTERN = /^https:\/\/[0-9a-f]{8}-[a-z0-9-]+\.[^/]+\.workers\.dev\/?$/;
 
 try {
   const commit = requiredEnvironment("GITHUB_SHA");
@@ -41,10 +41,11 @@ try {
   const upload = lastWranglerOutputEntry(outputFilePath, "version-upload") ?? {};
   const versionId = upload.version_id ?? "";
   const previewUrl = upload.preview_url ?? "";
+  const preview = versionPreviewDetails(previewUrl, PRODUCTION_TARGET);
   if (!VERSION_ID_PATTERN.test(versionId)) {
     throw new Error("Could not identify the uploaded release candidate");
   }
-  if (!PREVIEW_URL_PATTERN.test(previewUrl)) {
+  if (!preview) {
     annotate(
       "error",
       `Candidate ${versionId} uploaded, but Wrangler returned no version-prefixed Preview URL (got: '${previewUrl || "<empty>"}').`
@@ -57,7 +58,7 @@ try {
   }
 
   setGithubOutput("version_id", versionId);
-  setGithubOutput("preview_url", previewUrl);
+  setGithubOutput("preview_url", preview.previewUrl);
 } catch (error) {
   annotate("error", error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
