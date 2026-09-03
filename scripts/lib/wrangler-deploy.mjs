@@ -6,6 +6,7 @@ import { appendFileSync, readFileSync } from "node:fs";
 
 export const PRODUCTION_WORKER = "aaa-artists";
 export const VERSION_ID_PATTERN = /^[0-9a-f-]{36}$/;
+export const VERSION_VISIBILITY_DELAYS_SECONDS = [0, 2, 4, 8, 12];
 
 export function requiredEnvironment(name) {
   const value = process.env[name]?.trim();
@@ -53,6 +54,38 @@ export function activeProductionVersionId() {
     throw new Error("Could not identify the current 100% production version");
   }
   return versionId;
+}
+
+export function productionVersionExists(versionId) {
+  const versions = wranglerJson([
+    "versions",
+    "list",
+    "--name",
+    PRODUCTION_WORKER,
+    "--env",
+    "production",
+  ]);
+  return Array.isArray(versions) && versions.some((version) => version.id === versionId);
+}
+
+export async function waitForProductionVersion(
+  versionId,
+  {
+    delaysSeconds = VERSION_VISIBILITY_DELAYS_SECONDS,
+    versionExists = productionVersionExists,
+    sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  } = {}
+) {
+  for (const delay of delaysSeconds) {
+    if (delay > 0) await sleep(delay * 1000);
+    try {
+      if (versionExists(versionId)) return true;
+    } catch {
+      // A bounded retry also covers a transient list request failure. Persistent
+      // auth or API errors still fail closed once the delays are exhausted.
+    }
+  }
+  return false;
 }
 
 export function setGithubOutput(name, value) {
