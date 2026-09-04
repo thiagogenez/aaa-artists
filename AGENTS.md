@@ -14,6 +14,10 @@ Obsidian vault for cross-agent handoffs; durable project knowledge remains in ve
 - Use one branch per issue, named `<type>/<short-slug>`. Pull-request titles use Conventional
   Commit format because squash merge makes the title the commit on `main`. Never add AI
   attribution trailers.
+- Before composing a commit message or pull-request title, use the `caveman-commit` skill when it
+  is available. Otherwise apply the same constraints: use a terse, imperative Conventional Commit
+  subject, aim for 50 characters and never exceed 72, and omit fluff and trailing periods.
+  Normalize bot-generated pull-request titles before merge.
 - Fill in `.github/pull_request_template.md`. A human pull request needs the issue reference,
   `## Change`, `## Verification`, `## Risks and limitations`, and `## Next steps`; Dependabot uses
   its documented `## Before` and `## After` comparison. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the
