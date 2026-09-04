@@ -63,21 +63,19 @@ test("emits event schema on artist pages and keeps TBC dates out of it", async (
   expect(xoyoLd[0]).not.toHaveProperty("offers");
 });
 
-test("marks a shared event with the same identifier on every performer's page", async ({
-  page,
-}) => {
-  const identifiers: string[] = [];
-  for (const slug of ["c-systems", "krevix"]) {
-    await page.goto(`/artist/${slug}`);
+// Keep one navigation per test so a slow mobile WebKit load cannot consume the
+// next artist's timeout. JSON-LD is inline, so DOMContentLoaded is sufficient.
+for (const slug of ["c-systems", "krevix"]) {
+  test(`marks the shared event identifier on ${slug}`, async ({ page }) => {
+    const response = await page.goto(`/artist/${slug}`, { waitUntil: "domcontentloaded" });
+    expect(response?.status(), `${slug} page did not return 200`).toBe(200);
     const shared = (await musicEvents(page)).filter(
       (event) => event.identifier === "aaa-fusion-xoyo-2026-08-22"
     );
     expect(shared, `${slug} is missing the shared event`).toHaveLength(1);
     expect(shared[0]["@id"]).toContain(`/artist/${slug}#event-`);
-    identifiers.push(shared[0].identifier);
-  }
-  expect(new Set(identifiers).size).toBe(1);
-});
+  });
+}
 
 test("shows visible nested breadcrumbs and a compact, non-duplicated footer", async ({ page }) => {
   await page.goto("/artist/c-systems");
