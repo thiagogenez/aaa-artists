@@ -4,7 +4,15 @@
 import { spawnSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
 
-export const PRODUCTION_WORKER = "aaa-artists";
+export const PRODUCTION_TARGET = Object.freeze({
+  environment: "production",
+  workerName: "aaa-artists",
+});
+export const STAGING_TARGET = Object.freeze({
+  environment: "staging",
+  workerName: "aaa-artists-staging",
+});
+export const PRODUCTION_WORKER = PRODUCTION_TARGET.workerName;
 export const VERSION_ID_PATTERN = /^[0-9a-f-]{36}$/;
 export const VERSION_VISIBILITY_DELAYS_SECONDS = [0, 2, 4, 8, 12];
 
@@ -46,33 +54,45 @@ export function lastWranglerOutputEntry(outputFilePath, type) {
   return entries.findLast((entry) => entry.type === type);
 }
 
-export function activeProductionVersionId() {
-  const deployment = wranglerJson(["deployments", "status", "--name", PRODUCTION_WORKER]);
+export function activeWorkerVersionId(target, { readJson = wranglerJson } = {}) {
+  const deployment = readJson([
+    "deployments",
+    "status",
+    "--name",
+    target.workerName,
+    "--env",
+    target.environment,
+  ]);
   const active = (deployment.versions ?? []).find((version) => version.percentage === 100);
   const versionId = active?.version_id ?? "";
   if (!VERSION_ID_PATTERN.test(versionId)) {
-    throw new Error("Could not identify the current 100% production version");
+    throw new Error(`Could not identify the current 100% ${target.environment} version`);
   }
   return versionId;
 }
 
-export function productionVersionExists(versionId) {
-  const versions = wranglerJson([
+export function activeProductionVersionId() {
+  return activeWorkerVersionId(PRODUCTION_TARGET);
+}
+
+export function workerVersionExists(versionId, target, { readJson = wranglerJson } = {}) {
+  const versions = readJson([
     "versions",
     "list",
     "--name",
-    PRODUCTION_WORKER,
+    target.workerName,
     "--env",
-    "production",
+    target.environment,
   ]);
   return Array.isArray(versions) && versions.some((version) => version.id === versionId);
 }
 
-export async function waitForProductionVersion(
+export async function waitForWorkerVersion(
   versionId,
+  target,
   {
     delaysSeconds = VERSION_VISIBILITY_DELAYS_SECONDS,
-    versionExists = productionVersionExists,
+    versionExists = (candidateVersionId) => workerVersionExists(candidateVersionId, target),
     sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   } = {}
 ) {
@@ -86,6 +106,41 @@ export async function waitForProductionVersion(
     }
   }
   return false;
+}
+
+export function waitForProductionVersion(versionId, options) {
+  return waitForWorkerVersion(versionId, PRODUCTION_TARGET, options);
+}
+
+export function versionPreviewDetails(previewUrl, target) {
+  let url;
+  try {
+    url = new URL(previewUrl);
+  } catch {
+    return null;
+  }
+
+  const marker = `-${target.workerName}.`;
+  const markerIndex = url.hostname.indexOf(marker);
+  const versionPrefix = url.hostname.slice(0, markerIndex);
+  const stableHostname = url.hostname.slice(markerIndex + 1);
+  if (
+    url.protocol !== "https:" ||
+    url.port ||
+    url.pathname !== "/" ||
+    url.search ||
+    url.hash ||
+    markerIndex < 0 ||
+    !/^[0-9a-f]{8}$/.test(versionPrefix) ||
+    !stableHostname.endsWith(".workers.dev")
+  ) {
+    return null;
+  }
+
+  return {
+    previewUrl: previewUrl.replace(/\/$/, ""),
+    workerUrl: `https://${stableHostname}`,
+  };
 }
 
 export function setGithubOutput(name, value) {

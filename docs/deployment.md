@@ -12,10 +12,12 @@ The site is a Next.js static export plus a Cloudflare Worker route for booking e
 
 Staging exists to absorb failures before production: it serves every page with
 `X-Robots-Tag: noindex`, uses Cloudflare's always-pass Turnstile test key pair, and never
-touches the custom domains. Merging to `main` can only ever change staging. Production
+touches the custom domains. Its workflow uploads an inactive version, smoke-tests that exact
+version through its Preview URL, waits for it to become deployable, promotes it, and then
+smoke-tests the stable staging origin. Merging to `main` can only ever change staging. Production
 changes require dispatching **Deploy production** (Actions → Deploy production → Run
-workflow on `main`), which re-runs the full checks suite and then performs the
-transactional release described below. The daily event refresh updates staging
+workflow on `main`), which re-runs the full checks suite and performs the same transactional
+release against the separate production Worker. The daily event refresh updates staging
 unconditionally and rebuilds production only when `main` is the exact commit already live
 in production, so new code never reaches production through the schedule.
 
@@ -159,6 +161,13 @@ deployments.
 
 Attach `aaaartists.co` and `www.aaaartists.co` to the Worker. Static Assets is configured with `run_worker_first: true` so the Worker can permanently redirect HTTP apex and HTTPS `www` requests before an existing page asset is served, preserving the path and query string. A Cloudflare redirect rule may replace this only after equivalent one-hop behaviour is verified; if it does, narrow Worker-first routing to `/api/*` to avoid unnecessary Worker invocations.
 
+The staging workflow first records the active staging version, uploads a commit-tagged inactive
+candidate, smoke-tests its versioned Preview URL, waits for the candidate to appear in the
+deployable-version list, promotes it to 100% of the staging Worker, and smoke-tests the stable
+staging URL. Every staging command takes `--env staging` and resolves only
+`aaa-artists-staging`; tests enforce that the staging scripts do not select production. Any
+failure before promotion leaves the previous staging version active.
+
 The production workflow runs only from a manual **Deploy production** dispatch on `main`
 (or from the scheduled refresh when `main` already matches the live production commit).
 It first re-runs the reusable checks suite, then verifies its API permissions and confirms
@@ -210,10 +219,13 @@ GitHub Actions is the sole deployment authority for both Workers. On a push to p
 staging only. Production is released by manually dispatching **Deploy production** on
 `main`: it re-runs the same checks, builds with the production Turnstile site key, runs
 the preflight and Wrangler dry-run, uploads and smoke-tests the inactive candidate, and
-promotes it as the final action. The heavy deployment logic
+promotes it as the final action. Staging performs its equivalent candidate smoke and promotion
+only against `aaa-artists-staging`, followed by a smoke test of the stable staging origin. The
+heavy deployment logic
 lives in versioned scripts (`scripts/record-production-version.mjs`,
 `scripts/upload-production-candidate.mjs`, `scripts/promote-production-candidate.mjs`,
-`scripts/deploy-staging-worker.mjs`, `scripts/check-production-refresh.mjs`) rather than
+`scripts/record-staging-version.mjs`, `scripts/upload-staging-candidate.mjs`,
+`scripts/promote-staging-candidate.mjs`, `scripts/check-production-refresh.mjs`) rather than
 inline workflow shell, so it is linted and can be exercised locally.
 
 The deployment remains fail-safe until the repository variable `DEPLOYMENT_AUTHORITY` is exactly `github`. The one-time cutover (already performed):

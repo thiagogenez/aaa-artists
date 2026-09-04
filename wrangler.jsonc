@@ -7,7 +7,7 @@
   //
   // Two deploy targets are defined under "env":
   //   --env staging     https://aaa-artists-staging.<subdomain>.workers.dev
-  //                     Deployed automatically on every push to main (after checks).
+  //                     Transactionally deployed on every push to main (after checks).
   //   --env production  https://aaaartists.co (custom domains only)
   //                     Deployed only by the manual "Deploy production" workflow via
   //                     the transactional upload → candidate smoke → promote flow.
