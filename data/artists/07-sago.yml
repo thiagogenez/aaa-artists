@@ -59,3 +59,12 @@ gigs:
     country: Netherlands
     freeEntry: true
     flyer: /flyers/chasing-dreams-ade-2026.webp
+
+  # proposed automatically from skiddle — verify before merging
+  - date: "2026-11-06"
+    eventId: bricks-bar-2026-11-06
+    venue: Bricks Bar
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/whats-on/London/Bricks-Bar/Timescape-x-AAA-Events-Pres-Echoes-of-Tomorrow/42699707/
+    ticketStatus: available
