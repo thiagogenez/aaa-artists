@@ -1,0 +1,867 @@
+.page {
+  min-height: 100vh;
+  padding: clamp(4rem, 8vw, 7rem) 1.5rem 7rem;
+  background: var(--bg);
+}
+
+.shell {
+  position: relative;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.header h1 {
+  max-width: 10ch;
+  color: var(--text);
+  font-size: clamp(3.5rem, 8vw, 6rem);
+  font-weight: 760;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+
+.header p {
+  max-width: 31rem;
+  padding-bottom: 0.35rem;
+  color: var(--text-60);
+  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  line-height: 1.6;
+}
+
+.discovery {
+  --chart-line: color-mix(in srgb, var(--text) 13%, transparent);
+  --control-surface: color-mix(in srgb, var(--text) 4%, var(--bg));
+}
+
+.discoveryBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.viewSwitch {
+  display: grid;
+  min-width: 21rem;
+  min-inline-size: 0;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border);
+  padding: 0;
+}
+
+.viewSwitch button {
+  min-height: 48px;
+  padding: 0.75rem 1.25rem;
+  color: var(--text-60);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.viewSwitch button + button {
+  border-left: 1px solid var(--border);
+}
+
+.viewSwitch button:hover,
+.viewSwitch button:focus-visible {
+  color: var(--text);
+}
+
+.viewSwitch button[aria-pressed="true"] {
+  background: var(--cta-bg);
+  color: var(--cta-text);
+}
+
+.mobileFilterToggle {
+  display: none;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.25fr) repeat(3, minmax(9rem, 0.8fr)) minmax(17rem, 1.4fr);
+  border-block: 1px solid var(--border);
+}
+
+.filterField,
+.bpmField {
+  position: relative;
+  min-width: 0;
+  padding: 1rem;
+  border-right: 1px solid var(--border);
+}
+
+.filters > :last-child {
+  border-right: 0;
+}
+
+.filterField > label,
+.bpmField legend {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-40);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.filterField input[type="search"],
+.filterField select {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-bottom: 1px solid var(--text-20);
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+  transition: border-color 180ms ease;
+}
+
+.filterField input[type="search"]:focus,
+.filterField select:focus {
+  border-color: var(--text);
+}
+
+.filterField input[type="search"]::placeholder {
+  color: var(--text-40);
+  opacity: 1;
+}
+
+.filterField select:disabled {
+  color: var(--text-40);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.bpmField {
+  min-inline-size: 0;
+}
+
+.bpmReadout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.bpmReadout span:nth-child(2) {
+  color: var(--text-30);
+  font-weight: 400;
+}
+
+.rangeControl {
+  position: relative;
+  height: 30px;
+  margin-top: 0.1rem;
+}
+
+.rangeTrack,
+.rangeTrack::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 3px;
+  content: "";
+  transform: translateY(-50%);
+}
+
+.rangeTrack {
+  background: var(--border);
+}
+
+.rangeTrack::after {
+  right: calc(100% - var(--range-end));
+  left: var(--range-start);
+  background: linear-gradient(90deg, #7768ff 0%, #ff5c93 38%, #ff7138 68%, #d6ff46 100%);
+}
+
+.rangeControl input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 30px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+}
+
+.rangeControl input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  background: transparent;
+}
+
+.rangeControl input[type="range"]::-webkit-slider-thumb {
+  width: 17px;
+  height: 17px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  appearance: none;
+  background: var(--text);
+  box-shadow: 0 0 0 1px var(--text);
+  cursor: grab;
+  pointer-events: auto;
+  transform: translateY(-7px);
+}
+
+.rangeControl input[type="range"]::-moz-range-track {
+  height: 3px;
+  background: transparent;
+}
+
+.rangeControl input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 0 0 1px var(--text);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.rangeControl input[type="range"]:focus-visible {
+  outline: 0;
+}
+
+.rangeControl input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+.rangeControl input[type="range"]:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+.resultBar {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-60);
+  font-size: 0.82rem;
+}
+
+.resultBar strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+}
+
+.resultBar button {
+  min-height: 44px;
+  color: var(--text-60);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+  text-transform: uppercase;
+  transition: color 180ms ease;
+}
+
+.resultBar button:hover,
+.resultBar button:focus-visible {
+  color: var(--text);
+}
+
+.artistGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 1px;
+  background: var(--border);
+}
+
+.artistCard {
+  position: relative;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.artistCard::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--profile-color);
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.artistCard:hover::after,
+.artistCard:focus-visible::after,
+.artistCard[data-highlighted="true"]::after {
+  transform: scaleX(1);
+}
+
+.artistImage {
+  position: relative;
+  display: block;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.artistPhoto {
+  object-fit: cover;
+  filter: var(--artist-photo-filter);
+  transform: scale(1.001);
+  transition:
+    filter 360ms ease,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.artistCard:hover .artistPhoto,
+.artistCard:focus-visible .artistPhoto {
+  filter: var(--artist-card-back-photo-filter);
+  transform: scale(1.035);
+}
+
+.artistCopy {
+  display: flex;
+  min-height: 8.5rem;
+  flex-direction: column;
+  padding: 1.2rem 1.25rem 1.4rem;
+}
+
+.artistCopy strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 760;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.artistCopy > span {
+  margin-top: 0.7rem;
+  color: var(--text-60);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.artistCopy small {
+  margin-top: auto;
+  padding-top: 0.9rem;
+  color: var(--text-40);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.spectrum {
+  margin-top: 1px;
+  border-bottom: 1px solid var(--border);
+  animation: spectrum-reveal 480ms both cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spectrumMobile {
+  display: none;
+}
+
+.spectrumRuler {
+  display: grid;
+  min-height: 4.25rem;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  align-items: end;
+  border-bottom: 1px solid var(--border);
+}
+
+.spectrumRuler > span {
+  padding: 0 1rem 1rem;
+  color: var(--text-40);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.spectrumRuler > div {
+  position: relative;
+  height: 100%;
+  border-left: 1px solid var(--border);
+}
+
+.spectrumRuler > div > span {
+  position: absolute;
+  bottom: 0.85rem;
+  left: var(--tick-position);
+  color: var(--text-60);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  transform: translateX(-50%);
+}
+
+.spectrumRuler > div > span::after {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 50%;
+  width: 1px;
+  height: 0.5rem;
+  background: var(--border);
+  content: "";
+}
+
+.spectrumRuler > div > span:first-child {
+  transform: none;
+}
+
+.spectrumRuler > div > span:last-child {
+  transform: translateX(-100%);
+}
+
+.spectrumGroup > h2 {
+  display: flex;
+  min-height: 3.25rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  background: var(--control-surface);
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.spectrumRow {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+
+.spectrumRow > h3 {
+  display: flex;
+  min-height: 100%;
+  align-items: center;
+  padding: 1rem;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.spectrumLanes {
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  background-image: linear-gradient(
+    to right,
+    transparent calc(25% - 1px),
+    var(--chart-line) 25%,
+    transparent calc(25% + 1px),
+    transparent calc(50% - 1px),
+    var(--chart-line) 50%,
+    transparent calc(50% + 1px),
+    transparent calc(75% - 1px),
+    var(--chart-line) 75%,
+    transparent calc(75% + 1px)
+  );
+}
+
+.spectrumLane {
+  position: relative;
+  min-height: 3.25rem;
+}
+
+.spectrumEntry {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--profile-left);
+  width: var(--profile-width);
+  min-width: 1px;
+  color: var(--text);
+  opacity: var(--match-opacity);
+  transition:
+    opacity 220ms ease,
+    filter 220ms ease;
+}
+
+.spectrumEntry:hover,
+.spectrumEntry:focus-visible {
+  z-index: 2;
+  opacity: 1;
+  filter: saturate(1.18);
+}
+
+.spectrumEntryLabel {
+  position: absolute;
+  top: 0.55rem;
+  left: 0;
+  display: flex;
+  width: max-content;
+  max-width: 12rem;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.15rem 0.35rem;
+  background: var(--bg);
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.07em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.spectrumEntryLabel small {
+  color: var(--text-40);
+  font-size: 0.58rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.spectrumRange {
+  position: absolute;
+  right: 0;
+  bottom: 0.45rem;
+  left: 0;
+  height: 7px;
+  background: var(--profile-color);
+}
+
+.bookingPrompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-top: clamp(4rem, 8vw, 7rem);
+  border-block: 1px solid var(--border);
+  padding: clamp(1.5rem, 3vw, 2.5rem) 0;
+}
+
+.bookingPrompt h2 {
+  color: var(--text);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 740;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.bookingPrompt p {
+  max-width: 43rem;
+  margin-top: 0.65rem;
+  color: var(--text-60);
+  line-height: 1.6;
+}
+
+.bookingPrompt > a {
+  display: inline-flex;
+  min-height: 48px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+@keyframes spectrum-reveal {
+  from {
+    opacity: 0.5;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+
+@media (max-width: 1100px) {
+  .filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .searchField {
+    grid-column: auto;
+  }
+
+  .bpmField {
+    grid-column: span 2;
+    border-top: 1px solid var(--border);
+  }
+
+  .filterField:nth-child(3) {
+    border-right: 0;
+  }
+
+  .filterField:nth-child(4) {
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  .artistGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .artistGrid:has(> .artistCard:last-child:nth-child(odd))::after {
+    background: var(--bg);
+    content: "";
+  }
+
+  .artistImage {
+    aspect-ratio: 4 / 3;
+  }
+
+  .artistPhoto {
+    object-position: center top;
+  }
+
+  .spectrumRuler,
+  .spectrumRow {
+    grid-template-columns: 10.5rem minmax(0, 1fr);
+  }
+
+  .spectrumEntryLabel {
+    font-size: 0.62rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    display: block;
+  }
+
+  .header h1 {
+    font-size: clamp(3.4rem, 14vw, 5.5rem);
+  }
+
+  .header p {
+    margin-top: 1rem;
+  }
+
+  .spectrumDesktop {
+    display: none;
+  }
+
+  .spectrumMobile {
+    display: block;
+  }
+
+  .spectrumMobile > section > h2 {
+    border-bottom: 1px solid var(--border);
+    padding: 1rem;
+    background: var(--control-surface);
+    font-size: 0.72rem;
+    font-weight: 760;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .mobileStyle {
+    border-bottom: 1px solid var(--border);
+    padding: 1rem;
+  }
+
+  .mobileStyle h3 {
+    margin-bottom: 0.75rem;
+    color: var(--text-60);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .mobileProfile {
+    display: grid;
+    min-height: 44px;
+    grid-template-columns: 0.6rem 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    border-top: 1px solid var(--chart-line);
+    color: var(--text);
+    opacity: var(--match-opacity);
+    transition: opacity 180ms ease;
+  }
+
+  .mobileProfile:first-of-type {
+    border-top: 0;
+  }
+
+  .mobileProfile:hover,
+  .mobileProfile:focus-visible {
+    opacity: 1;
+  }
+
+  .mobileProfile > span {
+    width: 0.6rem;
+    height: 0.6rem;
+    background: var(--profile-color);
+  }
+
+  .mobileProfile strong {
+    font-size: 0.78rem;
+    font-weight: 720;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .mobileProfile small {
+    color: var(--text-60);
+    font-size: 0.68rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (max-width: 639px) {
+  .page {
+    padding: 3.5rem 1rem 5rem;
+  }
+
+  .header {
+    margin-bottom: 2.25rem;
+  }
+
+  .discoveryBar {
+    display: block;
+  }
+
+  .viewSwitch {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobileFilterToggle {
+    display: flex;
+    width: 100%;
+    min-height: 54px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    color: var(--text);
+  }
+
+  .mobileFilterToggle > span {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .mobileFilterToggle svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: square;
+    stroke-width: 1.5;
+  }
+
+  .mobileFilterToggle small {
+    color: var(--text-40);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .filters {
+    display: none;
+    grid-template-columns: 1fr;
+    border-top: 0;
+  }
+
+  .filters[data-open="true"] {
+    display: grid;
+  }
+
+  .filterField,
+  .bpmField,
+  .searchField {
+    grid-column: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filterField:nth-child(4) {
+    border-right: 0;
+  }
+
+  .bpmField {
+    border-top: 0;
+    border-bottom: 0;
+  }
+
+  .resultBar {
+    min-height: 4rem;
+  }
+
+  .artistGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .artistGrid::after {
+    display: none;
+  }
+
+  .artistImage {
+    aspect-ratio: 1;
+  }
+
+  .artistPhoto {
+    object-position: center;
+  }
+
+  .artistCopy {
+    min-height: 8rem;
+    padding: 1rem 1rem 1.25rem;
+  }
+
+  .bookingPrompt {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bookingPrompt > a {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spectrum {
+    animation: none;
+  }
+
+  .artistCard::after,
+  .artistPhoto,
+  .spectrumEntry,
+  .mobileProfile,
+  .viewSwitch button {
+    transition: none;
+  }
+}

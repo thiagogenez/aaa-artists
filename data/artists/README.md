@@ -26,6 +26,12 @@ tagline: Melodic trance, built for big rooms
 bio: >-                       # Folded block — just write the paragraph
   Xijaro & Pitch are a trance duo known for big, melodic productions…
 image: /artists/xijaro-pitch.webp   # Photo under /public
+soundProfiles:                # Practical set ranges used by roster discovery
+  - style: uplifting-trance   # Stable id from config/artist-discovery.mjs
+    bpm:
+      min: 136
+      max: 142
+    moments: [warm-up, peak-time]
 
 socials:                      # all optional
   instagram: https://…
@@ -63,6 +69,23 @@ switches to SoundCloud. Only one third-party player is mounted at a time.
 artist pages. `youtubeEmbed` is rejected by `npm run check` because the Listen section no longer
 renders video. Beatport remains a social link: it has no reliable artist-level embed or
 unauthenticated API suitable for this static site.
+
+## Discovery profiles
+
+`soundProfiles` describes the practical musical ranges an artist can offer in a set. It powers
+both the Grid filters and Spectrum view on `/artists`; it is not a claim that every release or
+performance stays inside those values.
+
+- Use a style id from `config/artist-discovery.mjs`. Add new visitor-facing styles to that
+  shared taxonomy before assigning them to an artist.
+- `bpm.min` and `bpm.max` are inclusive whole-number estimates within the site's 120–160 BPM
+  spectrum.
+- `moments` accepts `opening`, `warm-up`, `peak-time`, and `closing`. These describe musical fit,
+  not event billing roles such as headliner or support.
+- Give each artist one profile per style. The first profile is the default shown on their card;
+  filtering may bring another profile forward.
+- Treat the values as editable editorial estimates. Revise them when better public evidence or
+  direct artist guidance becomes available.
 
 At desktop `xl` widths, upcoming flyers and Listen share a flexible row. One or two 340px flyer
 slots are reserved and the player uses the remaining width; do not restore a fixed 50/50 split or
