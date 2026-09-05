@@ -6,6 +6,7 @@
 // `npm run gen:artists`) regenerates data/artists.data.json, which is imported
 // below. Run `npm run check` to validate the YAML before publishing.
 import data from "./artists.data.json";
+import type { NightMomentId, SoundStyleId } from "./artist-discovery";
 
 export interface Gig {
   date: string;
@@ -32,6 +33,14 @@ export interface Artist {
   tagline: string;
   bio: string;
   image: string;
+  soundProfiles: {
+    style: SoundStyleId;
+    bpm: {
+      min: number;
+      max: number;
+    };
+    moments: NightMomentId[];
+  }[];
   socials: {
     instagram?: string;
     soundcloud?: string;

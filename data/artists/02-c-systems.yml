@@ -10,6 +10,13 @@ bio: >-
   Oslo. Their music has come out on several of the genre's respected labels, and their sets build
   from atmospheric openings into big peak-time moments.
 image: /artists/c-systems.webp
+soundProfiles:
+  - style: progressive-trance
+    bpm: { min: 130, max: 136 }
+    moments: [opening, warm-up]
+  - style: uplifting-trance
+    bpm: { min: 136, max: 142 }
+    moments: [warm-up, peak-time]
 socials:
   instagram: https://instagram.com/csystemsofficial
   soundcloud: https://soundcloud.com/c-systems

@@ -16,6 +16,22 @@ bio: >-
   Allen Watts, Doppenberg, Jorn van Deynhoven and Ruben de Ronde, continuing to build his presence
   across the European club circuit.
 image: /artists/thiago-genez.jpeg
+soundProfiles:
+  - style: melodic-techno
+    bpm: { min: 122, max: 130 }
+    moments: [opening, warm-up]
+  - style: progressive-trance
+    bpm: { min: 128, max: 136 }
+    moments: [opening, warm-up]
+  - style: uplifting-trance
+    bpm: { min: 136, max: 142 }
+    moments: [warm-up, peak-time]
+  - style: peak-time-techno
+    bpm: { min: 134, max: 142 }
+    moments: [peak-time]
+  - style: hard-techno
+    bpm: { min: 145, max: 155 }
+    moments: [peak-time, closing]
 socials:
   soundcloud: https://soundcloud.com/thiagogenez
   youtube: https://youtube.com/thiagogenez
