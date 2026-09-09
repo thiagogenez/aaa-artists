@@ -31,14 +31,14 @@ export const SOUND_GROUPS = /** @type {const} */ ([
 // for Trance and a warm heat progression for Techno. Spectrum energy colors
 // remain separate because they encode tempo, not genre.
 export const SOUND_STYLE_COLORS = /** @type {const} */ ({
-  "progressive-trance": "#7177ff",
-  "uplifting-trance": "#a866ff",
-  "tech-trance": "#d84fda",
-  "hard-trance": "#f13faf",
-  "euro-trance": "#42bfff",
-  "melodic-techno": "#f0b84b",
-  "peak-time-techno": "#ff7938",
-  "hard-techno": "#ff4354",
+  "progressive-trance": "#65a2ff",
+  "uplifting-trance": "#31d6e7",
+  "tech-trance": "#63e694",
+  "euro-trance": "#b27aff",
+  "hard-trance": "#ff62b4",
+  "melodic-techno": "#ffe44f",
+  "peak-time-techno": "#ff9147",
+  "hard-techno": "#ff4d68",
 });
 
 export const NIGHT_MOMENTS = /** @type {const} */ ([

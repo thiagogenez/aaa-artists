@@ -122,6 +122,19 @@ test("filters the grid to artists compatible with the selected genre and style",
     "Hard Trance",
   ]);
 
+  const progressiveStyle = styleChoices.getByRole("button", {
+    name: "Progressive Trance",
+    exact: true,
+  });
+  const lightThemeAccent = await progressiveStyle.evaluate(
+    (element) => getComputedStyle(element, "::before").backgroundColor
+  );
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  const darkThemeAccent = await progressiveStyle.evaluate(
+    (element) => getComputedStyle(element, "::before").backgroundColor
+  );
+  expect(darkThemeAccent).not.toBe(lightThemeAccent);
+
   await genreChoices.getByRole("button", { name: "Techno", exact: true }).click();
   await styleChoices.getByRole("button", { name: "Hard Techno", exact: true }).click();
 

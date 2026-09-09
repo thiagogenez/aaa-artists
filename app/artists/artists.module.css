@@ -281,27 +281,35 @@
 }
 
 .styleChoices .styleChoice {
+  --style-ui-color: color-mix(in oklab, var(--style-color) 74%, #0a0a0a);
+  --style-fill-color: color-mix(in oklab, var(--style-color) 88%, white);
+
   background: transparent;
+}
+
+:global(html.dark) .styleChoices .styleChoice {
+  --style-ui-color: var(--style-color);
+  --style-fill-color: var(--style-color);
 }
 
 .styleChoices .styleChoice::before {
   width: 0.55rem;
   height: 0.55rem;
   flex: 0 0 auto;
-  background: var(--style-color);
+  background: var(--style-ui-color);
   content: "";
 }
 
 .styleChoices .styleChoice:hover,
 .styleChoices .styleChoice:focus-visible {
-  border-color: var(--style-color);
+  border-color: var(--style-ui-color);
   color: var(--text);
   transform: translateY(-1px);
 }
 
 .styleChoices .styleChoice[aria-pressed="true"] {
-  border-color: var(--style-color);
-  background: var(--style-color);
+  border-color: var(--style-ui-color);
+  background: var(--style-fill-color);
   color: #0a0a0a;
   outline: 2px solid var(--text);
   outline-offset: 2px;
