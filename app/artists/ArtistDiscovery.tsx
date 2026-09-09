@@ -7,7 +7,6 @@ import {
   BPM_DOMAIN,
   ENERGY_COLORS,
   NIGHT_MOMENTS,
-  SOUND_GROUP_COLORS,
   SOUND_GROUPS,
   SOUND_STYLE_COLORS,
   getSoundStyle,
@@ -77,6 +76,12 @@ function profilePosition(profile: SoundProfile): DiscoveryStyle {
   };
 }
 
+function cardBadgeLabel(label: string, family: OptionalGroup) {
+  if (family === "trance") return label.replace(/ Trance$/, "");
+  if (family === "techno") return label.replace(/ Techno$/, "");
+  return label;
+}
+
 function ArtistCard({
   artist,
   profile,
@@ -92,6 +97,7 @@ function ArtistCard({
   highlighted: boolean;
   priority: boolean;
 }) {
+  const [actionsOpen, setActionsOpen] = useState(false);
   const badges =
     family === "all"
       ? SOUND_GROUPS.filter((group) =>
@@ -100,60 +106,86 @@ function ArtistCard({
           )
         ).map((group) => ({ id: group.id, label: group.label, color: undefined }))
       : artist.soundProfiles
-          .filter((artistProfile) => {
-            if (selectedStyles.length > 0) return selectedStyles.includes(artistProfile.style);
-            return getSoundStyle(artistProfile.style).groupId === family;
-          })
+          .filter((artistProfile) => getSoundStyle(artistProfile.style).groupId === family)
           .map((artistProfile) => {
             const style = getSoundStyle(artistProfile.style);
             return { id: style.id, label: style.label, color: SOUND_STYLE_COLORS[style.id] };
           });
-  const visibleBadges = badges.slice(0, 2);
-  const otherStyles = badges.length - visibleBadges.length;
   const cardStyle: DiscoveryStyle = { "--style-color": SOUND_STYLE_COLORS[profile.style] };
+  const profileHref = `/artist/${artist.slug}`;
+  const actionsId = `artist-card-${artist.slug}-actions`;
 
   return (
-    <Link
-      href={`/artist/${artist.slug}`}
+    <article
       className={styles.artistCard}
       style={cardStyle}
       data-highlighted={highlighted ? "true" : "false"}
-      aria-label={`View ${artist.name} profile`}
+      data-open={actionsOpen ? "true" : "false"}
     >
-      <span className={styles.artistImage}>
-        <Image
-          src={artist.image}
-          alt={artist.name}
-          fill
-          priority={priority}
-          className={styles.artistPhoto}
-          sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-        />
-      </span>
-      <span className={styles.artistCopy}>
-        <strong>{artist.name}</strong>
-        <span className={styles.artistBadges}>
-          {visibleBadges.map((badge) => (
-            <span
-              key={badge.id}
-              className={`${styles.styleBadge} ${family === "all" ? styles.genreBadge : ""}`}
-              style={badge.color ? ({ "--badge-color": badge.color } as DiscoveryStyle) : undefined}
-              data-colored={badge.color ? "true" : "false"}
-              data-selected={
-                badge.color && selectedStyles.includes(badge.id as SoundStyleId) ? "true" : "false"
-              }
-            >
-              {badge.label}
-            </span>
-          ))}
+      <span className={styles.artistVisual}>
+        <span className={styles.artistImage}>
+          <Image
+            src={artist.image}
+            alt={artist.name}
+            fill
+            priority={priority}
+            className={styles.artistPhoto}
+            sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+          />
         </span>
-        {otherStyles > 0 && (
-          <small>
-            + {otherStyles} other {otherStyles === 1 ? "style" : "styles"}
-          </small>
-        )}
+
+        <span className={styles.artistWash} aria-hidden="true" />
+
+        <span className={styles.artistResting}>
+          <strong>{artist.name}</strong>
+          <span className={styles.artistBadges}>
+            {badges.map((badge) => (
+              <span
+                key={badge.id}
+                className={`${styles.styleBadge} ${family === "all" ? styles.genreBadge : ""}`}
+                style={
+                  badge.color ? ({ "--badge-color": badge.color } as DiscoveryStyle) : undefined
+                }
+                data-colored={badge.color ? "true" : "false"}
+                data-selected={
+                  badge.color && selectedStyles.includes(badge.id as SoundStyleId)
+                    ? "true"
+                    : "false"
+                }
+              >
+                <span className={styles.styleBadgeText}>{cardBadgeLabel(badge.label, family)}</span>
+              </span>
+            ))}
+          </span>
+        </span>
+
+        <button
+          type="button"
+          className={styles.cardRevealButton}
+          aria-expanded={actionsOpen}
+          aria-controls={actionsId}
+          aria-label={`${actionsOpen ? "Hide" : "Show"} actions for ${artist.name}`}
+          onClick={() => setActionsOpen((current) => !current)}
+        >
+          <span className={styles.tapHint}>Tap</span>
+        </button>
+
+        <span id={actionsId} className={styles.artistActions}>
+          <Link href={profileHref} aria-label={`View ${artist.name} profile`}>
+            View Profile
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 5 7 7-7 7" />
+            </svg>
+          </Link>
+          <Link
+            href={`/contact?artist=${encodeURIComponent(artist.name)}`}
+            aria-label={`Book ${artist.name}`}
+          >
+            Book {artist.name}
+          </Link>
+        </span>
       </span>
-    </Link>
+    </article>
   );
 }
 
@@ -365,8 +397,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                   <button
                     key={group.id}
                     type="button"
-                    className={styles.genreChoice}
-                    style={{ "--genre-color": SOUND_GROUP_COLORS[group.id] } as DiscoveryStyle}
                     aria-pressed={family === group.id}
                     onClick={() => {
                       setFamily(group.id);

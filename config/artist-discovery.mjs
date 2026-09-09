@@ -25,22 +25,18 @@ export const SOUND_GROUPS = /** @type {const} */ ([
   },
 ]);
 
-export const SOUND_GROUP_COLORS = /** @type {const} */ ({
-  trance: "#7768ff",
-  techno: "#00d3a7",
-});
-
-// Trance keeps the vivid palette from the first roster prototype. Techno uses
-// a separate palette so a color never implies two different genres.
+// Grid taxonomy uses two distinct color families: a cool spectral progression
+// for Trance and a warm heat progression for Techno. Spectrum energy colors
+// remain separate because they encode tempo, not genre.
 export const SOUND_STYLE_COLORS = /** @type {const} */ ({
-  "progressive-trance": "#7768ff",
-  "uplifting-trance": "#ff5c93",
-  "tech-trance": "#ff7138",
-  "hard-trance": "#d6ff46",
-  "euro-trance": "#37d8ff",
-  "melodic-techno": "#00d3a7",
-  "peak-time-techno": "#ffbd2e",
-  "hard-techno": "#ff3f57",
+  "progressive-trance": "#7177ff",
+  "uplifting-trance": "#a866ff",
+  "tech-trance": "#d84fda",
+  "hard-trance": "#f13faf",
+  "euro-trance": "#42bfff",
+  "melodic-techno": "#f0b84b",
+  "peak-time-techno": "#ff7938",
+  "hard-techno": "#ff4354",
 });
 
 export const NIGHT_MOMENTS = /** @type {const} */ ([
