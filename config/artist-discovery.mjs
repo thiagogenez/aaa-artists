@@ -25,6 +25,24 @@ export const SOUND_GROUPS = /** @type {const} */ ([
   },
 ]);
 
+export const SOUND_GROUP_COLORS = /** @type {const} */ ({
+  trance: "#7768ff",
+  techno: "#00d3a7",
+});
+
+// Trance keeps the vivid palette from the first roster prototype. Techno uses
+// a separate palette so a color never implies two different genres.
+export const SOUND_STYLE_COLORS = /** @type {const} */ ({
+  "progressive-trance": "#7768ff",
+  "uplifting-trance": "#ff5c93",
+  "tech-trance": "#ff7138",
+  "hard-trance": "#d6ff46",
+  "euro-trance": "#37d8ff",
+  "melodic-techno": "#00d3a7",
+  "peak-time-techno": "#ffbd2e",
+  "hard-techno": "#ff3f57",
+});
+
 export const NIGHT_MOMENTS = /** @type {const} */ ([
   { id: "opening", label: "Opening" },
   { id: "warm-up", label: "Warm-up" },

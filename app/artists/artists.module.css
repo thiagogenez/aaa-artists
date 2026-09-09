@@ -91,8 +91,13 @@
   border-block: 1px solid var(--border);
 }
 
+.filters[data-view="grid"] {
+  grid-template-columns: minmax(14rem, 0.75fr) minmax(0, 1.25fr);
+}
+
 .filterField,
-.bpmField {
+.bpmField,
+.choiceField {
   position: relative;
   min-width: 0;
   padding: 1rem;
@@ -104,7 +109,8 @@
 }
 
 .filterField > label,
-.bpmField legend {
+.bpmField legend,
+.choiceField legend {
   display: block;
   margin-bottom: 0.5rem;
   color: var(--text-40);
@@ -142,6 +148,92 @@
   color: var(--text-40);
   cursor: not-allowed;
   opacity: 0.72;
+}
+
+.choiceField {
+  min-inline-size: 0;
+}
+
+.choiceField > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.choiceField button {
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border);
+  color: var(--text-60);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.choiceField button:hover,
+.choiceField button:focus-visible {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.genreChoices button[aria-pressed="true"],
+.allStylesChoice[aria-pressed="true"] {
+  border-color: var(--cta-bg);
+  background: var(--cta-bg);
+  color: var(--cta-text);
+}
+
+.genreChoices .genreChoice[aria-pressed="true"] {
+  border-color: var(--genre-color);
+  background: var(--genre-color);
+  color: #0a0a0a;
+}
+
+.styleChoices {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--border);
+  border-right: 0;
+}
+
+.styleChoices > p {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--text-40);
+  font-size: 0.82rem;
+}
+
+.styleChoices .styleChoice {
+  background: transparent;
+}
+
+.styleChoices .styleChoice::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: 0 0 auto;
+  background: var(--style-color);
+  content: "";
+}
+
+.styleChoices .styleChoice:hover,
+.styleChoices .styleChoice:focus-visible {
+  border-color: var(--style-color);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+.styleChoices .styleChoice[aria-pressed="true"] {
+  border-color: var(--style-color);
+  background: var(--style-color);
+  color: #0a0a0a;
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
 }
 
 .bpmField {
@@ -289,7 +381,26 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   margin-top: 1px;
-  background: var(--border);
+  border-top: 1px solid var(--border);
+}
+
+.emptyGrid {
+  display: flex;
+  min-height: 18rem;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.emptyGrid strong {
+  color: var(--text);
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  letter-spacing: -0.03em;
+}
+
+.emptyGrid p {
+  margin-top: 0.5rem;
+  color: var(--text-60);
 }
 
 .artistCard {
@@ -298,6 +409,9 @@
   min-width: 0;
   overflow: hidden;
   background: var(--bg);
+  box-shadow:
+    1px 0 var(--border),
+    0 1px var(--border);
   color: var(--text);
 }
 
@@ -307,7 +421,7 @@
   bottom: 0;
   left: 0;
   height: 2px;
-  background: var(--profile-color);
+  background: var(--style-color);
   content: "";
   transform: scaleX(0);
   transform-origin: left;
@@ -359,15 +473,41 @@
   text-transform: uppercase;
 }
 
-.artistCopy > span {
+.artistBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
   margin-top: 0.7rem;
+}
+
+.styleBadge {
+  display: inline-flex;
+  min-height: 1.65rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--text-20);
+  background: transparent;
   color: var(--text-60);
-  font-size: 0.72rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.35;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
   text-transform: uppercase;
+}
+
+.styleBadge[data-colored="true"]::before {
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: 0 0 auto;
+  background: var(--badge-color);
+  content: "";
+}
+
+.styleBadge[data-selected="true"] {
+  border-color: var(--badge-color);
+  background: var(--badge-color);
+  color: #0a0a0a;
 }
 
 .artistCopy small {
@@ -602,6 +742,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .filters[data-view="grid"] {
+    grid-template-columns: minmax(12rem, 0.75fr) minmax(0, 1.25fr);
+  }
+
   .searchField {
     grid-column: auto;
   }
@@ -622,11 +766,6 @@
 
   .artistGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .artistGrid:has(> .artistCard:last-child:nth-child(odd))::after {
-    background: var(--bg);
-    content: "";
   }
 
   .artistImage {
@@ -802,10 +941,20 @@
 
   .filterField,
   .bpmField,
-  .searchField {
+  .searchField,
+  .choiceField {
     grid-column: auto;
     border-right: 0;
     border-bottom: 1px solid var(--border);
+  }
+
+  .filters[data-view="grid"] {
+    grid-template-columns: 1fr;
+  }
+
+  .styleChoices {
+    grid-column: auto;
+    border-top: 0;
   }
 
   .filterField:nth-child(4) {
@@ -861,7 +1010,8 @@
   .artistPhoto,
   .spectrumEntry,
   .mobileProfile,
-  .viewSwitch button {
+  .viewSwitch button,
+  .choiceField button {
     transition: none;
   }
 }

@@ -7,7 +7,9 @@ import {
   BPM_DOMAIN,
   ENERGY_COLORS,
   NIGHT_MOMENTS,
+  SOUND_GROUP_COLORS,
   SOUND_GROUPS,
+  SOUND_STYLE_COLORS,
   getSoundStyle,
   type NightMomentId,
   type SoundGroupId,
@@ -20,7 +22,6 @@ type DiscoveryArtist = Pick<Artist, "slug" | "name" | "image" | "soundProfiles">
 type SoundProfile = DiscoveryArtist["soundProfiles"][number];
 type ViewMode = "grid" | "spectrum";
 type OptionalGroup = "all" | SoundGroupId;
-type OptionalStyle = "all" | SoundStyleId;
 type OptionalMoment = "all" | NightMomentId;
 type DiscoveryStyle = CSSProperties & Record<`--${string}`, string | number>;
 
@@ -43,14 +44,14 @@ function bpmAffinity(distance: number) {
 function profileAffinity(
   profile: SoundProfile,
   family: OptionalGroup,
-  soundStyle: OptionalStyle,
+  selectedStyles: readonly SoundStyleId[],
   moment: OptionalMoment,
   bpmMin: number,
   bpmMax: number
 ) {
   const style = getSoundStyle(profile.style);
   if (family !== "all" && style.groupId !== family) return 0.06;
-  if (soundStyle !== "all" && profile.style !== soundStyle) return 0.06;
+  if (selectedStyles.length > 0 && !selectedStyles.includes(profile.style)) return 0.06;
   if (moment !== "all" && !profile.moments.includes(moment)) return 0.1;
   return bpmAffinity(distanceFromRange(profile, bpmMin, bpmMax));
 }
@@ -79,17 +80,37 @@ function profilePosition(profile: SoundProfile): DiscoveryStyle {
 function ArtistCard({
   artist,
   profile,
+  family,
+  selectedStyles,
   highlighted,
   priority,
 }: {
   artist: DiscoveryArtist;
   profile: SoundProfile;
+  family: OptionalGroup;
+  selectedStyles: readonly SoundStyleId[];
   highlighted: boolean;
   priority: boolean;
 }) {
-  const soundStyle = getSoundStyle(profile.style);
-  const otherStyles = artist.soundProfiles.length - 1;
-  const cardStyle: DiscoveryStyle = { "--profile-color": profileColor(profile) };
+  const badges =
+    family === "all"
+      ? SOUND_GROUPS.filter((group) =>
+          artist.soundProfiles.some(
+            (artistProfile) => getSoundStyle(artistProfile.style).groupId === group.id
+          )
+        ).map((group) => ({ id: group.id, label: group.label, color: undefined }))
+      : artist.soundProfiles
+          .filter((artistProfile) => {
+            if (selectedStyles.length > 0) return selectedStyles.includes(artistProfile.style);
+            return getSoundStyle(artistProfile.style).groupId === family;
+          })
+          .map((artistProfile) => {
+            const style = getSoundStyle(artistProfile.style);
+            return { id: style.id, label: style.label, color: SOUND_STYLE_COLORS[style.id] };
+          });
+  const visibleBadges = badges.slice(0, 2);
+  const otherStyles = badges.length - visibleBadges.length;
+  const cardStyle: DiscoveryStyle = { "--style-color": SOUND_STYLE_COLORS[profile.style] };
 
   return (
     <Link
@@ -111,8 +132,20 @@ function ArtistCard({
       </span>
       <span className={styles.artistCopy}>
         <strong>{artist.name}</strong>
-        <span>
-          {soundStyle.label} · {profile.bpm.min}–{profile.bpm.max} BPM
+        <span className={styles.artistBadges}>
+          {visibleBadges.map((badge) => (
+            <span
+              key={badge.id}
+              className={`${styles.styleBadge} ${family === "all" ? styles.genreBadge : ""}`}
+              style={badge.color ? ({ "--badge-color": badge.color } as DiscoveryStyle) : undefined}
+              data-colored={badge.color ? "true" : "false"}
+              data-selected={
+                badge.color && selectedStyles.includes(badge.id as SoundStyleId) ? "true" : "false"
+              }
+            >
+              {badge.label}
+            </span>
+          ))}
         </span>
         {otherStyles > 0 && (
           <small>
@@ -161,20 +194,24 @@ function SpectrumEntry({
 export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[] }) {
   const [view, setView] = useState<ViewMode>("grid");
   const [family, setFamily] = useState<OptionalGroup>("all");
-  const [soundStyle, setSoundStyle] = useState<OptionalStyle>("all");
+  const [selectedStyles, setSelectedStyles] = useState<SoundStyleId[]>([]);
   const [moment, setMoment] = useState<OptionalMoment>("all");
   const [bpmMin, setBpmMin] = useState<number>(DEFAULT_BPM.min);
   const [bpmMax, setBpmMax] = useState<number>(DEFAULT_BPM.max);
   const [query, setQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const effectiveMoment: OptionalMoment = view === "spectrum" ? moment : "all";
+  const effectiveBpmMin = view === "spectrum" ? bpmMin : DEFAULT_BPM.min;
+  const effectiveBpmMax = view === "spectrum" ? bpmMax : DEFAULT_BPM.max;
 
   const familyStyles =
     family === "all" ? [] : (SOUND_GROUPS.find((group) => group.id === family)?.styles ?? []);
-  const bpmIsFiltered = bpmMin !== DEFAULT_BPM.min || bpmMax !== DEFAULT_BPM.max;
+  const bpmIsFiltered =
+    view === "spectrum" && (bpmMin !== DEFAULT_BPM.min || bpmMax !== DEFAULT_BPM.max);
   const activeFilterCount =
     Number(family !== "all") +
-    Number(soundStyle !== "all") +
-    Number(moment !== "all") +
+    Number(selectedStyles.length > 0) +
+    Number(view === "spectrum" && moment !== "all") +
     Number(bpmIsFiltered) +
     Number(query.trim().length > 0);
 
@@ -186,7 +223,14 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
           .map((profile, profileIndex) => ({
             profile,
             profileIndex,
-            affinity: profileAffinity(profile, family, soundStyle, moment, bpmMin, bpmMax),
+            affinity: profileAffinity(
+              profile,
+              family,
+              selectedStyles,
+              effectiveMoment,
+              effectiveBpmMin,
+              effectiveBpmMax
+            ),
           }))
           .sort(
             (left, right) =>
@@ -206,25 +250,41 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
         (left, right) =>
           right.affinity - left.affinity || left.editorialIndex - right.editorialIndex
       );
-  }, [artists, bpmMax, bpmMin, family, moment, query, soundStyle]);
+  }, [artists, effectiveBpmMax, effectiveBpmMin, effectiveMoment, family, query, selectedStyles]);
 
   const bestMatches = activeFilterCount
     ? rankedArtists.filter(({ affinity }) => affinity >= 0.99).length
     : artists.length;
+
+  const gridArtists = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+    return rankedArtists.filter(({ artist }) => {
+      const nameMatches =
+        normalizedQuery.length === 0 || artist.name.toLocaleLowerCase().includes(normalizedQuery);
+      const soundMatches = artist.soundProfiles.some((profile) => {
+        const style = getSoundStyle(profile.style);
+        return (
+          (family === "all" || style.groupId === family) &&
+          (selectedStyles.length === 0 || selectedStyles.includes(profile.style))
+        );
+      });
+      return nameMatches && soundMatches;
+    });
+  }, [family, query, rankedArtists, selectedStyles]);
 
   const visibleGroups = SOUND_GROUPS.map((group) => ({
     ...group,
     styles: group.styles.filter(
       (style) =>
         (family === "all" || group.id === family) &&
-        (soundStyle === "all" || style.id === soundStyle) &&
+        (selectedStyles.length === 0 || selectedStyles.includes(style.id)) &&
         artists.some((artist) => artist.soundProfiles.some((profile) => profile.style === style.id))
     ),
   })).filter((group) => group.styles.length > 0);
 
   const resetFilters = () => {
     setFamily("all");
-    setSoundStyle("all");
+    setSelectedStyles([]);
     setMoment("all");
     setBpmMin(DEFAULT_BPM.min);
     setBpmMax(DEFAULT_BPM.max);
@@ -235,7 +295,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     "--range-start": `${((bpmMin - BPM_DOMAIN.min) / (BPM_DOMAIN.max - BPM_DOMAIN.min)) * 100}%`,
     "--range-end": `${((bpmMax - BPM_DOMAIN.min) / (BPM_DOMAIN.max - BPM_DOMAIN.min)) * 100}%`,
   };
-
   return (
     <section className={styles.discovery} aria-label="Artist discovery">
       <div className={styles.discoveryBar}>
@@ -266,7 +325,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             </svg>
             Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </span>
-          <small>{artists.length} artists</small>
+          <small>{view === "grid" ? gridArtists.length : artists.length} artists</small>
         </button>
       </div>
 
@@ -274,6 +333,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
         id="artist-filters"
         className={styles.filters}
         data-open={filtersOpen ? "true" : "false"}
+        data-view={view}
       >
         <div className={`${styles.filterField} ${styles.searchField}`}>
           <label htmlFor="artist-search">Artist</label>
@@ -286,94 +346,183 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
           />
         </div>
 
-        <div className={styles.filterField}>
-          <label htmlFor="artist-genre">Genre</label>
-          <select
-            id="artist-genre"
-            value={family}
-            onChange={(event) => {
-              setFamily(event.target.value as OptionalGroup);
-              setSoundStyle("all");
-            }}
-          >
-            <option value="all">All genres</option>
-            {SOUND_GROUPS.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {view === "grid" ? (
+          <>
+            <fieldset className={`${styles.choiceField} ${styles.genreChoices}`}>
+              <legend>Genre</legend>
+              <div>
+                <button
+                  type="button"
+                  aria-pressed={family === "all"}
+                  onClick={() => {
+                    setFamily("all");
+                    setSelectedStyles([]);
+                  }}
+                >
+                  All
+                </button>
+                {SOUND_GROUPS.map((group) => (
+                  <button
+                    key={group.id}
+                    type="button"
+                    className={styles.genreChoice}
+                    style={{ "--genre-color": SOUND_GROUP_COLORS[group.id] } as DiscoveryStyle}
+                    aria-pressed={family === group.id}
+                    onClick={() => {
+                      setFamily(group.id);
+                      setSelectedStyles([]);
+                    }}
+                  >
+                    {group.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
 
-        <div className={styles.filterField}>
-          <label htmlFor="artist-style">Style</label>
-          <select
-            id="artist-style"
-            value={soundStyle}
-            disabled={family === "all"}
-            onChange={(event) => setSoundStyle(event.target.value as OptionalStyle)}
-          >
-            <option value="all">{family === "all" ? "Choose genre" : "All styles"}</option>
-            {familyStyles.map((style) => (
-              <option key={style.id} value={style.id}>
-                {style.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            <fieldset className={`${styles.choiceField} ${styles.styleChoices}`}>
+              <legend>Style</legend>
+              {family === "all" ? (
+                <p>Choose a genre to see its styles.</p>
+              ) : (
+                <div>
+                  <button
+                    type="button"
+                    className={styles.allStylesChoice}
+                    aria-pressed={selectedStyles.length === 0}
+                    onClick={() => setSelectedStyles([])}
+                  >
+                    All styles
+                  </button>
+                  {familyStyles.map((sound) => (
+                    <button
+                      key={sound.id}
+                      type="button"
+                      className={styles.styleChoice}
+                      style={{ "--style-color": SOUND_STYLE_COLORS[sound.id] } as DiscoveryStyle}
+                      aria-pressed={selectedStyles.includes(sound.id)}
+                      onClick={() =>
+                        setSelectedStyles((current) =>
+                          current.includes(sound.id)
+                            ? current.filter((styleId) => styleId !== sound.id)
+                            : [...current, sound.id]
+                        )
+                      }
+                    >
+                      {sound.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+          </>
+        ) : (
+          <>
+            <div className={styles.filterField}>
+              <label htmlFor="artist-genre">Genre</label>
+              <select
+                id="artist-genre"
+                value={family}
+                onChange={(event) => {
+                  setFamily(event.target.value as OptionalGroup);
+                  setSelectedStyles([]);
+                }}
+              >
+                <option value="all">All genres</option>
+                {SOUND_GROUPS.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className={styles.filterField}>
-          <label htmlFor="artist-moment">Moment</label>
-          <select
-            id="artist-moment"
-            value={moment}
-            onChange={(event) => setMoment(event.target.value as OptionalMoment)}
-          >
-            <option value="all">Any moment</option>
-            {NIGHT_MOMENTS.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className={styles.filterField}>
+              <label htmlFor="artist-style">Style</label>
+              <select
+                id="artist-style"
+                value={selectedStyles.length === 1 ? selectedStyles[0] : "all"}
+                disabled={family === "all"}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setSelectedStyles(value === "all" ? [] : [value as SoundStyleId]);
+                }}
+              >
+                <option value="all">{family === "all" ? "Choose genre" : "All styles"}</option>
+                {familyStyles.map((style) => (
+                  <option key={style.id} value={style.id}>
+                    {style.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
 
-        <fieldset className={styles.bpmField}>
-          <legend>BPM range</legend>
-          <div className={styles.bpmReadout} aria-live="polite">
-            <span>{bpmMin}</span>
-            <span aria-hidden="true">—</span>
-            <span>{bpmMax}</span>
+        {view === "spectrum" && (
+          <div className={`${styles.filterField} ${styles.momentFilter}`}>
+            <label htmlFor="artist-moment">Moment</label>
+            <select
+              id="artist-moment"
+              value={moment}
+              onChange={(event) => setMoment(event.target.value as OptionalMoment)}
+            >
+              <option value="all">Any moment</option>
+              {NIGHT_MOMENTS.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className={styles.rangeControl} style={rangeStyle}>
-            <span className={styles.rangeTrack} aria-hidden="true" />
-            <input
-              type="range"
-              min={BPM_DOMAIN.min}
-              max={BPM_DOMAIN.max - 1}
-              value={bpmMin}
-              aria-label="Minimum BPM"
-              onChange={(event) => setBpmMin(Math.min(Number(event.target.value), bpmMax - 1))}
-            />
-            <input
-              type="range"
-              min={BPM_DOMAIN.min + 1}
-              max={BPM_DOMAIN.max}
-              value={bpmMax}
-              aria-label="Maximum BPM"
-              onChange={(event) => setBpmMax(Math.max(Number(event.target.value), bpmMin + 1))}
-            />
-          </div>
-        </fieldset>
+        )}
+
+        {view === "spectrum" && (
+          <fieldset className={styles.bpmField}>
+            <legend>BPM range</legend>
+            <div className={styles.bpmReadout} aria-live="polite">
+              <span>{bpmMin}</span>
+              <span aria-hidden="true">—</span>
+              <span>{bpmMax}</span>
+            </div>
+            <div className={styles.rangeControl} style={rangeStyle}>
+              <span className={styles.rangeTrack} aria-hidden="true" />
+              <input
+                type="range"
+                min={BPM_DOMAIN.min}
+                max={BPM_DOMAIN.max - 1}
+                value={bpmMin}
+                aria-label="Minimum BPM"
+                onChange={(event) => setBpmMin(Math.min(Number(event.target.value), bpmMax - 1))}
+              />
+              <input
+                type="range"
+                min={BPM_DOMAIN.min + 1}
+                max={BPM_DOMAIN.max}
+                value={bpmMax}
+                aria-label="Maximum BPM"
+                onChange={(event) => setBpmMax(Math.max(Number(event.target.value), bpmMin + 1))}
+              />
+            </div>
+          </fieldset>
+        )}
       </div>
 
       <div className={styles.resultBar} aria-live="polite">
         <p>
-          <strong>{artists.length}</strong> artists
-          {activeFilterCount > 0 && (
-            <span>
-              · <strong>{bestMatches}</strong> best {bestMatches === 1 ? "match" : "matches"}
-            </span>
+          {view === "grid" ? (
+            <>
+              <strong>{gridArtists.length}</strong>{" "}
+              {gridArtists.length === 1 ? "artist" : "artists"}
+            </>
+          ) : (
+            <>
+              <strong>{artists.length}</strong> artists
+              {activeFilterCount > 0 && (
+                <span>
+                  · <strong>{bestMatches}</strong> best {bestMatches === 1 ? "match" : "matches"}
+                </span>
+              )}
+            </>
           )}
         </p>
         {activeFilterCount > 0 && (
@@ -384,17 +533,26 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
       </div>
 
       {view === "grid" ? (
-        <div className={styles.artistGrid} data-testid="artist-grid">
-          {rankedArtists.map(({ artist, profile, affinity }, index) => (
-            <ArtistCard
-              key={artist.slug}
-              artist={artist}
-              profile={profile}
-              highlighted={activeFilterCount > 0 && affinity >= 0.99}
-              priority={index < 3}
-            />
-          ))}
-        </div>
+        gridArtists.length > 0 ? (
+          <div className={styles.artistGrid} data-testid="artist-grid">
+            {gridArtists.map(({ artist, profile, affinity }, index) => (
+              <ArtistCard
+                key={artist.slug}
+                artist={artist}
+                profile={profile}
+                family={family}
+                selectedStyles={selectedStyles}
+                highlighted={activeFilterCount > 0 && affinity >= 0.99}
+                priority={index < 3}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyGrid} data-testid="artist-grid">
+            <strong>No artists match these filters.</strong>
+            <p>Try another genre, style or artist name.</p>
+          </div>
+        )
       ) : (
         <div className={styles.spectrum} data-testid="artist-spectrum">
           <div className={styles.spectrumDesktop}>
@@ -436,8 +594,14 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                             .toLocaleLowerCase()
                             .includes(query.trim().toLocaleLowerCase());
                           const affinity =
-                            profileAffinity(profile, family, soundStyle, moment, bpmMin, bpmMax) *
-                            (nameMatches ? 1 : 0.08);
+                            profileAffinity(
+                              profile,
+                              family,
+                              selectedStyles,
+                              moment,
+                              bpmMin,
+                              bpmMax
+                            ) * (nameMatches ? 1 : 0.08);
                           return (
                             <SpectrumEntry
                               key={artist.slug}
@@ -473,7 +637,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                           .toLocaleLowerCase()
                           .includes(query.trim().toLocaleLowerCase());
                         const affinity =
-                          profileAffinity(profile, family, soundStyle, moment, bpmMin, bpmMax) *
+                          profileAffinity(profile, family, selectedStyles, moment, bpmMin, bpmMax) *
                           (nameMatches ? 1 : 0.08);
                         const itemStyle: DiscoveryStyle = {
                           "--profile-color": profileColor(profile),

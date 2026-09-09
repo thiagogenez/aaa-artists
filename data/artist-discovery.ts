@@ -2,10 +2,19 @@ import {
   BPM_DOMAIN,
   ENERGY_COLORS,
   NIGHT_MOMENTS,
+  SOUND_GROUP_COLORS,
   SOUND_GROUPS,
+  SOUND_STYLE_COLORS,
 } from "@/config/artist-discovery.mjs";
 
-export { BPM_DOMAIN, ENERGY_COLORS, NIGHT_MOMENTS, SOUND_GROUPS };
+export {
+  BPM_DOMAIN,
+  ENERGY_COLORS,
+  NIGHT_MOMENTS,
+  SOUND_GROUP_COLORS,
+  SOUND_GROUPS,
+  SOUND_STYLE_COLORS,
+};
 
 export type SoundGroupId = (typeof SOUND_GROUPS)[number]["id"];
 export type SoundStyleId = (typeof SOUND_GROUPS)[number]["styles"][number]["id"];
