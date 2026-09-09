@@ -95,6 +95,13 @@
   grid-template-columns: minmax(14rem, 0.75fr) minmax(0, 1.25fr);
 }
 
+.filters[data-view="grid"] .searchField {
+  display: flex;
+  grid-row: span 2;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .filterField,
 .bpmField,
 .choiceField {
@@ -144,6 +151,65 @@
   opacity: 1;
 }
 
+.searchField {
+  z-index: 30;
+}
+
+.searchControl {
+  position: relative;
+  width: 100%;
+}
+
+.searchSuggestions {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  left: 0;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.searchSuggestion {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.85rem;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.searchSuggestion + .searchSuggestion {
+  border-top: 1px solid var(--border);
+}
+
+.searchSuggestion small {
+  color: var(--text-40);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.searchSuggestion:hover,
+.searchSuggestion[data-active="true"] {
+  background: var(--cta-bg);
+  color: var(--cta-text);
+}
+
+.searchSuggestion:hover small,
+.searchSuggestion[data-active="true"] small {
+  color: currentColor;
+  opacity: 0.64;
+}
+
 .filterField select:disabled {
   color: var(--text-40);
   cursor: not-allowed;
@@ -154,7 +220,14 @@
   min-inline-size: 0;
 }
 
-.choiceField > div {
+.choiceField > fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.choiceField > fieldset > div {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -189,13 +262,17 @@
   color: var(--cta-text);
 }
 
+.genreChoices {
+  border-right: 0;
+}
+
 .styleChoices {
-  grid-column: 1 / -1;
+  grid-column: 2;
   border-top: 1px solid var(--border);
   border-right: 0;
 }
 
-.styleChoices > p {
+.styleChoices > fieldset > p {
   display: flex;
   min-height: 44px;
   align-items: center;
@@ -1064,6 +1141,10 @@
 
   .filters[data-view="grid"] {
     grid-template-columns: 1fr;
+  }
+
+  .filters[data-view="grid"] .searchField {
+    grid-row: auto;
   }
 
   .styleChoices {

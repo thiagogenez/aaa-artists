@@ -1,5 +1,100 @@
 import { expect, test } from "playwright/test";
 
+test("autocompletes artist names with keyboard navigation", async ({ page }) => {
+  await page.goto("/artists");
+  const filterToggle = page.getByRole("button", { name: /Filters/ });
+  if (await filterToggle.isVisible()) await filterToggle.click();
+
+  const search = page.getByRole("combobox", { name: "Artist" });
+  const suggestions = page.getByRole("listbox", { name: "Artist suggestions" });
+
+  await search.fill("c");
+  await expect(suggestions.getByRole("option", { name: /C-Systems/ })).toBeVisible();
+  await expect(suggestions.getByRole("option", { name: /Xijaro & Pitch/ })).toHaveCount(0);
+  await expect(page.getByTestId("artist-grid").getByRole("article")).toHaveCount(1);
+
+  await search.fill("pitch");
+  await expect(suggestions.getByRole("option", { name: /Xijaro & Pitch/ })).toBeVisible();
+
+  await search.fill("dek");
+
+  const steve = suggestions.getByRole("option", { name: /Steve Dekay/ });
+  await expect(suggestions).toBeVisible();
+  await expect(steve).toBeVisible();
+
+  await search.press("ArrowDown");
+  await expect(steve).toHaveAttribute("aria-selected", "true");
+  await search.press("Enter");
+
+  await expect(search).toHaveValue("Steve Dekay");
+  await expect(suggestions).not.toBeVisible();
+  await expect(page.getByTestId("artist-grid").getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("link", { name: "View Steve Dekay profile" })).toBeVisible();
+
+  await search.fill("dim");
+  await suggestions.getByRole("option", { name: /DIM3NSION/ }).click();
+  await expect(search).toHaveValue("DIM3NSION");
+  await expect(page.getByRole("link", { name: "View DIM3NSION profile" })).toBeVisible();
+});
+
+test("animates pointer filter changes without slowing keyboard or reduced-motion users", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const testWindow = window as Window & { __rosterTransitionCalls?: number };
+    testWindow.__rosterTransitionCalls = 0;
+
+    Object.defineProperty(document, "startViewTransition", {
+      configurable: true,
+      value: (update: () => void) => {
+        testWindow.__rosterTransitionCalls = (testWindow.__rosterTransitionCalls ?? 0) + 1;
+        const updateCallbackDone = Promise.resolve().then(update);
+        return {
+          ready: updateCallbackDone,
+          updateCallbackDone,
+          finished: updateCallbackDone,
+          skipTransition: () => undefined,
+          types: new Set<string>(),
+        };
+      },
+    });
+  });
+  await page.goto("/artists");
+  const filterToggle = page.getByRole("button", { name: /Filters/ });
+  if (await filterToggle.isVisible()) await filterToggle.click();
+
+  const genreChoices = page.getByRole("group", { name: "Genre" });
+  await genreChoices.getByRole("button", { name: "Techno", exact: true }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
+      )
+    )
+    .toBe(1);
+
+  const trance = genreChoices.getByRole("button", { name: "Trance", exact: true });
+  await trance.focus();
+  await trance.press("Enter");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
+      )
+    )
+    .toBe(1);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await genreChoices.getByRole("button", { name: "All", exact: true }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
+      )
+    )
+    .toBe(1);
+});
+
 test("filters the grid to artists compatible with the selected genre and style", async ({
   page,
 }) => {
@@ -17,6 +112,16 @@ test("filters the grid to artists compatible with the selected genre and style",
   if (await filterToggle.isVisible()) await filterToggle.click();
   const genreChoices = page.getByRole("group", { name: "Genre" });
   const styleChoices = page.getByRole("group", { name: "Style" });
+  await genreChoices.getByRole("button", { name: "Trance", exact: true }).click();
+  await expect(styleChoices.getByRole("button")).toHaveText([
+    "All styles",
+    "Progressive Trance",
+    "Uplifting Trance",
+    "Tech Trance",
+    "Euro Trance",
+    "Hard Trance",
+  ]);
+
   await genreChoices.getByRole("button", { name: "Techno", exact: true }).click();
   await styleChoices.getByRole("button", { name: "Hard Techno", exact: true }).click();
 

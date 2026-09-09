@@ -1,5 +1,7 @@
 // Shared editorial vocabulary for roster discovery. Keep identifiers stable:
 // artist YAML uses them as content values, while labels remain free to evolve.
+// spectrumOrder moves from lower to higher typical tempo/energy within each
+// group. It is a browsing aid, not a hard musical boundary.
 export const BPM_DOMAIN = /** @type {const} */ ({ min: 120, max: 160 });
 
 export const SOUND_GROUPS = /** @type {const} */ ([
@@ -7,20 +9,20 @@ export const SOUND_GROUPS = /** @type {const} */ ([
     id: "trance",
     label: "Trance",
     styles: [
-      { id: "progressive-trance", label: "Progressive Trance" },
-      { id: "uplifting-trance", label: "Uplifting Trance" },
-      { id: "tech-trance", label: "Tech Trance" },
-      { id: "hard-trance", label: "Hard Trance" },
-      { id: "euro-trance", label: "Euro Trance" },
+      { id: "progressive-trance", label: "Progressive Trance", spectrumOrder: 10 },
+      { id: "uplifting-trance", label: "Uplifting Trance", spectrumOrder: 20 },
+      { id: "tech-trance", label: "Tech Trance", spectrumOrder: 30 },
+      { id: "euro-trance", label: "Euro Trance", spectrumOrder: 40 },
+      { id: "hard-trance", label: "Hard Trance", spectrumOrder: 50 },
     ],
   },
   {
     id: "techno",
     label: "Techno",
     styles: [
-      { id: "melodic-techno", label: "Melodic Techno" },
-      { id: "peak-time-techno", label: "Peak-Time Techno" },
-      { id: "hard-techno", label: "Hard Techno" },
+      { id: "melodic-techno", label: "Melodic Techno", spectrumOrder: 10 },
+      { id: "peak-time-techno", label: "Peak-Time Techno", spectrumOrder: 20 },
+      { id: "hard-techno", label: "Hard Techno", spectrumOrder: 30 },
     ],
   },
 ]);

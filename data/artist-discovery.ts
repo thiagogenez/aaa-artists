@@ -12,8 +12,17 @@ export type SoundGroupId = (typeof SOUND_GROUPS)[number]["id"];
 export type SoundStyleId = (typeof SOUND_GROUPS)[number]["styles"][number]["id"];
 export type NightMomentId = (typeof NIGHT_MOMENTS)[number]["id"];
 
+export function compareSoundStyleSpectrumOrder(
+  left: { spectrumOrder: number },
+  right: { spectrumOrder: number }
+) {
+  return left.spectrumOrder - right.spectrumOrder;
+}
+
 export const SOUND_STYLES = SOUND_GROUPS.flatMap((group) =>
-  group.styles.map((style) => ({ ...style, groupId: group.id, groupLabel: group.label }))
+  [...group.styles]
+    .sort(compareSoundStyleSpectrumOrder)
+    .map((style) => ({ ...style, groupId: group.id, groupLabel: group.label }))
 );
 
 export const SOUND_STYLE_BY_ID = new Map(SOUND_STYLES.map((style) => [style.id, style]));

@@ -2,13 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, type CSSProperties } from "react";
+import {
+  useMemo,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
+import { flushSync } from "react-dom";
 import {
   BPM_DOMAIN,
   ENERGY_COLORS,
   NIGHT_MOMENTS,
   SOUND_GROUPS,
   SOUND_STYLE_COLORS,
+  compareSoundStyleSpectrumOrder,
   getSoundStyle,
   type NightMomentId,
   type SoundGroupId,
@@ -25,6 +33,43 @@ type OptionalMoment = "all" | NightMomentId;
 type DiscoveryStyle = CSSProperties & Record<`--${string}`, string | number>;
 
 const DEFAULT_BPM = { min: BPM_DOMAIN.min, max: BPM_DOMAIN.max };
+const MIN_SUBSTRING_SEARCH_LENGTH = 3;
+
+function normalizeArtistSearch(value: string) {
+  return value.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
+}
+
+function artistNameMatchRank(name: string, rawQuery: string) {
+  const query = normalizeArtistSearch(rawQuery);
+  if (query.length === 0) return 0;
+
+  const normalizedName = normalizeArtistSearch(name);
+  if (normalizedName === query) return 0;
+  if (normalizedName.startsWith(query)) return 1;
+
+  const words = normalizedName.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  if (words.some((word) => word.startsWith(query))) return 2;
+  if (query.length >= MIN_SUBSTRING_SEARCH_LENGTH && normalizedName.includes(query)) return 3;
+
+  return null;
+}
+
+function transitionRoster(event: ReactMouseEvent<HTMLButtonElement>, update: () => void) {
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canAnimate =
+    event.detail !== 0 &&
+    !prefersReducedMotion &&
+    typeof document.startViewTransition === "function";
+
+  if (!canAnimate) {
+    update();
+    return;
+  }
+
+  document.startViewTransition(() => {
+    flushSync(update);
+  });
+}
 
 function distanceFromRange(profile: SoundProfile, selectedMin: number, selectedMax: number) {
   if (profile.bpm.max >= selectedMin && profile.bpm.min <= selectedMax) return 0;
@@ -111,7 +156,10 @@ function ArtistCard({
             const style = getSoundStyle(artistProfile.style);
             return { id: style.id, label: style.label, color: SOUND_STYLE_COLORS[style.id] };
           });
-  const cardStyle: DiscoveryStyle = { "--style-color": SOUND_STYLE_COLORS[profile.style] };
+  const cardStyle: DiscoveryStyle = {
+    "--style-color": SOUND_STYLE_COLORS[profile.style],
+    viewTransitionName: `artist-${artist.slug}`,
+  };
   const profileHref = `/artist/${artist.slug}`;
   const actionsId = `artist-card-${artist.slug}-actions`;
 
@@ -231,13 +279,34 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const [bpmMin, setBpmMin] = useState<number>(DEFAULT_BPM.min);
   const [bpmMax, setBpmMax] = useState<number>(DEFAULT_BPM.max);
   const [query, setQuery] = useState("");
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const effectiveMoment: OptionalMoment = view === "spectrum" ? moment : "all";
   const effectiveBpmMin = view === "spectrum" ? bpmMin : DEFAULT_BPM.min;
   const effectiveBpmMax = view === "spectrum" ? bpmMax : DEFAULT_BPM.max;
 
   const familyStyles =
-    family === "all" ? [] : (SOUND_GROUPS.find((group) => group.id === family)?.styles ?? []);
+    family === "all"
+      ? []
+      : [...(SOUND_GROUPS.find((group) => group.id === family)?.styles ?? [])].sort(
+          compareSoundStyleSpectrumOrder
+        );
+  const artistSuggestions = useMemo(() => {
+    const normalizedQuery = normalizeArtistSearch(query);
+    if (normalizedQuery.length === 0) return [];
+
+    return artists
+      .flatMap((artist, editorialIndex) => {
+        const rank = artistNameMatchRank(artist.name, normalizedQuery);
+        if (rank === null || normalizeArtistSearch(artist.name) === normalizedQuery) return [];
+        return [{ artist, editorialIndex, rank }];
+      })
+      .sort((left, right) => left.rank - right.rank || left.editorialIndex - right.editorialIndex)
+      .slice(0, 6)
+      .map(({ artist }) => artist);
+  }, [artists, query]);
+  const suggestionsVisible = suggestionsOpen && artistSuggestions.length > 0;
   const bpmIsFiltered =
     view === "spectrum" && (bpmMin !== DEFAULT_BPM.min || bpmMax !== DEFAULT_BPM.max);
   const activeFilterCount =
@@ -248,7 +317,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     Number(query.trim().length > 0);
 
   const rankedArtists = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase();
     return artists
       .map((artist, editorialIndex) => {
         const rankedProfiles = artist.soundProfiles
@@ -268,8 +336,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             (left, right) =>
               right.affinity - left.affinity || left.profileIndex - right.profileIndex
           );
-        const nameMatches =
-          normalizedQuery.length === 0 || artist.name.toLocaleLowerCase().includes(normalizedQuery);
+        const nameMatches = artistNameMatchRank(artist.name, query) !== null;
         const affinity = (rankedProfiles[0]?.affinity ?? 0) * (nameMatches ? 1 : 0.04);
         return {
           artist,
@@ -289,10 +356,8 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     : artists.length;
 
   const gridArtists = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase();
     return rankedArtists.filter(({ artist }) => {
-      const nameMatches =
-        normalizedQuery.length === 0 || artist.name.toLocaleLowerCase().includes(normalizedQuery);
+      const nameMatches = artistNameMatchRank(artist.name, query) !== null;
       const soundMatches = artist.soundProfiles.some((profile) => {
         const style = getSoundStyle(profile.style);
         return (
@@ -304,14 +369,55 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     });
   }, [family, query, rankedArtists, selectedStyles]);
 
+  const selectArtistSuggestion = (artistName: string) => {
+    setQuery(artistName);
+    setSuggestionsOpen(false);
+    setActiveSuggestionIndex(-1);
+  };
+
+  const handleSearchKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") {
+      setSuggestionsOpen(false);
+      setActiveSuggestionIndex(-1);
+      return;
+    }
+
+    if (artistSuggestions.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setSuggestionsOpen(true);
+      setActiveSuggestionIndex((current) => (current + 1) % artistSuggestions.length);
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSuggestionsOpen(true);
+      setActiveSuggestionIndex((current) =>
+        current <= 0 ? artistSuggestions.length - 1 : current - 1
+      );
+      return;
+    }
+
+    if (event.key === "Enter" && suggestionsVisible && activeSuggestionIndex >= 0) {
+      event.preventDefault();
+      selectArtistSuggestion(artistSuggestions[activeSuggestionIndex].name);
+    }
+  };
+
   const visibleGroups = SOUND_GROUPS.map((group) => ({
     ...group,
-    styles: group.styles.filter(
-      (style) =>
-        (family === "all" || group.id === family) &&
-        (selectedStyles.length === 0 || selectedStyles.includes(style.id)) &&
-        artists.some((artist) => artist.soundProfiles.some((profile) => profile.style === style.id))
-    ),
+    styles: group.styles
+      .filter(
+        (style) =>
+          (family === "all" || group.id === family) &&
+          (selectedStyles.length === 0 || selectedStyles.includes(style.id)) &&
+          artists.some((artist) =>
+            artist.soundProfiles.some((profile) => profile.style === style.id)
+          )
+      )
+      .sort(compareSoundStyleSpectrumOrder),
   })).filter((group) => group.styles.length > 0);
 
   const resetFilters = () => {
@@ -321,6 +427,8 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     setBpmMin(DEFAULT_BPM.min);
     setBpmMax(DEFAULT_BPM.max);
     setQuery("");
+    setSuggestionsOpen(false);
+    setActiveSuggestionIndex(-1);
   };
 
   const rangeStyle: DiscoveryStyle = {
@@ -369,81 +477,140 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
       >
         <div className={`${styles.filterField} ${styles.searchField}`}>
           <label htmlFor="artist-search">Artist</label>
-          <input
-            id="artist-search"
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by name"
-          />
+          <div className={styles.searchControl}>
+            <input
+              id="artist-search"
+              type="search"
+              role="combobox"
+              value={query}
+              autoComplete="off"
+              aria-autocomplete="list"
+              aria-controls="artist-search-suggestions"
+              aria-expanded={suggestionsVisible}
+              aria-activedescendant={
+                suggestionsVisible && activeSuggestionIndex >= 0
+                  ? `artist-search-option-${artistSuggestions[activeSuggestionIndex]?.slug}`
+                  : undefined
+              }
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setSuggestionsOpen(event.target.value.trim().length > 0);
+                setActiveSuggestionIndex(-1);
+              }}
+              onFocus={() => setSuggestionsOpen(query.trim().length > 0)}
+              onBlur={() => {
+                setSuggestionsOpen(false);
+                setActiveSuggestionIndex(-1);
+              }}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Search by name"
+            />
+
+            {suggestionsVisible && (
+              <div
+                id="artist-search-suggestions"
+                className={styles.searchSuggestions}
+                role="listbox"
+                aria-label="Artist suggestions"
+              >
+                {artistSuggestions.map((artist, index) => (
+                  <button
+                    key={artist.slug}
+                    id={`artist-search-option-${artist.slug}`}
+                    type="button"
+                    role="option"
+                    className={styles.searchSuggestion}
+                    aria-selected={activeSuggestionIndex === index}
+                    data-active={activeSuggestionIndex === index ? "true" : "false"}
+                    onMouseEnter={() => setActiveSuggestionIndex(index)}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onClick={() => selectArtistSuggestion(artist.name)}
+                  >
+                    <span>{artist.name}</span>
+                    <small>Artist</small>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {view === "grid" ? (
           <>
-            <fieldset className={`${styles.choiceField} ${styles.genreChoices}`}>
-              <legend>Genre</legend>
-              <div>
-                <button
-                  type="button"
-                  aria-pressed={family === "all"}
-                  onClick={() => {
-                    setFamily("all");
-                    setSelectedStyles([]);
-                  }}
-                >
-                  All
-                </button>
-                {SOUND_GROUPS.map((group) => (
-                  <button
-                    key={group.id}
-                    type="button"
-                    aria-pressed={family === group.id}
-                    onClick={() => {
-                      setFamily(group.id);
-                      setSelectedStyles([]);
-                    }}
-                  >
-                    {group.label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-            <fieldset className={`${styles.choiceField} ${styles.styleChoices}`}>
-              <legend>Style</legend>
-              {family === "all" ? (
-                <p>Choose a genre to see its styles.</p>
-              ) : (
+            <div className={`${styles.choiceField} ${styles.genreChoices}`}>
+              <fieldset>
+                <legend>Genre</legend>
                 <div>
                   <button
                     type="button"
-                    className={styles.allStylesChoice}
-                    aria-pressed={selectedStyles.length === 0}
-                    onClick={() => setSelectedStyles([])}
+                    aria-pressed={family === "all"}
+                    onClick={(event) =>
+                      transitionRoster(event, () => {
+                        setFamily("all");
+                        setSelectedStyles([]);
+                      })
+                    }
                   >
-                    All styles
+                    All
                   </button>
-                  {familyStyles.map((sound) => (
+                  {SOUND_GROUPS.map((group) => (
                     <button
-                      key={sound.id}
+                      key={group.id}
                       type="button"
-                      className={styles.styleChoice}
-                      style={{ "--style-color": SOUND_STYLE_COLORS[sound.id] } as DiscoveryStyle}
-                      aria-pressed={selectedStyles.includes(sound.id)}
-                      onClick={() =>
-                        setSelectedStyles((current) =>
-                          current.includes(sound.id)
-                            ? current.filter((styleId) => styleId !== sound.id)
-                            : [...current, sound.id]
-                        )
+                      aria-pressed={family === group.id}
+                      onClick={(event) =>
+                        transitionRoster(event, () => {
+                          setFamily(group.id);
+                          setSelectedStyles([]);
+                        })
                       }
                     >
-                      {sound.label}
+                      {group.label}
                     </button>
                   ))}
                 </div>
-              )}
-            </fieldset>
+              </fieldset>
+            </div>
+
+            <div className={`${styles.choiceField} ${styles.styleChoices}`}>
+              <fieldset>
+                <legend>Style</legend>
+                {family === "all" ? (
+                  <p>Choose a genre to see its styles.</p>
+                ) : (
+                  <div>
+                    <button
+                      type="button"
+                      className={styles.allStylesChoice}
+                      aria-pressed={selectedStyles.length === 0}
+                      onClick={(event) => transitionRoster(event, () => setSelectedStyles([]))}
+                    >
+                      All styles
+                    </button>
+                    {familyStyles.map((sound) => (
+                      <button
+                        key={sound.id}
+                        type="button"
+                        className={styles.styleChoice}
+                        style={{ "--style-color": SOUND_STYLE_COLORS[sound.id] } as DiscoveryStyle}
+                        aria-pressed={selectedStyles.includes(sound.id)}
+                        onClick={(event) =>
+                          transitionRoster(event, () => {
+                            setSelectedStyles((current) =>
+                              current.includes(sound.id)
+                                ? current.filter((styleId) => styleId !== sound.id)
+                                : [...current, sound.id]
+                            );
+                          })
+                        }
+                      >
+                        {sound.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </fieldset>
+            </div>
           </>
         ) : (
           <>
@@ -620,9 +787,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                       <h3>{sound.label}</h3>
                       <div className={styles.spectrumLanes}>
                         {profiles.map(({ artist, profile }) => {
-                          const nameMatches = artist.name
-                            .toLocaleLowerCase()
-                            .includes(query.trim().toLocaleLowerCase());
+                          const nameMatches = artistNameMatchRank(artist.name, query) !== null;
                           const affinity =
                             profileAffinity(
                               profile,
@@ -663,9 +828,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                     <div key={sound.id} className={styles.mobileStyle}>
                       <h3>{sound.label}</h3>
                       {profiles.map(({ artist, profile }) => {
-                        const nameMatches = artist.name
-                          .toLocaleLowerCase()
-                          .includes(query.trim().toLocaleLowerCase());
+                        const nameMatches = artistNameMatchRank(artist.name, query) !== null;
                         const affinity =
                           profileAffinity(profile, family, selectedStyles, moment, bpmMin, bpmMax) *
                           (nameMatches ? 1 : 0.08);
