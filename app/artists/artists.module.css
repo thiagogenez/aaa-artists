@@ -40,21 +40,32 @@
 
 .discoveryBar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
+  gap: 0.75rem;
   margin-bottom: 1rem;
 }
 
-.viewSwitch {
+.viewSwitch,
+.paletteSwitch {
   display: grid;
-  min-width: 21rem;
   min-inline-size: 0;
   grid-template-columns: 1fr 1fr;
   border: 1px solid var(--border);
   padding: 0;
 }
 
-.viewSwitch button {
+.viewSwitch {
+  min-width: 21rem;
+}
+
+.paletteSwitch {
+  min-width: 22rem;
+}
+
+.viewSwitch button,
+.paletteSwitch button {
   min-height: 48px;
   padding: 0.75rem 1.25rem;
   color: var(--text-60);
@@ -67,16 +78,20 @@
     color 180ms ease;
 }
 
-.viewSwitch button + button {
+.viewSwitch button + button,
+.paletteSwitch button + button {
   border-left: 1px solid var(--border);
 }
 
 .viewSwitch button:hover,
-.viewSwitch button:focus-visible {
+.viewSwitch button:focus-visible,
+.paletteSwitch button:hover,
+.paletteSwitch button:focus-visible {
   color: var(--text);
 }
 
-.viewSwitch button[aria-pressed="true"] {
+.viewSwitch button[aria-pressed="true"],
+.paletteSwitch button[aria-pressed="true"] {
   background: var(--cta-bg);
   color: var(--cta-text);
 }
@@ -281,38 +296,45 @@
 }
 
 .styleChoices .styleChoice {
-  --style-ui-color: color-mix(in oklab, var(--style-color) 74%, #0a0a0a);
-  --style-fill-color: color-mix(in oklab, var(--style-color) 88%, white);
-
   background: transparent;
-}
-
-:global(html.dark) .styleChoices .styleChoice {
-  --style-ui-color: var(--style-color);
-  --style-fill-color: var(--style-color);
 }
 
 .styleChoices .styleChoice::before {
   width: 0.55rem;
   height: 0.55rem;
   flex: 0 0 auto;
-  background: var(--style-ui-color);
+  background: var(--text-40);
   content: "";
 }
 
 .styleChoices .styleChoice:hover,
 .styleChoices .styleChoice:focus-visible {
-  border-color: var(--style-ui-color);
+  border-color: var(--text);
   color: var(--text);
   transform: translateY(-1px);
 }
 
 .styleChoices .styleChoice[aria-pressed="true"] {
-  border-color: var(--style-ui-color);
-  background: var(--style-fill-color);
-  color: #0a0a0a;
+  border-color: var(--cta-bg);
+  background: var(--cta-bg);
+  color: var(--cta-text);
   outline: 2px solid var(--text);
   outline-offset: 2px;
+}
+
+.styleChoices .styleChoice[aria-pressed="true"]::before {
+  background: currentColor;
+}
+
+.discovery[data-palette="color"] .styleChoices .styleChoice::before {
+  background: var(--style-color);
+}
+
+.discovery[data-palette="color"] .styleChoices .styleChoice[aria-pressed="true"] {
+  border-color: var(--style-color);
+  background: #0a0a0a;
+  color: var(--style-color);
+  outline-color: var(--style-color);
 }
 
 .bpmField {
@@ -359,6 +381,10 @@
 .rangeTrack::after {
   right: calc(100% - var(--range-end));
   left: var(--range-start);
+  background: var(--text);
+}
+
+.discovery[data-palette="color"] .rangeTrack::after {
   background: linear-gradient(90deg, #7768ff 0%, #ff5c93 38%, #ff7138 68%, #d6ff46 100%);
 }
 
@@ -509,7 +535,7 @@
   bottom: 0;
   left: 0;
   height: 2px;
-  background: var(--style-color);
+  background: var(--card-line);
   content: "";
   transform: scaleX(0);
   transform-origin: left;
@@ -520,6 +546,10 @@
 .artistCard:focus-visible::after,
 .artistCard[data-highlighted="true"]::after {
   transform: scaleX(1);
+}
+
+.discovery[data-palette="color"] .artistCard::after {
+  background: var(--style-color);
 }
 
 .artistImage {
@@ -636,21 +666,36 @@
 }
 
 .artistBadges .styleBadge[data-selected="true"] {
-  color: white;
+  color: var(--cta-text);
 }
 
 .styleBadgeText {
   position: relative;
+  isolation: isolate;
 }
 
-.styleBadge[data-selected="true"] .styleBadgeText::after {
+.styleBadge[data-selected="true"] .styleBadgeText {
+  color: var(--cta-text);
+  white-space: nowrap;
+}
+
+.styleBadge[data-selected="true"] .styleBadgeText::before {
   position: absolute;
-  right: 0;
-  bottom: -0.16rem;
-  left: 0;
-  height: 2px;
-  background: var(--badge-color);
+  z-index: -1;
+  inset: -0.12rem -0.38rem;
+  background: var(--cta-bg);
   content: "";
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.discovery[data-palette="color"] .styleBadge[data-selected="true"] .styleBadgeText::before {
+  background: #0a0a0a;
+  outline-color: var(--badge-color);
+}
+
+.discovery[data-palette="color"] .styleBadge[data-selected="true"] .styleBadgeText {
+  color: var(--badge-color);
 }
 
 .artistActions {
@@ -859,7 +904,7 @@
 .spectrumEntry:focus-visible {
   z-index: 2;
   opacity: 1;
-  filter: saturate(1.18);
+  filter: none;
 }
 
 .spectrumEntryLabel {
@@ -892,6 +937,10 @@
   bottom: 0.45rem;
   left: 0;
   height: 7px;
+  background: var(--text-60);
+}
+
+.discovery[data-palette="color"] .spectrumRange {
   background: var(--profile-color);
 }
 
@@ -1054,6 +1103,10 @@
   .mobileProfile > span {
     width: 0.6rem;
     height: 0.6rem;
+    background: var(--text-60);
+  }
+
+  .discovery[data-palette="color"] .mobileProfile > span {
     background: var(--profile-color);
   }
 
@@ -1085,6 +1138,11 @@
   }
 
   .viewSwitch {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .paletteSwitch {
     width: 100%;
     min-width: 0;
   }
@@ -1209,6 +1267,7 @@
   .spectrumEntry,
   .mobileProfile,
   .viewSwitch button,
+  .paletteSwitch button,
   .choiceField button {
     transition: none;
   }

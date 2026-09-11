@@ -41,13 +41,20 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
   page,
 }) => {
   await page.addInitScript(() => {
-    const testWindow = window as Window & { __rosterTransitionCalls?: number };
+    const testWindow = window as Window & {
+      __rosterTransitionCalls?: number;
+      __rosterTransitionDirections?: string[];
+    };
     testWindow.__rosterTransitionCalls = 0;
+    testWindow.__rosterTransitionDirections = [];
 
     Object.defineProperty(document, "startViewTransition", {
       configurable: true,
       value: (update: () => void) => {
         testWindow.__rosterTransitionCalls = (testWindow.__rosterTransitionCalls ?? 0) + 1;
+        testWindow.__rosterTransitionDirections?.push(
+          document.documentElement.dataset.rosterTransition ?? ""
+        );
         const updateCallbackDone = Promise.resolve().then(update);
         return {
           ready: updateCallbackDone,
@@ -72,17 +79,45 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
       )
     )
     .toBe(1);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as Window & { __rosterTransitionDirections?: string[] })
+            .__rosterTransitionDirections
+      )
+    )
+    .toEqual(["collapse"]);
 
   const trance = genreChoices.getByRole("button", { name: "Trance", exact: true });
-  await trance.focus();
-  await trance.press("Enter");
+  await trance.click();
   await expect
     .poll(() =>
       page.evaluate(
         () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
       )
     )
-    .toBe(1);
+    .toBe(2);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as Window & { __rosterTransitionDirections?: string[] })
+            .__rosterTransitionDirections
+      )
+    )
+    .toEqual(["collapse", "expand"]);
+
+  const techno = genreChoices.getByRole("button", { name: "Techno", exact: true });
+  await techno.focus();
+  await techno.press("Enter");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
+      )
+    )
+    .toBe(2);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await genreChoices.getByRole("button", { name: "All", exact: true }).click();
@@ -92,7 +127,7 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
         () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
       )
     )
-    .toBe(1);
+    .toBe(2);
 });
 
 test("filters the grid to artists compatible with the selected genre and style", async ({
@@ -136,7 +171,33 @@ test("filters the grid to artists compatible with the selected genre and style",
   expect(darkThemeAccent).not.toBe(lightThemeAccent);
 
   await genreChoices.getByRole("button", { name: "Techno", exact: true }).click();
+  const thiagoCard = grid.getByRole("article").filter({
+    has: page.getByText("Thiago Genez", { exact: true }),
+  });
+  const selectedStyleLabel = thiagoCard.getByText("Hard", { exact: true });
+  const unselectedMetrics = await selectedStyleLabel.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    const styles = getComputedStyle(element);
+    return {
+      fontSize: styles.fontSize,
+      height: bounds.height,
+      width: bounds.width,
+    };
+  });
   await styleChoices.getByRole("button", { name: "Hard Techno", exact: true }).click();
+  const selectedMetrics = await selectedStyleLabel.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    const styles = getComputedStyle(element);
+    return {
+      fontSize: styles.fontSize,
+      height: bounds.height,
+      width: bounds.width,
+    };
+  });
+
+  expect(selectedMetrics.fontSize).toBe(unselectedMetrics.fontSize);
+  expect(selectedMetrics.height).toBeCloseTo(unselectedMetrics.height, 1);
+  expect(selectedMetrics.width).toBeCloseTo(unselectedMetrics.width, 1);
 
   await expect(page.getByText("1 artist", { exact: true })).toBeVisible();
   const firstArtist = grid.getByRole("article").first();
@@ -164,6 +225,99 @@ test("filters the grid to artists compatible with the selected genre and style",
   ).toHaveAttribute("aria-pressed", "true");
   await expect(grid.getByRole("article")).toHaveCount(2);
   await expect(grid.getByRole("link", { name: "View Krevix profile" })).toBeVisible();
+});
+
+test("ranks artists matching every selected style before partial matches", async ({ page }) => {
+  await page.goto("/artists");
+
+  const filterToggle = page.getByRole("button", { name: /Filters/ });
+  if (await filterToggle.isVisible()) await filterToggle.click();
+
+  const genreChoices = page.getByRole("group", { name: "Genre" });
+  const styleChoices = page.getByRole("group", { name: "Style" });
+  await genreChoices.getByRole("button", { name: "Trance", exact: true }).click();
+  await styleChoices.getByRole("button", { name: "Progressive Trance", exact: true }).click();
+  await styleChoices.getByRole("button", { name: "Uplifting Trance", exact: true }).click();
+
+  const cards = page.getByTestId("artist-grid").getByRole("article");
+  await expect(cards.nth(0)).toContainText("C-Systems");
+  await expect(cards.nth(1)).toContainText("DIM3NSION");
+  await expect(cards.nth(2)).toContainText("Thiago Genez");
+  await expect(cards.nth(3)).toContainText("Krevix");
+  await expect(cards.nth(4)).toContainText("Mr B");
+  await expect(cards.nth(5)).toContainText("Xijaro & Pitch");
+});
+
+test("orders partial style matches by the canonical sound spectrum", async ({ page }) => {
+  await page.goto("/artists");
+
+  const filterToggle = page.getByRole("button", { name: /Filters/ });
+  if (await filterToggle.isVisible()) await filterToggle.click();
+
+  const genreChoices = page.getByRole("group", { name: "Genre" });
+  const styleChoices = page.getByRole("group", { name: "Style" });
+  await genreChoices.getByRole("button", { name: "Trance", exact: true }).click();
+  await styleChoices.getByRole("button", { name: "Hard Trance", exact: true }).click();
+  await styleChoices.getByRole("button", { name: "Progressive Trance", exact: true }).click();
+
+  const cards = page.getByTestId("artist-grid").getByRole("article");
+  await expect(cards).toHaveCount(9);
+  await expect(cards.nth(0)).toContainText("Mr B");
+  await expect(cards.nth(1)).toContainText("C-Systems");
+  await expect(cards.nth(2)).toContainText("DIM3NSION");
+  await expect(cards.nth(3)).toContainText("Thiago Genez");
+  await expect(cards.nth(4)).toContainText("Krevix");
+  await expect(cards.nth(5)).toContainText("Xijaro & Pitch");
+  await expect(cards.nth(6)).toContainText("Steve Dekay");
+  await expect(cards.nth(7)).toContainText("FROGR");
+  await expect(cards.nth(8)).toContainText("SAGO");
+});
+
+test("switches between monochrome and restrained color treatments", async ({ page }) => {
+  await page.goto("/artists");
+
+  const palette = page.getByRole("group", { name: "Color treatment" });
+  const withoutColors = palette.getByRole("button", { name: "Without colors" });
+  const withColors = palette.getByRole("button", { name: "With colors" });
+  await expect(withoutColors).toHaveAttribute("aria-pressed", "true");
+  await expect(withColors).toHaveAttribute("aria-pressed", "false");
+
+  const filterToggle = page.getByRole("button", { name: /Filters/ });
+  if (await filterToggle.isVisible()) await filterToggle.click();
+  await page
+    .getByRole("group", { name: "Genre" })
+    .getByRole("button", { name: "Trance", exact: true })
+    .click();
+
+  const progressiveStyle = page
+    .getByRole("group", { name: "Style" })
+    .getByRole("button", { name: "Progressive Trance", exact: true });
+  const monochromeAccent = await progressiveStyle.evaluate(
+    (element) => getComputedStyle(element, "::before").backgroundColor
+  );
+
+  await withColors.click();
+  await progressiveStyle.click();
+  const lightColorAccent = await progressiveStyle.evaluate(
+    (element) => getComputedStyle(element, "::before").backgroundColor
+  );
+  expect(lightColorAccent).not.toBe(monochromeAccent);
+  await expect
+    .poll(() =>
+      progressiveStyle.evaluate((element) => {
+        const styles = getComputedStyle(element);
+        return (
+          styles.backgroundColor === "rgb(10, 10, 10)" && styles.color === styles.borderTopColor
+        );
+      })
+    )
+    .toBe(true);
+
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  const darkColorAccent = await progressiveStyle.evaluate(
+    (element) => getComputedStyle(element, "::before").backgroundColor
+  );
+  expect(darkColorAccent).toBe(lightColorAccent);
 });
 
 test("shares the filters with a directly navigable spectrum", async ({ page }) => {
