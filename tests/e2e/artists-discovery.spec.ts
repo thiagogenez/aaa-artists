@@ -1,17 +1,18 @@
 import { expect, test } from "playwright/test";
 
-test("autocompletes artist names with keyboard navigation", async ({ page }) => {
+test("filters by multiple artist names with an accessible autocomplete", async ({ page }) => {
   await page.goto("/artists");
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
 
-  const search = page.getByRole("combobox", { name: "Artist" });
+  const search = page.getByRole("combobox", { name: "Artists" });
   const suggestions = page.getByRole("listbox", { name: "Artist suggestions" });
+  const grid = page.getByTestId("artist-grid");
 
   await search.fill("c");
   await expect(suggestions.getByRole("option", { name: /C-Systems/ })).toBeVisible();
   await expect(suggestions.getByRole("option", { name: /Xijaro & Pitch/ })).toHaveCount(0);
-  await expect(page.getByTestId("artist-grid").getByRole("article")).toHaveCount(1);
+  await expect(grid.getByRole("article")).toHaveCount(9);
 
   await search.fill("pitch");
   await expect(suggestions.getByRole("option", { name: /Xijaro & Pitch/ })).toBeVisible();
@@ -23,18 +24,33 @@ test("autocompletes artist names with keyboard navigation", async ({ page }) => 
   await expect(steve).toBeVisible();
 
   await search.press("ArrowDown");
-  await expect(steve).toHaveAttribute("aria-selected", "true");
+  await expect(steve).toHaveAttribute("data-active", "true");
   await search.press("Enter");
 
-  await expect(search).toHaveValue("Steve Dekay");
+  const selectedArtists = page.getByRole("list", { name: "Selected artists" });
+  await expect(search).toHaveValue("");
+  await expect(selectedArtists).toContainText("Steve Dekay");
   await expect(suggestions).not.toBeVisible();
-  await expect(page.getByTestId("artist-grid").getByRole("article")).toHaveCount(1);
+  await expect(grid.getByRole("article")).toHaveCount(1);
   await expect(page.getByRole("link", { name: "View Steve Dekay profile" })).toBeVisible();
 
   await search.fill("dim");
   await suggestions.getByRole("option", { name: /DIM3NSION/ }).click();
-  await expect(search).toHaveValue("DIM3NSION");
+  await expect(search).toHaveValue("");
+  await expect(selectedArtists).toContainText("Steve Dekay");
+  await expect(selectedArtists).toContainText("DIM3NSION");
+  await expect(grid.getByRole("article")).toHaveCount(2);
+  await expect(page.getByRole("link", { name: "View Steve Dekay profile" })).toBeVisible();
   await expect(page.getByRole("link", { name: "View DIM3NSION profile" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Remove Steve Dekay" }).click();
+  await expect(selectedArtists).not.toContainText("Steve Dekay");
+  await expect(grid.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("link", { name: "View DIM3NSION profile" })).toBeVisible();
+
+  await search.press("Backspace");
+  await expect(selectedArtists).toHaveCount(0);
+  await expect(grid.getByRole("article")).toHaveCount(9);
 });
 
 test("animates pointer filter changes without slowing keyboard or reduced-motion users", async ({

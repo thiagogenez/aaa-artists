@@ -65,11 +65,11 @@ function artistNameMatchRank(name: string, rawQuery: string) {
 
 function artistMatchesGridFilters(
   artist: DiscoveryArtist,
-  query: string,
+  selectedArtistSlugs: readonly string[],
   family: OptionalGroup,
   selectedStyles: readonly SoundStyleId[]
 ) {
-  const nameMatches = artistNameMatchRank(artist.name, query) !== null;
+  const nameMatches = selectedArtistSlugs.length === 0 || selectedArtistSlugs.includes(artist.slug);
   const soundMatches = artist.soundProfiles.some((profile) => {
     const style = getSoundStyle(profile.style);
     return (
@@ -342,6 +342,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const [bpmMin, setBpmMin] = useState<number>(DEFAULT_BPM.min);
   const [bpmMax, setBpmMax] = useState<number>(DEFAULT_BPM.max);
   const [query, setQuery] = useState("");
+  const [selectedArtistSlugs, setSelectedArtistSlugs] = useState<string[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -362,13 +363,17 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     return artists
       .flatMap((artist, editorialIndex) => {
         const rank = artistNameMatchRank(artist.name, normalizedQuery);
-        if (rank === null || normalizeArtistSearch(artist.name) === normalizedQuery) return [];
+        if (rank === null || selectedArtistSlugs.includes(artist.slug)) return [];
         return [{ artist, editorialIndex, rank }];
       })
       .sort((left, right) => left.rank - right.rank || left.editorialIndex - right.editorialIndex)
       .slice(0, 6)
       .map(({ artist }) => artist);
-  }, [artists, query]);
+  }, [artists, query, selectedArtistSlugs]);
+  const selectedArtists = selectedArtistSlugs.flatMap((slug) => {
+    const artist = artists.find((candidate) => candidate.slug === slug);
+    return artist ? [artist] : [];
+  });
   const suggestionsVisible = suggestionsOpen && artistSuggestions.length > 0;
   const bpmIsFiltered =
     view === "spectrum" && (bpmMin !== DEFAULT_BPM.min || bpmMax !== DEFAULT_BPM.max);
@@ -377,7 +382,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     Number(selectedStyles.length > 0) +
     Number(view === "spectrum" && moment !== "all") +
     Number(bpmIsFiltered) +
-    Number(query.trim().length > 0);
+    Number(selectedArtistSlugs.length > 0);
 
   const rankedArtists = useMemo(() => {
     return artists
@@ -400,7 +405,8 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             (left, right) =>
               right.affinity - left.affinity || left.profileIndex - right.profileIndex
           );
-        const nameMatches = artistNameMatchRank(artist.name, query) !== null;
+        const nameMatches =
+          selectedArtistSlugs.length === 0 || selectedArtistSlugs.includes(artist.slug);
         const affinity = (rankedProfiles[0]?.affinity ?? 0) * (nameMatches ? 1 : 0.04);
         return {
           artist,
@@ -417,7 +423,15 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
           right.affinity - left.affinity ||
           left.editorialIndex - right.editorialIndex
       );
-  }, [artists, effectiveBpmMax, effectiveBpmMin, effectiveMoment, family, query, selectedStyles]);
+  }, [
+    artists,
+    effectiveBpmMax,
+    effectiveBpmMin,
+    effectiveMoment,
+    family,
+    selectedArtistSlugs,
+    selectedStyles,
+  ]);
 
   const bestMatches = activeFilterCount
     ? rankedArtists.filter(({ affinity }) => affinity >= 0.99).length
@@ -425,9 +439,9 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
 
   const gridArtists = useMemo(() => {
     return rankedArtists.filter(({ artist }) =>
-      artistMatchesGridFilters(artist, query, family, selectedStyles)
+      artistMatchesGridFilters(artist, selectedArtistSlugs, family, selectedStyles)
     );
-  }, [family, query, rankedArtists, selectedStyles]);
+  }, [family, rankedArtists, selectedArtistSlugs, selectedStyles]);
 
   const transitionGridFilters = (
     event: ReactMouseEvent<HTMLButtonElement>,
@@ -435,7 +449,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     nextStyles: readonly SoundStyleId[]
   ) => {
     const nextCount = artists.filter((artist) =>
-      artistMatchesGridFilters(artist, query, nextFamily, nextStyles)
+      artistMatchesGridFilters(artist, selectedArtistSlugs, nextFamily, nextStyles)
     ).length;
     transitionRoster(event, getRosterTransitionDirection(gridArtists.length, nextCount), () => {
       setFamily(nextFamily);
@@ -443,13 +457,43 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     });
   };
 
-  const selectArtistSuggestion = (artistName: string) => {
-    setQuery(artistName);
+  const commitArtistSelection = (nextArtistSlugs: readonly string[]) => {
+    setSelectedArtistSlugs([...nextArtistSlugs]);
+    setQuery("");
     setSuggestionsOpen(false);
     setActiveSuggestionIndex(-1);
   };
 
+  const transitionArtistSelection = (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    nextArtistSlugs: readonly string[]
+  ) => {
+    const nextCount = artists.filter((artist) =>
+      artistMatchesGridFilters(artist, nextArtistSlugs, family, selectedStyles)
+    ).length;
+    transitionRoster(event, getRosterTransitionDirection(gridArtists.length, nextCount), () => {
+      commitArtistSelection(nextArtistSlugs);
+    });
+  };
+
+  const selectArtistSuggestion = (
+    artist: DiscoveryArtist,
+    event?: ReactMouseEvent<HTMLButtonElement>
+  ) => {
+    const nextArtistSlugs = [...selectedArtistSlugs, artist.slug];
+    if (event) {
+      transitionArtistSelection(event, nextArtistSlugs);
+      return;
+    }
+    commitArtistSelection(nextArtistSlugs);
+  };
+
   const handleSearchKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Backspace" && query.length === 0 && selectedArtistSlugs.length > 0) {
+      setSelectedArtistSlugs((current) => current.slice(0, -1));
+      return;
+    }
+
     if (event.key === "Escape") {
       setSuggestionsOpen(false);
       setActiveSuggestionIndex(-1);
@@ -476,7 +520,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
 
     if (event.key === "Enter" && suggestionsVisible && activeSuggestionIndex >= 0) {
       event.preventDefault();
-      selectArtistSuggestion(artistSuggestions[activeSuggestionIndex].name);
+      selectArtistSuggestion(artistSuggestions[activeSuggestionIndex]);
     }
   };
 
@@ -501,6 +545,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     setBpmMin(DEFAULT_BPM.min);
     setBpmMax(DEFAULT_BPM.max);
     setQuery("");
+    setSelectedArtistSlugs([]);
     setSuggestionsOpen(false);
     setActiveSuggestionIndex(-1);
   };
@@ -568,35 +613,68 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
         data-view={view}
       >
         <div className={`${styles.filterField} ${styles.searchField}`}>
-          <label htmlFor="artist-search">Artist</label>
+          <label htmlFor="artist-search">Artists</label>
           <div className={styles.searchControl}>
-            <input
-              id="artist-search"
-              type="search"
-              role="combobox"
-              value={query}
-              autoComplete="off"
-              aria-autocomplete="list"
-              aria-controls="artist-search-suggestions"
-              aria-expanded={suggestionsVisible}
-              aria-activedescendant={
-                suggestionsVisible && activeSuggestionIndex >= 0
-                  ? `artist-search-option-${artistSuggestions[activeSuggestionIndex]?.slug}`
-                  : undefined
-              }
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setSuggestionsOpen(event.target.value.trim().length > 0);
-                setActiveSuggestionIndex(-1);
-              }}
-              onFocus={() => setSuggestionsOpen(query.trim().length > 0)}
-              onBlur={() => {
-                setSuggestionsOpen(false);
-                setActiveSuggestionIndex(-1);
-              }}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Search by name"
-            />
+            <div className={styles.searchInputShell}>
+              {selectedArtists.length > 0 && (
+                <ul className={styles.selectedArtists} aria-label="Selected artists">
+                  {selectedArtists.map((artist) => (
+                    <li key={artist.slug} className={styles.selectedArtist}>
+                      <span>{artist.name}</span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${artist.name}`}
+                        onClick={(event) =>
+                          transitionArtistSelection(
+                            event,
+                            selectedArtistSlugs.filter((slug) => slug !== artist.slug)
+                          )
+                        }
+                      >
+                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="m4 4 8 8m0-8-8 8" />
+                        </svg>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <input
+                id="artist-search"
+                type="search"
+                role="combobox"
+                value={query}
+                autoComplete="off"
+                aria-autocomplete="list"
+                aria-controls="artist-search-suggestions"
+                aria-expanded={suggestionsVisible}
+                aria-activedescendant={
+                  suggestionsVisible && activeSuggestionIndex >= 0
+                    ? `artist-search-option-${artistSuggestions[activeSuggestionIndex]?.slug}`
+                    : undefined
+                }
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setSuggestionsOpen(event.target.value.trim().length > 0);
+                  setActiveSuggestionIndex(-1);
+                }}
+                onFocus={() => setSuggestionsOpen(query.trim().length > 0)}
+                onBlur={() => {
+                  setSuggestionsOpen(false);
+                  setActiveSuggestionIndex(-1);
+                }}
+                onKeyDown={handleSearchKeyDown}
+                placeholder={selectedArtists.length > 0 ? "Add another artist" : "Search by name"}
+              />
+            </div>
+            <span className="sr-only" aria-live="polite">
+              {selectedArtists.length === 0
+                ? "No artists selected"
+                : `${selectedArtists.length} ${
+                    selectedArtists.length === 1 ? "artist" : "artists"
+                  } selected`}
+            </span>
 
             {suggestionsVisible && (
               <div
@@ -604,6 +682,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                 className={styles.searchSuggestions}
                 role="listbox"
                 aria-label="Artist suggestions"
+                aria-multiselectable="true"
               >
                 {artistSuggestions.map((artist, index) => (
                   <button
@@ -612,11 +691,11 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                     type="button"
                     role="option"
                     className={styles.searchSuggestion}
-                    aria-selected={activeSuggestionIndex === index}
+                    aria-selected="false"
                     data-active={activeSuggestionIndex === index ? "true" : "false"}
                     onMouseEnter={() => setActiveSuggestionIndex(index)}
                     onPointerDown={(event) => event.preventDefault()}
-                    onClick={() => selectArtistSuggestion(artist.name)}
+                    onClick={(event) => selectArtistSuggestion(artist, event)}
                   >
                     <span>{artist.name}</span>
                     <small>Artist</small>
@@ -866,7 +945,9 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                       <h3>{sound.label}</h3>
                       <div className={styles.spectrumLanes}>
                         {profiles.map(({ artist, profile }) => {
-                          const nameMatches = artistNameMatchRank(artist.name, query) !== null;
+                          const nameMatches =
+                            selectedArtistSlugs.length === 0 ||
+                            selectedArtistSlugs.includes(artist.slug);
                           const affinity =
                             profileAffinity(
                               profile,
@@ -907,7 +988,9 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                     <div key={sound.id} className={styles.mobileStyle}>
                       <h3>{sound.label}</h3>
                       {profiles.map(({ artist, profile }) => {
-                        const nameMatches = artistNameMatchRank(artist.name, query) !== null;
+                        const nameMatches =
+                          selectedArtistSlugs.length === 0 ||
+                          selectedArtistSlugs.includes(artist.slug);
                         const affinity =
                           profileAffinity(profile, family, selectedStyles, moment, bpmMin, bpmMax) *
                           (nameMatches ? 1 : 0.08);
