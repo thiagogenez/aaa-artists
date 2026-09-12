@@ -155,7 +155,7 @@ test("filters the grid to artists compatible with the selected genre and style",
   await expect(grid.getByRole("article")).toHaveCount(9);
   await expect(grid.getByRole("link", { name: /View .* profile/ })).toHaveCount(9);
   await expect(grid.getByRole("link", { name: /Book .*/ })).toHaveCount(9);
-  await expect(page.getByLabel("Moment", { exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("spectrum-moment-picker")).toHaveCount(0);
   await expect(page.getByText("BPM range", { exact: true })).toHaveCount(0);
   await expect(grid.getByText("Trance", { exact: true }).first()).toBeVisible();
 
@@ -336,16 +336,57 @@ test("switches between monochrome and restrained color treatments", async ({ pag
   expect(darkColorAccent).toBe(lightColorAccent);
 });
 
-test("shares the filters with a directly navigable spectrum", async ({ page }) => {
+test("shares name filters with a selectable BPM-ordered spectrum", async ({ page }) => {
   await page.goto("/artists");
   await page.getByRole("button", { name: "Spectrum" }).click();
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
-  await expect(page.getByLabel("Moment", { exact: true })).toBeVisible();
-  await expect(page.getByText("BPM range", { exact: true })).toBeVisible();
+  const momentPicker = page.getByTestId("spectrum-moment-picker");
+  await expect(momentPicker).toBeVisible();
+  const momentSummary = momentPicker.locator("summary");
+  const stylesSummary = page.getByTestId("spectrum-styles-picker").locator("summary");
+  const pickerHeights = await Promise.all([
+    momentSummary.evaluate((element) => element.getBoundingClientRect().height),
+    stylesSummary.evaluate((element) => element.getBoundingClientRect().height),
+  ]);
+  expect(Math.abs(pickerHeights[0] - pickerHeights[1])).toBeLessThan(1);
+
+  await momentSummary.click();
+  const momentOptions = page.getByLabel("Moment options");
+  await expect(momentOptions).toBeVisible();
+  await momentOptions.getByRole("button", { name: "Peak-time" }).click();
+  await expect(momentOptions).not.toBeVisible();
+  await expect(momentSummary).toContainText("Peak-time");
+  await momentSummary.click();
+  await momentOptions.getByRole("button", { name: "Any moment" }).click();
+  await expect(momentSummary).toContainText("Any moment");
+  const spectrumRuler = page.locator('[data-spectrum-ruler="true"]');
+  await expect(spectrumRuler.getByText("BPM", { exact: true })).toBeVisible();
+  await expect(spectrumRuler.getByText("Full range selected", { exact: true })).toBeVisible();
+  const minimumBpmSlider = spectrumRuler.getByRole("slider", { name: "Minimum BPM" });
+  const maximumBpmSlider = spectrumRuler.getByRole("slider", { name: "Maximum BPM" });
+  await expect(minimumBpmSlider).toBeVisible();
+  await expect(maximumBpmSlider).toBeVisible();
+  await expect(minimumBpmSlider).toHaveAttribute("data-edge", "start");
+  await expect(maximumBpmSlider).toHaveAttribute("data-edge", "end");
+
+  const sliderSelection = page.locator('[data-bpm-slider-selection="true"]');
+  const fullSelectionRatio = await sliderSelection.evaluate((selection) => {
+    const track = selection.parentElement;
+    if (!track) return 0;
+    return selection.getBoundingClientRect().width / track.getBoundingClientRect().width;
+  });
+  expect(fullSelectionRatio).toBeCloseTo(1, 2);
 
   const spectrum = page.getByTestId("artist-spectrum");
   await expect(spectrum).toBeVisible();
+  const rulerTicks = spectrum.locator("[data-bpm-tick]");
+  await expect(rulerTicks).toHaveCount(21);
+  await expect(spectrum.locator('[data-bpm-tick][data-major="true"]')).toHaveCount(5);
+  await expect(spectrum.locator('[data-bpm-tick][data-major="false"]')).toHaveCount(16);
+  await expect(page.getByTestId("spectrum-summary")).toContainText(
+    "9 artists · 8 styles · 122–155 BPM"
+  );
   await expect(
     spectrum.getByRole("heading", { name: "Trance", exact: true }).first()
   ).toBeVisible();
@@ -353,14 +394,227 @@ test("shares the filters with a directly navigable spectrum", async ({ page }) =
     spectrum.getByRole("heading", { name: "Euro Trance", exact: true }).first()
   ).toBeVisible();
 
-  const frogrRange = spectrum.getByRole("link", { name: "FROGR, 140 to 145 BPM" }).first();
-  await expect(frogrRange).toHaveAttribute("href", "/artist/frogr");
+  const frogrRange = spectrum.getByRole("button", { name: "FROGR, 140 to 145 BPM" }).first();
+  await expect(frogrRange).not.toHaveAttribute("title");
+  await expect(spectrum.locator('[data-spectrum-coverage="true"]')).toHaveCount(8);
+  await expect(spectrum.locator('[data-spectrum-style="progressive-trance"] h3')).toContainText(
+    "5 artists · 126–136 BPM"
+  );
+  await expect
+    .poll(() =>
+      spectrum
+        .locator('[data-spectrum-style="progressive-trance"] [data-artist]')
+        .evaluateAll((entries) => entries.map((entry) => entry.getAttribute("data-artist")))
+    )
+    .toEqual(["dim3nsion", "krevix", "mr-b", "thiago", "c-systems"]);
 
-  await page.getByLabel("Genre", { exact: true }).selectOption("techno");
+  const dimensionProgressive = spectrum.getByRole("button", {
+    name: "DIM3NSION, 126 to 134 BPM",
+  });
+  const dimensionRangeValues = dimensionProgressive.locator('[data-bpm-range-values="true"]');
+  await expect(dimensionRangeValues.locator("span").first()).toHaveText("126");
+  await expect(dimensionRangeValues.locator("span").last()).toHaveText("134");
+  const dimensionRangeLayout = await dimensionProgressive.evaluate((entry) => {
+    const range = entry.querySelector('[data-bpm-profile-range="true"]');
+    const values = entry.querySelector('[data-bpm-range-values="true"]');
+    if (!(range instanceof HTMLElement) || !(values instanceof HTMLElement)) return false;
+    return values.getBoundingClientRect().top >= range.getBoundingClientRect().bottom;
+  });
+  expect(dimensionRangeLayout).toBe(true);
+
+  const axisAlignment = await spectrum.evaluate((element) => {
+    const ruler = element.querySelector('[data-spectrum-ruler="true"]');
+    const label = element.querySelector('[data-spectrum-axis-label="true"]');
+    const scale = ruler?.querySelector(":scope > div");
+    const firstTick = scale?.querySelector('[data-bpm-tick="120"]');
+    const lastTick = scale?.querySelector('[data-bpm-tick="160"]');
+    const firstStyle = element.querySelector('[data-spectrum-style="progressive-trance"] h3');
+    if (
+      !(ruler instanceof HTMLElement) ||
+      !(label instanceof HTMLElement) ||
+      !(scale instanceof HTMLElement) ||
+      !(firstTick instanceof HTMLElement) ||
+      !(lastTick instanceof HTMLElement) ||
+      !firstStyle
+    ) {
+      return {
+        heightDifference: Number.POSITIVE_INFINITY,
+        edgeDifference: Number.POSITIVE_INFINITY,
+        firstTickDifference: Number.POSITIVE_INFINITY,
+        lastTickDifference: Number.POSITIVE_INFINITY,
+        firstLabelInset: Number.NEGATIVE_INFINITY,
+        lastLabelInset: Number.NEGATIVE_INFINITY,
+      };
+    }
+    const scaleBounds = scale.getBoundingClientRect();
+    const firstTickBounds = firstTick.getBoundingClientRect();
+    const lastTickBounds = lastTick.getBoundingClientRect();
+    return {
+      heightDifference: Math.abs(
+        label.getBoundingClientRect().height - ruler.getBoundingClientRect().height
+      ),
+      edgeDifference: Math.abs(
+        label.getBoundingClientRect().right - firstStyle.getBoundingClientRect().right
+      ),
+      firstTickDifference: Math.abs(
+        firstTickBounds.left +
+          Number.parseFloat(getComputedStyle(firstTick, "::after").left) -
+          scaleBounds.left
+      ),
+      lastTickDifference: Math.abs(
+        lastTickBounds.left +
+          Number.parseFloat(getComputedStyle(lastTick, "::after").left) -
+          scaleBounds.right
+      ),
+      firstLabelInset: firstTickBounds.left - scaleBounds.left,
+      lastLabelInset: scaleBounds.right - lastTickBounds.right,
+    };
+  });
+  expect(axisAlignment.heightDifference).toBeLessThanOrEqual(1);
+  expect(axisAlignment.edgeDifference).toBeLessThan(1);
+  expect(axisAlignment.firstTickDifference).toBeLessThan(1);
+  expect(axisAlignment.lastTickDifference).toBeLessThan(1);
+  expect(axisAlignment.firstLabelInset).toBeGreaterThanOrEqual(3);
+  expect(axisAlignment.lastLabelInset).toBeGreaterThanOrEqual(3);
+  const thiagoEntries = spectrum.locator('[data-artist="thiago"]');
+  await expect(thiagoEntries).toHaveCount(5);
+  await thiagoEntries.first().focus();
+  await expect
+    .poll(() =>
+      thiagoEntries.evaluateAll((entries) => entries.map((entry) => entry.dataset.footprint))
+    )
+    .toEqual(["active", "active", "active", "active", "active"]);
+  await expect(spectrum.locator('[data-artist="frogr"]').first()).toHaveAttribute(
+    "data-footprint",
+    "muted"
+  );
+  await expect(spectrum).toContainText("Thiago Genez · 5 visible styles · 122–155 BPM");
+
+  await page.getByRole("button", { name: "Spectrum" }).focus();
+  const toggleThiago = async () => {
+    if ((page.viewportSize()?.width ?? 0) <= 767) {
+      await thiagoEntries.first().focus();
+      await page.keyboard.press("Enter");
+      return;
+    }
+    await thiagoEntries.first().click();
+  };
+  await toggleThiago();
+  await expect(thiagoEntries.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/\/artists$/);
+  await expect(page.getByLabel("Selected artists")).toContainText("Thiago Genez");
+  if ((page.viewportSize()?.width ?? 0) > 767) {
+    await frogrRange.hover();
+    await expect(frogrRange).toHaveAttribute("data-footprint", "active");
+    await expect(spectrum).toContainText("FROGR · 2 visible styles · 140–146 BPM");
+    await expect
+      .poll(() =>
+        thiagoEntries.evaluateAll((entries) => entries.map((entry) => entry.dataset.footprint))
+      )
+      .toEqual(["active", "active", "active", "active", "active"]);
+  }
+  await page.getByRole("button", { name: "Spectrum" }).hover();
+  await page.getByRole("button", { name: "Spectrum" }).focus();
+  await expect(spectrum.locator('[data-artist="frogr"]').first()).toHaveCSS("opacity", "0.08");
+
+  if ((page.viewportSize()?.width ?? 0) <= 767) {
+    await frogrRange.focus();
+    await page.keyboard.press("Enter");
+  } else {
+    await frogrRange.click();
+  }
+  await expect(frogrRange).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Selected artists")).toContainText("FROGR");
+  await expect
+    .poll(() =>
+      thiagoEntries.evaluateAll((entries) => entries.map((entry) => entry.dataset.footprint))
+    )
+    .toEqual(["active", "active", "active", "active", "active"]);
+
+  await page.getByRole("button", { name: "Remove FROGR" }).click();
+  await page.getByRole("button", { name: "Remove Thiago Genez" }).click();
+  await expect(thiagoEntries.first()).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByLabel("Selected artists")).toHaveCount(0);
+
+  await maximumBpmSlider.fill("140");
+  await minimumBpmSlider.fill("132");
+  await expect(minimumBpmSlider).not.toHaveAttribute("data-edge");
+  await expect(maximumBpmSlider).not.toHaveAttribute("data-edge");
+  await expect(page.getByText("Selected range", { exact: true })).toBeVisible();
+  await expect(spectrum).toHaveAttribute("data-bpm-filtered", "true");
+  await expect(spectrum.locator('[data-bpm-tick="130"]')).toHaveAttribute("data-in-range", "false");
+  await expect(spectrum.locator('[data-bpm-tick="132"]')).toHaveAttribute("data-in-range", "true");
+  const rulerSelectionRatio = await sliderSelection.evaluate((selection) => {
+    const track = selection.parentElement;
+    if (!track) return 0;
+    return selection.getBoundingClientRect().width / track.getBoundingClientRect().width;
+  });
+  expect(rulerSelectionRatio).toBeCloseTo(0.2, 2);
+  await expect
+    .poll(() =>
+      spectrum
+        .locator('[data-bpm-window="true"]')
+        .first()
+        .evaluate((element) => getComputedStyle(element).opacity)
+    )
+    .toBe("1");
+
+  const thiagoProgressive = spectrum.getByRole("button", {
+    name: "Thiago Genez, 128 to 136 BPM",
+  });
+  await expect(thiagoProgressive).toHaveAttribute("data-bpm-match", "partial");
+  const overlapRatio = await thiagoProgressive.evaluate((entry) => {
+    const fullRange = entry.querySelector('[data-bpm-profile-range="true"]');
+    const overlap = entry.querySelector('[data-bpm-overlap="true"]');
+    if (!(fullRange instanceof HTMLElement) || !(overlap instanceof HTMLElement)) return 0;
+    return overlap.getBoundingClientRect().width / fullRange.getBoundingClientRect().width;
+  });
+  expect(overlapRatio).toBeCloseTo(0.5, 1);
+
+  await page.getByText("All 8 styles", { exact: true }).click();
+  const technoStyles = page.getByRole("region", { name: "Techno styles" });
+  await technoStyles.getByRole("button", { name: "Hide all Techno styles" }).click();
+  await expect(spectrum.getByRole("heading", { name: "Techno", exact: true })).toHaveCount(0);
   await expect(
-    spectrum.getByRole("heading", { name: "Techno", exact: true }).first()
+    spectrum.getByRole("heading", { name: "Trance", exact: true }).first()
   ).toBeVisible();
-  await expect(spectrum.getByRole("heading", { name: "Trance", exact: true })).toHaveCount(0);
+  await expect(page.getByText("5 of 8 styles", { exact: true })).toBeVisible();
+
+  await page.getByRole("checkbox", { name: "Progressive Trance" }).uncheck();
+  await expect(
+    spectrum.getByRole("heading", { name: "Progressive Trance", exact: true })
+  ).toHaveCount(0);
+  await expect(
+    spectrum.getByRole("heading", { name: "Uplifting Trance", exact: true }).first()
+  ).toBeVisible();
+  await expect(page.getByText("4 of 8 styles", { exact: true })).toBeVisible();
+
+  const stylesPicker = page.getByTestId("spectrum-styles-picker");
+  await stylesPicker.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(technoStyles).not.toBeVisible();
+
+  await stylesPicker.getByText("4 of 8 styles", { exact: true }).click();
+  await expect(technoStyles).toBeVisible();
+  await page.getByRole("heading", { name: "Our Artists" }).click();
+  await expect(technoStyles).not.toBeVisible();
+});
+
+test("preserves the BPM map as a horizontally scrollable spectrum on mobile", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) > 767, "Mobile spectrum behavior");
+
+  await page.goto("/artists");
+  await page.getByRole("button", { name: "Spectrum" }).click();
+
+  const viewport = page.getByRole("region", { name: "Artist BPM spectrum" });
+  const dimensions = await viewport.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+  await expect(viewport.getByRole("heading", { name: "Progressive Trance" })).toHaveCSS(
+    "position",
+    "sticky"
+  );
 });
 
 test("collapses filters on mobile and keeps square artist photography", async ({ page }) => {

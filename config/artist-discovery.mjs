@@ -27,9 +27,9 @@ export const SOUND_GROUPS = /** @type {const} */ ([
   },
 ]);
 
-// Grid taxonomy uses two distinct color families: a cool spectral progression
-// for Trance and a warm heat progression for Techno. Spectrum energy colors
-// remain separate because they encode tempo, not genre.
+// Discovery uses two distinct color families: a cool spectral progression for
+// Trance and a warm heat progression for Techno. BPM is encoded by position in
+// the Spectrum, so color consistently identifies style in both views.
 export const SOUND_STYLE_COLORS = /** @type {const} */ ({
   "progressive-trance": "#65a2ff",
   "uplifting-trance": "#31d6e7",
@@ -46,13 +46,4 @@ export const NIGHT_MOMENTS = /** @type {const} */ ([
   { id: "warm-up", label: "Warm-up" },
   { id: "peak-time", label: "Peak-time" },
   { id: "closing", label: "Closing" },
-]);
-
-// Preserved from the first roster prototype. In Spectrum these colors describe
-// increasing tempo and energy, rather than claiming a fixed color per genre.
-export const ENERGY_COLORS = /** @type {const} */ ([
-  { bpm: 120, color: "#7768ff" },
-  { bpm: 132, color: "#ff5c93" },
-  { bpm: 142, color: "#ff7138" },
-  { bpm: 150, color: "#d6ff46" },
 ]);

@@ -3,7 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -12,7 +14,6 @@ import {
 import { flushSync } from "react-dom";
 import {
   BPM_DOMAIN,
-  ENERGY_COLORS,
   NIGHT_MOMENTS,
   SOUND_GROUPS,
   SOUND_STYLE_COLORS,
@@ -32,12 +33,26 @@ type PaletteMode = "mono" | "color";
 type OptionalGroup = "all" | SoundGroupId;
 type OptionalMoment = "all" | NightMomentId;
 type RosterTransitionDirection = "expand" | "collapse" | "reorder";
+type SpectrumFootprint = "idle" | "active" | "muted";
+type SpectrumProfile = { artist: DiscoveryArtist; profile: SoundProfile };
 type DiscoveryStyle = CSSProperties & {
   viewTransitionClass?: string;
 } & Record<`--${string}`, string | number>;
 
 const DEFAULT_BPM = { min: BPM_DOMAIN.min, max: BPM_DOMAIN.max };
+const BPM_RULER_TICKS = Array.from(
+  { length: (BPM_DOMAIN.max - BPM_DOMAIN.min) / 2 + 1 },
+  (_, index) => BPM_DOMAIN.min + index * 2
+);
 const MIN_SUBSTRING_SEARCH_LENGTH = 3;
+const ALL_SOUND_STYLE_IDS: readonly SoundStyleId[] = SOUND_GROUPS.flatMap((group) =>
+  group.styles.map((style) => style.id)
+);
+const NO_SOUND_STYLES: readonly SoundStyleId[] = [];
+const MOMENT_OPTIONS: readonly { id: OptionalMoment; label: string }[] = [
+  { id: "all", label: "Any moment" },
+  ...NIGHT_MOMENTS,
+];
 const BOOKING_PROMPT_TRANSITION_STYLE: DiscoveryStyle = {
   viewTransitionClass: "roster-followup",
   viewTransitionName: "roster-followup",
@@ -161,16 +176,16 @@ function compareStyleMatchOrder(left: readonly number[], right: readonly number[
   return 0;
 }
 
-function getEnergyColor(bpm: number) {
-  let match: (typeof ENERGY_COLORS)[number] = ENERGY_COLORS[0];
-  for (const stop of ENERGY_COLORS) {
-    if (bpm >= stop.bpm) match = stop;
-  }
-  return match.color;
+function profileColor(profile: SoundProfile) {
+  return SOUND_STYLE_COLORS[profile.style];
 }
 
-function profileColor(profile: SoundProfile) {
-  return getEnergyColor((profile.bpm.min + profile.bpm.max) / 2);
+function compareSpectrumProfiles(left: SpectrumProfile, right: SpectrumProfile) {
+  return (
+    left.profile.bpm.min - right.profile.bpm.min ||
+    left.profile.bpm.max - right.profile.bpm.max ||
+    left.artist.name.localeCompare(right.artist.name, "en", { sensitivity: "base" })
+  );
 }
 
 function profilePosition(profile: SoundProfile): DiscoveryStyle {
@@ -179,6 +194,49 @@ function profilePosition(profile: SoundProfile): DiscoveryStyle {
     "--profile-left": `${((profile.bpm.min - BPM_DOMAIN.min) / span) * 100}%`,
     "--profile-width": `${((profile.bpm.max - profile.bpm.min) / span) * 100}%`,
     "--profile-color": profileColor(profile),
+  };
+}
+
+function getStyleCoverage(profiles: readonly SoundProfile[]) {
+  if (profiles.length === 0) return null;
+
+  const min = Math.min(...profiles.map((profile) => profile.bpm.min));
+  const max = Math.max(...profiles.map((profile) => profile.bpm.max));
+  const span = BPM_DOMAIN.max - BPM_DOMAIN.min;
+  return {
+    min,
+    max,
+    style: {
+      "--coverage-left": `${((min - BPM_DOMAIN.min) / span) * 100}%`,
+      "--coverage-width": `${((max - min) / span) * 100}%`,
+    } as DiscoveryStyle,
+  };
+}
+
+function getProfileBpmMatch(
+  profile: SoundProfile,
+  selectedMin: number,
+  selectedMax: number,
+  isFiltered: boolean
+) {
+  const profileSpan = Math.max(profile.bpm.max - profile.bpm.min, 1);
+  const overlapMin = Math.max(profile.bpm.min, selectedMin);
+  const overlapMax = Math.min(profile.bpm.max, selectedMax);
+  const overlap = Math.max(overlapMax - overlapMin, 0);
+  const state = !isFiltered
+    ? "full"
+    : overlap === 0
+      ? "none"
+      : overlap === profileSpan
+        ? "full"
+        : "partial";
+
+  return {
+    state,
+    style: {
+      "--bpm-match-left": `${((overlapMin - profile.bpm.min) / profileSpan) * 100}%`,
+      "--bpm-match-width": `${(overlap / profileSpan) * 100}%`,
+    } as DiscoveryStyle,
   };
 }
 
@@ -303,32 +361,80 @@ function SpectrumEntry({
   artist,
   profile,
   affinity,
+  bpmMin,
+  bpmMax,
+  bpmIsFiltered,
+  styleLabel,
+  footprint,
+  selected,
+  onArtistHover,
+  onArtistFocus,
+  onArtistToggle,
 }: {
   artist: DiscoveryArtist;
   profile: SoundProfile;
   affinity: number;
+  bpmMin: number;
+  bpmMax: number;
+  bpmIsFiltered: boolean;
+  styleLabel: string;
+  footprint: SpectrumFootprint;
+  selected: boolean;
+  onArtistHover: (slug: string | null) => void;
+  onArtistFocus: (slug: string | null) => void;
+  onArtistToggle: (slug: string) => void;
 }) {
+  const bpmMatch = getProfileBpmMatch(profile, bpmMin, bpmMax, bpmIsFiltered);
   const entryStyle: DiscoveryStyle = {
     ...profilePosition(profile),
+    ...bpmMatch.style,
     "--match-opacity": affinity,
   };
 
   return (
     <div className={styles.spectrumLane}>
-      <Link
-        href={`/artist/${artist.slug}`}
+      <button
+        type="button"
         className={styles.spectrumEntry}
         style={entryStyle}
         aria-label={`${artist.name}, ${profile.bpm.min} to ${profile.bpm.max} BPM`}
+        aria-pressed={selected}
+        data-artist={artist.slug}
+        data-style-label={styleLabel}
+        data-footprint={footprint}
+        data-bpm-match={bpmMatch.state}
+        onMouseEnter={() => onArtistHover(artist.slug)}
+        onMouseLeave={() => onArtistHover(null)}
+        onFocus={() => onArtistFocus(artist.slug)}
+        onBlur={() => onArtistFocus(null)}
+        onClick={(event) => {
+          onArtistToggle(artist.slug);
+          if (selected) event.currentTarget.blur();
+        }}
       >
-        <span className={styles.spectrumEntryLabel}>
+        <span
+          className={styles.spectrumEntryLabel}
+          data-align={profile.bpm.max >= 149 ? "end" : "start"}
+        >
+          <span className={styles.spectrumAvatar} aria-hidden="true">
+            <Image src={artist.image} alt="" fill sizes="24px" />
+          </span>
           <span>{artist.name}</span>
-          <small>
-            {profile.bpm.min}–{profile.bpm.max}
-          </small>
         </span>
-        <span className={styles.spectrumRange} aria-hidden="true" />
-      </Link>
+        <span className={styles.spectrumRange} data-bpm-profile-range="true" aria-hidden="true">
+          {bpmMatch.state !== "none" && (
+            <span className={styles.spectrumRangeMatch} data-bpm-overlap="true" />
+          )}
+        </span>
+        <span
+          className={styles.spectrumRangeValues}
+          data-bpm-range-values="true"
+          aria-hidden="true"
+        >
+          <span>{profile.bpm.min}</span>
+          <span>{profile.bpm.max}</span>
+        </span>
+      </button>
     </div>
   );
 }
@@ -338,6 +444,9 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const [palette, setPalette] = useState<PaletteMode>("mono");
   const [family, setFamily] = useState<OptionalGroup>("all");
   const [selectedStyles, setSelectedStyles] = useState<SoundStyleId[]>([]);
+  const [visibleSpectrumStyles, setVisibleSpectrumStyles] = useState<SoundStyleId[]>([
+    ...ALL_SOUND_STYLE_IDS,
+  ]);
   const [moment, setMoment] = useState<OptionalMoment>("all");
   const [bpmMin, setBpmMin] = useState<number>(DEFAULT_BPM.min);
   const [bpmMax, setBpmMax] = useState<number>(DEFAULT_BPM.max);
@@ -346,6 +455,33 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [hoveredSpectrumArtistSlug, setHoveredSpectrumArtistSlug] = useState<string | null>(null);
+  const [focusedSpectrumArtistSlug, setFocusedSpectrumArtistSlug] = useState<string | null>(null);
+  const spectrumStylesPickerRef = useRef<HTMLDetailsElement>(null);
+  const spectrumMomentPickerRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      for (const picker of [spectrumStylesPickerRef.current, spectrumMomentPickerRef.current]) {
+        if (picker?.open && event.target instanceof Node && !picker.contains(event.target)) {
+          picker.removeAttribute("open");
+        }
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+  }, []);
+
+  const closeSpectrumStylesPicker = () => {
+    const picker = spectrumStylesPickerRef.current;
+    picker?.removeAttribute("open");
+    picker?.querySelector("summary")?.focus();
+  };
+  const closeSpectrumMomentPicker = () => {
+    const picker = spectrumMomentPickerRef.current;
+    picker?.removeAttribute("open");
+    picker?.querySelector("summary")?.focus();
+  };
   const effectiveMoment: OptionalMoment = view === "spectrum" ? moment : "all";
   const effectiveBpmMin = view === "spectrum" ? bpmMin : DEFAULT_BPM.min;
   const effectiveBpmMax = view === "spectrum" ? bpmMax : DEFAULT_BPM.max;
@@ -377,25 +513,21 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const suggestionsVisible = suggestionsOpen && artistSuggestions.length > 0;
   const bpmIsFiltered =
     view === "spectrum" && (bpmMin !== DEFAULT_BPM.min || bpmMax !== DEFAULT_BPM.max);
-  const activeFilterCount =
-    Number(family !== "all") +
-    Number(selectedStyles.length > 0) +
-    Number(view === "spectrum" && moment !== "all") +
-    Number(bpmIsFiltered) +
-    Number(selectedArtistSlugs.length > 0);
+  const effectiveFamily: OptionalGroup = view === "grid" ? family : "all";
+  const effectiveStyles = view === "grid" ? selectedStyles : NO_SOUND_STYLES;
 
   const rankedArtists = useMemo(() => {
     return artists
       .map((artist, editorialIndex) => {
-        const matchedStyleOrder = selectedStyleMatchOrder(artist, selectedStyles);
+        const matchedStyleOrder = selectedStyleMatchOrder(artist, effectiveStyles);
         const rankedProfiles = artist.soundProfiles
           .map((profile, profileIndex) => ({
             profile,
             profileIndex,
             affinity: profileAffinity(
               profile,
-              family,
-              selectedStyles,
+              effectiveFamily,
+              effectiveStyles,
               effectiveMoment,
               effectiveBpmMin,
               effectiveBpmMax
@@ -428,14 +560,10 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     effectiveBpmMax,
     effectiveBpmMin,
     effectiveMoment,
-    family,
+    effectiveFamily,
+    effectiveStyles,
     selectedArtistSlugs,
-    selectedStyles,
   ]);
-
-  const bestMatches = activeFilterCount
-    ? rankedArtists.filter(({ affinity }) => affinity >= 0.99).length
-    : artists.length;
 
   const gridArtists = useMemo(() => {
     return rankedArtists.filter(({ artist }) =>
@@ -488,6 +616,14 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     commitArtistSelection(nextArtistSlugs);
   };
 
+  const toggleSpectrumArtist = (slug: string) => {
+    commitArtistSelection(
+      selectedArtistSlugs.includes(slug)
+        ? selectedArtistSlugs.filter((selectedSlug) => selectedSlug !== slug)
+        : [...selectedArtistSlugs, slug]
+    );
+  };
+
   const handleSearchKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Backspace" && query.length === 0 && selectedArtistSlugs.length > 0) {
       setSelectedArtistSlugs((current) => current.slice(0, -1));
@@ -524,23 +660,122 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     }
   };
 
-  const visibleGroups = SOUND_GROUPS.map((group) => ({
-    ...group,
-    styles: group.styles
-      .filter(
-        (style) =>
-          (family === "all" || group.id === family) &&
-          (selectedStyles.length === 0 || selectedStyles.includes(style.id)) &&
-          artists.some((artist) =>
-            artist.soundProfiles.some((profile) => profile.style === style.id)
+  const allSpectrumGroups = useMemo(
+    () =>
+      SOUND_GROUPS.map((group) => ({
+        ...group,
+        styles: group.styles
+          .flatMap((sound) => {
+            const profiles = artists
+              .flatMap((artist) =>
+                artist.soundProfiles
+                  .filter((profile) => profile.style === sound.id)
+                  .map((profile) => ({ artist, profile }))
+              )
+              .sort(compareSpectrumProfiles);
+            return profiles.length > 0 ? [{ ...sound, profiles }] : [];
+          })
+          .sort(compareSoundStyleSpectrumOrder),
+      })).filter((group) => group.styles.length > 0),
+    [artists]
+  );
+  const spectrumGroups = useMemo(
+    () =>
+      allSpectrumGroups
+        .map((group) => ({
+          ...group,
+          styles: group.styles.filter((sound) => visibleSpectrumStyles.includes(sound.id)),
+        }))
+        .filter((group) => group.styles.length > 0),
+    [allSpectrumGroups, visibleSpectrumStyles]
+  );
+  const availableSpectrumStyleIds = allSpectrumGroups.flatMap((group) =>
+    group.styles.map((sound) => sound.id)
+  );
+  const visibleSpectrumStyleIds = availableSpectrumStyleIds.filter((styleId) =>
+    visibleSpectrumStyles.includes(styleId)
+  );
+  const spectrumStylesCustomized =
+    visibleSpectrumStyleIds.length !== availableSpectrumStyleIds.length;
+  const gridFilterCount =
+    Number(family !== "all") +
+    Number(selectedStyles.length > 0) +
+    Number(selectedArtistSlugs.length > 0);
+  const spectrumMatchFilterCount =
+    Number(moment !== "all") + Number(bpmIsFiltered) + Number(selectedArtistSlugs.length > 0);
+  const activeFilterCount =
+    view === "grid" ? gridFilterCount : Number(spectrumStylesCustomized) + spectrumMatchFilterCount;
+  const matchFiltersActive = view === "grid" ? gridFilterCount > 0 : spectrumMatchFilterCount > 0;
+  const allSpectrumProfiles = spectrumGroups.flatMap((group) =>
+    group.styles.flatMap((sound) => sound.profiles.map(({ profile }) => profile))
+  );
+  const spectrumArtistCount = new Set(
+    spectrumGroups.flatMap((group) =>
+      group.styles.flatMap((sound) => sound.profiles.map(({ artist }) => artist.slug))
+    )
+  ).size;
+  const bestMatches = matchFiltersActive
+    ? view === "grid"
+      ? rankedArtists.filter(({ affinity }) => affinity >= 0.99).length
+      : artists.filter((artist) => {
+          const nameMatches =
+            selectedArtistSlugs.length === 0 || selectedArtistSlugs.includes(artist.slug);
+          return (
+            nameMatches &&
+            artist.soundProfiles.some(
+              (profile) =>
+                visibleSpectrumStyles.includes(profile.style) &&
+                profileAffinity(profile, "all", NO_SOUND_STYLES, moment, bpmMin, bpmMax) >= 0.99
+            )
+          );
+        }).length
+    : spectrumArtistCount;
+  const rosterCoverage = getStyleCoverage(allSpectrumProfiles);
+  const spectrumStyleCount = spectrumGroups.reduce(
+    (count, group) => count + group.styles.length,
+    0
+  );
+  const activeSpectrumArtistSlug = hoveredSpectrumArtistSlug ?? focusedSpectrumArtistSlug;
+  const activeSpectrumArtist = activeSpectrumArtistSlug
+    ? artists.find((artist) => artist.slug === activeSpectrumArtistSlug)
+    : undefined;
+  const activeArtistProfiles = activeSpectrumArtist?.soundProfiles.filter((profile) =>
+    visibleSpectrumStyles.includes(profile.style)
+  );
+  const activeArtistCoverage = getStyleCoverage(activeArtistProfiles ?? []);
+
+  const toggleSpectrumStyle = (styleId: SoundStyleId) => {
+    setVisibleSpectrumStyles((current) =>
+      current.includes(styleId)
+        ? current.filter((candidate) => candidate !== styleId)
+        : ALL_SOUND_STYLE_IDS.filter(
+            (candidate) => current.includes(candidate) || candidate === styleId
           )
+    );
+  };
+
+  const toggleSpectrumGroup = (groupId: SoundGroupId) => {
+    const groupStyleIds = allSpectrumGroups
+      .find((group) => group.id === groupId)
+      ?.styles.map((sound) => sound.id);
+    if (!groupStyleIds?.length) return;
+
+    const allGroupStylesVisible = groupStyleIds.every((styleId) =>
+      visibleSpectrumStyles.includes(styleId)
+    );
+    setVisibleSpectrumStyles((current) =>
+      ALL_SOUND_STYLE_IDS.filter((styleId) =>
+        allGroupStylesVisible
+          ? current.includes(styleId) && !groupStyleIds.includes(styleId)
+          : current.includes(styleId) || groupStyleIds.includes(styleId)
       )
-      .sort(compareSoundStyleSpectrumOrder),
-  })).filter((group) => group.styles.length > 0);
+    );
+  };
 
   const resetFilters = () => {
     setFamily("all");
     setSelectedStyles([]);
+    setVisibleSpectrumStyles([...ALL_SOUND_STYLE_IDS]);
     setMoment("all");
     setBpmMin(DEFAULT_BPM.min);
     setBpmMax(DEFAULT_BPM.max);
@@ -602,7 +837,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             </svg>
             Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </span>
-          <small>{view === "grid" ? gridArtists.length : artists.length} artists</small>
+          <small>{view === "grid" ? gridArtists.length : spectrumArtistCount} artists</small>
         </button>
       </div>
 
@@ -771,94 +1006,151 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             </div>
           </>
         ) : (
-          <>
-            <div className={styles.filterField}>
-              <label htmlFor="artist-genre">Genre</label>
-              <select
-                id="artist-genre"
-                value={family}
-                onChange={(event) => {
-                  setFamily(event.target.value as OptionalGroup);
-                  setSelectedStyles([]);
-                }}
-              >
-                <option value="all">All genres</option>
-                {SOUND_GROUPS.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles.filterField}>
-              <label htmlFor="artist-style">Style</label>
-              <select
-                id="artist-style"
-                value={selectedStyles.length === 1 ? selectedStyles[0] : "all"}
-                disabled={family === "all"}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setSelectedStyles(value === "all" ? [] : [value as SoundStyleId]);
-                }}
-              >
-                <option value="all">{family === "all" ? "Choose genre" : "All styles"}</option>
-                {familyStyles.map((style) => (
-                  <option key={style.id} value={style.id}>
-                    {style.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
-
-        {view === "spectrum" && (
-          <div className={`${styles.filterField} ${styles.momentFilter}`}>
-            <label htmlFor="artist-moment">Moment</label>
-            <select
-              id="artist-moment"
-              value={moment}
-              onChange={(event) => setMoment(event.target.value as OptionalMoment)}
+          <div className={`${styles.filterField} ${styles.spectrumStylesField}`}>
+            <span className={styles.filterLabel}>Styles shown</span>
+            <details
+              ref={spectrumStylesPickerRef}
+              className={styles.spectrumStylesPicker}
+              data-testid="spectrum-styles-picker"
+              onToggle={(event) => {
+                if (event.currentTarget.open) {
+                  spectrumMomentPickerRef.current?.removeAttribute("open");
+                }
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  closeSpectrumStylesPicker();
+                }
+              }}
             >
-              <option value="all">Any moment</option>
-              {NIGHT_MOMENTS.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
+              <summary>
+                <span>
+                  {visibleSpectrumStyleIds.length === availableSpectrumStyleIds.length
+                    ? `All ${availableSpectrumStyleIds.length} styles`
+                    : `${visibleSpectrumStyleIds.length} of ${availableSpectrumStyleIds.length} styles`}
+                </span>
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="m4 6 4 4 4-4" />
+                </svg>
+              </summary>
+              <div className={styles.spectrumStylesPanel}>
+                {allSpectrumGroups.map((group) => {
+                  const visibleCount = group.styles.filter((sound) =>
+                    visibleSpectrumStyles.includes(sound.id)
+                  ).length;
+                  const allGroupStylesVisible = visibleCount === group.styles.length;
+                  return (
+                    <section
+                      key={group.id}
+                      className={styles.spectrumStylesGroup}
+                      aria-label={`${group.label} styles`}
+                    >
+                      <header className={styles.spectrumStylesGroupHeader}>
+                        <strong>{group.label}</strong>
+                        <button
+                          type="button"
+                          aria-label={`${allGroupStylesVisible ? "Hide" : "Show"} all ${group.label} styles`}
+                          onClick={() => toggleSpectrumGroup(group.id)}
+                        >
+                          {allGroupStylesVisible ? "Hide all" : "Show all"}
+                        </button>
+                      </header>
+                      <div className={styles.spectrumStyleOptions}>
+                        {group.styles.map((sound) => (
+                          <label
+                            key={sound.id}
+                            className={styles.spectrumStyleOption}
+                            style={
+                              {
+                                "--style-color": SOUND_STYLE_COLORS[sound.id],
+                              } as DiscoveryStyle
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              checked={visibleSpectrumStyles.includes(sound.id)}
+                              onChange={() => toggleSpectrumStyle(sound.id)}
+                            />
+                            <span>{sound.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+                <footer className={styles.spectrumStylesFooter}>
+                  <button
+                    type="button"
+                    disabled={!spectrumStylesCustomized}
+                    onClick={() => setVisibleSpectrumStyles([...ALL_SOUND_STYLE_IDS])}
+                  >
+                    Show all styles
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.spectrumStylesDone}
+                    onClick={closeSpectrumStylesPicker}
+                  >
+                    Done
+                  </button>
+                </footer>
+              </div>
+            </details>
           </div>
         )}
 
         {view === "spectrum" && (
-          <fieldset className={styles.bpmField}>
-            <legend>BPM range</legend>
-            <div className={styles.bpmReadout} aria-live="polite">
-              <span>{bpmMin}</span>
-              <span aria-hidden="true">—</span>
-              <span>{bpmMax}</span>
-            </div>
-            <div className={styles.rangeControl} style={rangeStyle}>
-              <span className={styles.rangeTrack} aria-hidden="true" />
-              <input
-                type="range"
-                min={BPM_DOMAIN.min}
-                max={BPM_DOMAIN.max - 1}
-                value={bpmMin}
-                aria-label="Minimum BPM"
-                onChange={(event) => setBpmMin(Math.min(Number(event.target.value), bpmMax - 1))}
-              />
-              <input
-                type="range"
-                min={BPM_DOMAIN.min + 1}
-                max={BPM_DOMAIN.max}
-                value={bpmMax}
-                aria-label="Maximum BPM"
-                onChange={(event) => setBpmMax(Math.max(Number(event.target.value), bpmMin + 1))}
-              />
-            </div>
-          </fieldset>
+          <div className={`${styles.filterField} ${styles.momentFilter}`}>
+            <span id="artist-moment-label" className={styles.filterLabel}>
+              Moment
+            </span>
+            <details
+              ref={spectrumMomentPickerRef}
+              className={styles.spectrumStylesPicker}
+              data-testid="spectrum-moment-picker"
+              onToggle={(event) => {
+                if (event.currentTarget.open) {
+                  spectrumStylesPickerRef.current?.removeAttribute("open");
+                }
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  closeSpectrumMomentPicker();
+                }
+              }}
+            >
+              <summary aria-labelledby="artist-moment-label artist-moment-value">
+                <span id="artist-moment-value">
+                  {MOMENT_OPTIONS.find((item) => item.id === moment)?.label}
+                </span>
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="m4 6 4 4 4-4" />
+                </svg>
+              </summary>
+              <fieldset
+                className={`${styles.spectrumStylesPanel} ${styles.spectrumMomentPanel}`}
+                aria-label="Moment options"
+              >
+                {MOMENT_OPTIONS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={styles.spectrumMomentOption}
+                    aria-pressed={moment === item.id}
+                    onClick={() => {
+                      setMoment(item.id);
+                      closeSpectrumMomentPicker();
+                    }}
+                  >
+                    <span className={styles.spectrumMomentIndicator} aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </fieldset>
+            </details>
+          </div>
         )}
       </div>
 
@@ -870,14 +1162,26 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
               {gridArtists.length === 1 ? "artist" : "artists"}
             </>
           ) : (
-            <>
-              <strong>{artists.length}</strong> artists
+            <span data-testid="spectrum-summary">
+              <strong>{spectrumArtistCount}</strong>{" "}
+              {spectrumArtistCount === 1 ? "artist" : "artists"} ·{" "}
+              <strong>{spectrumStyleCount}</strong> {spectrumStyleCount === 1 ? "style" : "styles"}
+              {rosterCoverage && (
+                <span>
+                  {" "}
+                  ·{" "}
+                  <strong>
+                    {rosterCoverage.min}–{rosterCoverage.max}
+                  </strong>{" "}
+                  BPM
+                </span>
+              )}
               {activeFilterCount > 0 && (
                 <span>
                   · <strong>{bestMatches}</strong> best {bestMatches === 1 ? "match" : "matches"}
                 </span>
               )}
-            </>
+            </span>
           )}
         </p>
         {activeFilterCount > 0 && (
@@ -909,117 +1213,191 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
           </div>
         )
       ) : (
-        <div className={styles.spectrum} data-testid="artist-spectrum">
-          <div className={styles.spectrumDesktop}>
-            <div className={styles.spectrumRuler}>
-              <span>BPM</span>
-              <div>
-                {[120, 130, 140, 150, 160].map((bpm) => (
-                  <span
-                    key={bpm}
-                    style={
-                      {
-                        "--tick-position": `${
-                          ((bpm - BPM_DOMAIN.min) / (BPM_DOMAIN.max - BPM_DOMAIN.min)) * 100
-                        }%`,
-                      } as DiscoveryStyle
-                    }
-                  >
-                    {bpm}
-                  </span>
-                ))}
+        <div
+          className={styles.spectrum}
+          data-testid="artist-spectrum"
+          data-bpm-filtered={bpmIsFiltered ? "true" : "false"}
+          style={rangeStyle}
+        >
+          <div className={styles.spectrumGuide} aria-live="polite">
+            {activeSpectrumArtist && activeArtistCoverage ? (
+              <strong>
+                {activeSpectrumArtist.name} · {activeArtistProfiles?.length ?? 0} visible{" "}
+                {activeArtistProfiles?.length === 1 ? "style" : "styles"} ·{" "}
+                {activeArtistCoverage.min}–{activeArtistCoverage.max} BPM
+              </strong>
+            ) : (
+              <strong>Hover or focus an artist to trace every position.</strong>
+            )}
+            <span>Each artist appears in every style they play.</span>
+          </div>
+
+          <section className={styles.spectrumViewport} aria-label="Artist BPM spectrum">
+            <div className={styles.spectrumDesktop}>
+              <div className={styles.spectrumRuler} data-spectrum-ruler="true">
+                <span data-spectrum-axis-label="true">
+                  <span>BPM</span>
+                  <output aria-live="polite">
+                    <strong>
+                      {bpmMin}–{bpmMax}
+                    </strong>
+                    <small>{bpmIsFiltered ? "Selected range" : "Full range selected"}</small>
+                  </output>
+                </span>
+                <div data-bpm-ruler-scale="true">
+                  {BPM_RULER_TICKS.map((bpm) => {
+                    const isMajor = bpm % 10 === 0;
+                    return (
+                      <span
+                        key={bpm}
+                        data-bpm-tick={bpm}
+                        data-major={isMajor ? "true" : "false"}
+                        data-in-range={bpm >= bpmMin && bpm <= bpmMax ? "true" : "false"}
+                        aria-hidden="true"
+                        style={
+                          {
+                            "--tick-position": `${
+                              ((bpm - BPM_DOMAIN.min) / (BPM_DOMAIN.max - BPM_DOMAIN.min)) * 100
+                            }%`,
+                          } as DiscoveryStyle
+                        }
+                      >
+                        {isMajor ? bpm : null}
+                      </span>
+                    );
+                  })}
+                  <div className={styles.spectrumRangeControl} style={rangeStyle}>
+                    <span className={styles.rangeTrack} aria-hidden="true">
+                      <span className={styles.rangeSelection} data-bpm-slider-selection="true" />
+                    </span>
+                    <input
+                      type="range"
+                      min={BPM_DOMAIN.min}
+                      max={BPM_DOMAIN.max - 1}
+                      value={bpmMin}
+                      data-edge={bpmMin === BPM_DOMAIN.min ? "start" : undefined}
+                      aria-label="Minimum BPM"
+                      onChange={(event) =>
+                        setBpmMin(Math.min(Number(event.target.value), bpmMax - 1))
+                      }
+                    />
+                    <input
+                      type="range"
+                      min={BPM_DOMAIN.min + 1}
+                      max={BPM_DOMAIN.max}
+                      value={bpmMax}
+                      data-edge={bpmMax === BPM_DOMAIN.max ? "end" : undefined}
+                      aria-label="Maximum BPM"
+                      onChange={(event) =>
+                        setBpmMax(Math.max(Number(event.target.value), bpmMin + 1))
+                      }
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {visibleGroups.map((group) => (
-              <section key={group.id} className={styles.spectrumGroup}>
-                <h2>{group.label}</h2>
-                {group.styles.map((sound) => {
-                  const profiles = artists.flatMap((artist) =>
-                    artist.soundProfiles
-                      .filter((profile) => profile.style === sound.id)
-                      .map((profile) => ({ artist, profile }))
-                  );
-                  return (
-                    <div key={sound.id} className={styles.spectrumRow}>
-                      <h3>{sound.label}</h3>
-                      <div className={styles.spectrumLanes}>
-                        {profiles.map(({ artist, profile }) => {
-                          const nameMatches =
-                            selectedArtistSlugs.length === 0 ||
-                            selectedArtistSlugs.includes(artist.slug);
-                          const affinity =
-                            profileAffinity(
-                              profile,
-                              family,
-                              selectedStyles,
-                              moment,
-                              bpmMin,
-                              bpmMax
-                            ) * (nameMatches ? 1 : 0.08);
-                          return (
-                            <SpectrumEntry
-                              key={artist.slug}
-                              artist={artist}
-                              profile={profile}
-                              affinity={affinity}
+              {spectrumGroups.length > 0 ? (
+                spectrumGroups.map((group) => (
+                  <section
+                    key={group.id}
+                    className={styles.spectrumGroup}
+                    data-spectrum-group={group.id}
+                  >
+                    <h2>{group.label}</h2>
+                    {group.styles.map((sound) => {
+                      const profiles = sound.profiles;
+                      const coverage = getStyleCoverage(profiles.map(({ profile }) => profile));
+                      const rowStyle = {
+                        "--style-color": SOUND_STYLE_COLORS[sound.id],
+                      } as DiscoveryStyle;
+                      return (
+                        <div
+                          key={sound.id}
+                          className={styles.spectrumRow}
+                          style={rowStyle}
+                          data-spectrum-style={sound.id}
+                        >
+                          <h3>
+                            <span>{sound.label}</span>
+                            {coverage && (
+                              <small aria-hidden="true">
+                                {profiles.length} {profiles.length === 1 ? "artist" : "artists"} ·{" "}
+                                {coverage.min}–{coverage.max} BPM
+                              </small>
+                            )}
+                          </h3>
+                          <div className={styles.spectrumLanes}>
+                            {coverage && (
+                              <span
+                                className={styles.spectrumCoverage}
+                                style={coverage.style}
+                                data-spectrum-coverage="true"
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span
+                              className={styles.spectrumBpmWindow}
+                              data-bpm-window="true"
+                              aria-hidden="true"
                             />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </section>
-            ))}
-          </div>
-
-          <div className={styles.spectrumMobile}>
-            {visibleGroups.map((group) => (
-              <section key={group.id}>
-                <h2>{group.label}</h2>
-                {group.styles.map((sound) => {
-                  const profiles = artists.flatMap((artist) =>
-                    artist.soundProfiles
-                      .filter((profile) => profile.style === sound.id)
-                      .map((profile) => ({ artist, profile }))
-                  );
-                  return (
-                    <div key={sound.id} className={styles.mobileStyle}>
-                      <h3>{sound.label}</h3>
-                      {profiles.map(({ artist, profile }) => {
-                        const nameMatches =
-                          selectedArtistSlugs.length === 0 ||
-                          selectedArtistSlugs.includes(artist.slug);
-                        const affinity =
-                          profileAffinity(profile, family, selectedStyles, moment, bpmMin, bpmMax) *
-                          (nameMatches ? 1 : 0.08);
-                        const itemStyle: DiscoveryStyle = {
-                          "--profile-color": profileColor(profile),
-                          "--match-opacity": affinity,
-                        };
-                        return (
-                          <Link
-                            key={artist.slug}
-                            href={`/artist/${artist.slug}`}
-                            className={styles.mobileProfile}
-                            style={itemStyle}
-                            aria-label={`${artist.name}, ${profile.bpm.min} to ${profile.bpm.max} BPM`}
-                          >
-                            <span aria-hidden="true" />
-                            <strong>{artist.name}</strong>
-                            <small>
-                              {profile.bpm.min}–{profile.bpm.max} BPM
-                            </small>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </section>
-            ))}
-          </div>
+                            {profiles.map(({ artist, profile }) => {
+                              const nameMatches =
+                                selectedArtistSlugs.length === 0 ||
+                                selectedArtistSlugs.includes(artist.slug);
+                              const affinity =
+                                profileAffinity(
+                                  profile,
+                                  "all",
+                                  NO_SOUND_STYLES,
+                                  moment,
+                                  bpmMin,
+                                  bpmMax
+                                ) * (nameMatches ? 1 : 0.08);
+                              return (
+                                <SpectrumEntry
+                                  key={artist.slug}
+                                  artist={artist}
+                                  profile={profile}
+                                  affinity={affinity}
+                                  bpmMin={bpmMin}
+                                  bpmMax={bpmMax}
+                                  bpmIsFiltered={bpmIsFiltered}
+                                  styleLabel={sound.label}
+                                  footprint={
+                                    activeSpectrumArtistSlug === null
+                                      ? "idle"
+                                      : activeSpectrumArtistSlug === artist.slug ||
+                                          selectedArtistSlugs.includes(artist.slug)
+                                        ? "active"
+                                        : "muted"
+                                  }
+                                  selected={selectedArtistSlugs.includes(artist.slug)}
+                                  onArtistHover={setHoveredSpectrumArtistSlug}
+                                  onArtistFocus={setFocusedSpectrumArtistSlug}
+                                  onArtistToggle={toggleSpectrumArtist}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </section>
+                ))
+              ) : (
+                <div className={styles.spectrumEmpty}>
+                  <strong>No styles are shown.</strong>
+                  <p>Choose styles above or restore the complete roster map.</p>
+                  <button
+                    type="button"
+                    onClick={() => setVisibleSpectrumStyles([...ALL_SOUND_STYLE_IDS])}
+                  >
+                    Show all styles
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       )}
 

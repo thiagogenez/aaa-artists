@@ -102,7 +102,7 @@
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(12rem, 1.25fr) repeat(3, minmax(9rem, 0.8fr)) minmax(17rem, 1.4fr);
+  grid-template-columns: minmax(12rem, 1.25fr) repeat(3, minmax(9rem, 0.8fr));
   border-block: 1px solid var(--border);
 }
 
@@ -118,7 +118,6 @@
 }
 
 .filterField,
-.bpmField,
 .choiceField {
   position: relative;
   min-width: 0;
@@ -131,7 +130,7 @@
 }
 
 .filterField > label,
-.bpmField legend,
+.filterLabel,
 .choiceField legend {
   display: block;
   margin-bottom: 0.5rem;
@@ -140,6 +139,224 @@
   font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase;
+}
+
+.spectrumStylesField {
+  z-index: 35;
+  grid-column: span 2;
+}
+
+.spectrumStylesPicker {
+  position: relative;
+}
+
+.spectrumStylesPicker > summary {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--text-20);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1rem;
+  list-style: none;
+  transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spectrumStylesPicker > summary::-webkit-details-marker {
+  display: none;
+}
+
+.spectrumStylesPicker > summary:hover,
+.spectrumStylesPicker > summary:focus-visible,
+.spectrumStylesPicker[open] > summary {
+  border-color: var(--text);
+}
+
+.spectrumStylesPicker > summary:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+.spectrumStylesPicker > summary svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: square;
+  stroke-width: 1.5;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spectrumStylesPicker[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.spectrumStylesPanel {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 0.75rem);
+  left: 0;
+  width: min(32rem, calc(100vw - 3rem));
+  border: 1px solid var(--border);
+  background: var(--bg);
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.16);
+}
+
+.spectrumStylesGroup {
+  padding: 1rem;
+}
+
+.spectrumStylesGroup + .spectrumStylesGroup {
+  border-top: 1px solid var(--border);
+}
+
+.spectrumStylesGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.spectrumStylesGroupHeader strong {
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.spectrumStylesGroupHeader button,
+.spectrumStylesFooter button {
+  color: var(--text-60);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25rem;
+  text-transform: uppercase;
+}
+
+.spectrumStylesGroupHeader button:hover,
+.spectrumStylesGroupHeader button:focus-visible,
+.spectrumStylesFooter button:hover,
+.spectrumStylesFooter button:focus-visible {
+  color: var(--text);
+}
+
+.spectrumStyleOptions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.15rem 1rem;
+}
+
+.spectrumStyleOption {
+  display: flex;
+  min-width: 0;
+  min-height: 40px;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--text-60);
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.spectrumStyleOption:hover {
+  color: var(--text);
+}
+
+.spectrumStyleOption input {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  accent-color: var(--text);
+}
+
+.discovery[data-palette="color"] .spectrumStyleOption input {
+  accent-color: var(--style-color);
+}
+
+.spectrumStylesFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding: 0.9rem 1rem;
+}
+
+.spectrumStylesFooter button:disabled {
+  cursor: default;
+  opacity: 0.32;
+}
+
+.spectrumStylesFooter .spectrumStylesDone {
+  min-height: 38px;
+  border: 1px solid var(--text);
+  padding: 0.55rem 1rem;
+  background: var(--text);
+  color: var(--bg);
+  text-decoration: none;
+}
+
+.spectrumStylesFooter .spectrumStylesDone:hover,
+.spectrumStylesFooter .spectrumStylesDone:focus-visible {
+  background: transparent;
+  color: var(--text);
+}
+
+.momentFilter {
+  z-index: 34;
+}
+
+.spectrumMomentPanel {
+  width: min(18rem, calc(100vw - 3rem));
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0.45rem;
+}
+
+.spectrumMomentOption {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem;
+  color: var(--text-60);
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+.spectrumMomentOption + .spectrumMomentOption {
+  border-top: 1px solid var(--border);
+}
+
+.spectrumMomentOption:hover,
+.spectrumMomentOption:focus-visible {
+  color: var(--text);
+}
+
+.spectrumMomentOption[aria-pressed="true"] {
+  background: var(--control-surface);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.spectrumMomentIndicator {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--text-40);
+}
+
+.spectrumMomentOption[aria-pressed="true"] .spectrumMomentIndicator {
+  border: 3px solid var(--control-surface);
+  background: var(--text);
+  outline: 1px solid var(--text);
 }
 
 .filterField input[type="search"],
@@ -417,58 +634,36 @@
   outline-color: var(--style-color);
 }
 
-.bpmField {
-  min-inline-size: 0;
-}
-
-.bpmReadout {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--text);
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.bpmReadout span:nth-child(2) {
-  color: var(--text-30);
-  font-weight: 400;
-}
-
-.rangeControl {
-  position: relative;
+.spectrumRangeControl {
+  position: absolute;
+  right: 0;
+  bottom: -15px;
+  left: 0;
+  z-index: 4;
   height: 30px;
-  margin-top: 0.1rem;
 }
 
-.rangeTrack,
-.rangeTrack::after {
+.rangeTrack {
   position: absolute;
   top: 50%;
   right: 0;
   left: 0;
-  height: 3px;
-  content: "";
+  height: 1px;
+  background: var(--text-20);
   transform: translateY(-50%);
 }
 
-.rangeTrack {
-  background: var(--border);
-}
-
-.rangeTrack::after {
+.rangeSelection {
+  position: absolute;
+  top: 50%;
   right: calc(100% - var(--range-end));
   left: var(--range-start);
+  height: 3px;
   background: var(--text);
+  transform: translateY(-50%);
 }
 
-.discovery[data-palette="color"] .rangeTrack::after {
-  background: linear-gradient(90deg, #7768ff 0%, #ff5c93 38%, #ff7138 68%, #d6ff46 100%);
-}
-
-.rangeControl input[type="range"] {
+.spectrumRangeControl input[type="range"] {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -479,12 +674,12 @@
   pointer-events: none;
 }
 
-.rangeControl input[type="range"]::-webkit-slider-runnable-track {
+.spectrumRangeControl input[type="range"]::-webkit-slider-runnable-track {
   height: 3px;
   background: transparent;
 }
 
-.rangeControl input[type="range"]::-webkit-slider-thumb {
+.spectrumRangeControl input[type="range"]::-webkit-slider-thumb {
   width: 17px;
   height: 17px;
   border: 3px solid var(--bg);
@@ -497,12 +692,20 @@
   transform: translateY(-7px);
 }
 
-.rangeControl input[type="range"]::-moz-range-track {
+.spectrumRangeControl input[data-edge="start"]::-webkit-slider-thumb {
+  transform: translate(8px, -7px);
+}
+
+.spectrumRangeControl input[data-edge="end"]::-webkit-slider-thumb {
+  transform: translate(-8px, -7px);
+}
+
+.spectrumRangeControl input[type="range"]::-moz-range-track {
   height: 3px;
   background: transparent;
 }
 
-.rangeControl input[type="range"]::-moz-range-thumb {
+.spectrumRangeControl input[type="range"]::-moz-range-thumb {
   width: 12px;
   height: 12px;
   border: 3px solid var(--bg);
@@ -513,16 +716,24 @@
   pointer-events: auto;
 }
 
-.rangeControl input[type="range"]:focus-visible {
+.spectrumRangeControl input[data-edge="start"]::-moz-range-thumb {
+  transform: translateX(6px);
+}
+
+.spectrumRangeControl input[data-edge="end"]::-moz-range-thumb {
+  transform: translateX(-6px);
+}
+
+.spectrumRangeControl input[type="range"]:focus-visible {
   outline: 0;
 }
 
-.rangeControl input[type="range"]:focus-visible::-webkit-slider-thumb {
+.spectrumRangeControl input[type="range"]:focus-visible::-webkit-slider-thumb {
   outline: 2px solid var(--text);
   outline-offset: 3px;
 }
 
-.rangeControl input[type="range"]:focus-visible::-moz-range-thumb {
+.spectrumRangeControl input[type="range"]:focus-visible::-moz-range-thumb {
   outline: 2px solid var(--text);
   outline-offset: 3px;
 }
@@ -858,36 +1069,90 @@
   animation: spectrum-reveal 480ms both cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.spectrumMobile {
-  display: none;
+.spectrumGuide {
+  display: flex;
+  min-height: 5.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding: 1.25rem;
+}
+
+.spectrumGuide strong {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 720;
+}
+
+.spectrumGuide span {
+  color: var(--text-40);
+  font-size: 0.72rem;
+}
+
+.spectrumViewport {
+  scrollbar-color: var(--text-40) var(--control-surface);
+  scrollbar-width: thin;
 }
 
 .spectrumRuler {
   display: grid;
-  min-height: 4.25rem;
+  min-height: 4.75rem;
   grid-template-columns: 13rem minmax(0, 1fr);
   align-items: end;
   border-bottom: 1px solid var(--border);
 }
 
 .spectrumRuler > span {
-  padding: 0 1rem 1rem;
+  display: flex;
+  align-self: stretch;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--control-surface) 72%, var(--bg));
+}
+
+.spectrumRuler > span > span {
   color: var(--text-40);
   font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.13em;
 }
 
+.spectrumRuler output {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  white-space: nowrap;
+}
+
+.spectrumRuler output strong {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.spectrumRuler output small {
+  color: var(--text-40);
+  font-size: 0.55rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
 .spectrumRuler > div {
   position: relative;
   height: 100%;
-  border-left: 1px solid var(--border);
 }
 
-.spectrumRuler > div > span {
+.spectrumRuler [data-bpm-tick] {
   position: absolute;
   bottom: 0.85rem;
   left: var(--tick-position);
+  z-index: 3;
   color: var(--text-60);
   font-size: 0.74rem;
   font-variant-numeric: tabular-nums;
@@ -895,7 +1160,11 @@
   transform: translateX(-50%);
 }
 
-.spectrumRuler > div > span::after {
+.spectrumRuler [data-bpm-tick][data-major="true"][data-in-range="false"] {
+  color: var(--text-40);
+}
+
+.spectrumRuler [data-bpm-tick]::after {
   position: absolute;
   top: calc(100% + 0.45rem);
   left: 50%;
@@ -905,26 +1174,63 @@
   content: "";
 }
 
-.spectrumRuler > div > span:first-child {
+.spectrumRuler [data-bpm-tick][data-major="true"][data-in-range="true"]::after {
+  background: var(--text-60);
+}
+
+.spectrumRuler [data-bpm-tick][data-major="false"] {
+  bottom: -1px;
+  width: 1px;
+  height: 0.3rem;
+  background: var(--text-20);
+  color: transparent;
+}
+
+.spectrumRuler [data-bpm-tick][data-major="false"][data-in-range="true"] {
+  height: 0.42rem;
+  background: var(--text-40);
+}
+
+.spectrumRuler [data-bpm-tick][data-major="false"]::after {
+  display: none;
+}
+
+.spectrumRuler [data-bpm-tick="120"] {
+  left: 0.25rem;
   transform: none;
 }
 
-.spectrumRuler > div > span:last-child {
-  transform: translateX(-100%);
+.spectrumRuler [data-bpm-tick="120"]::after {
+  left: -0.25rem;
+}
+
+.spectrumRuler [data-bpm-tick="160"] {
+  right: 0.25rem;
+  left: auto;
+  transform: none;
+}
+
+.spectrumRuler [data-bpm-tick="160"]::after {
+  left: calc(100% + 0.25rem);
 }
 
 .spectrumGroup > h2 {
   display: flex;
-  min-height: 3.25rem;
+  min-height: 3.75rem;
   align-items: center;
   border-bottom: 1px solid var(--border);
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   background: var(--control-surface);
   color: var(--text);
   font-size: 0.72rem;
   font-weight: 760;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.spectrumGroup + .spectrumGroup {
+  margin-top: 0.85rem;
+  border-top: 1px solid var(--border);
 }
 
 .spectrumRow {
@@ -936,17 +1242,31 @@
 .spectrumRow > h3 {
   display: flex;
   min-height: 100%;
-  align-items: center;
-  padding: 1rem;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  border-right: 1px solid var(--border);
+  padding: 1.2rem 1.25rem;
+  background: color-mix(in srgb, var(--control-surface) 72%, var(--bg));
   color: var(--text);
-  font-size: 0.92rem;
-  font-weight: 650;
+  font-size: 0.98rem;
+  font-weight: 720;
   line-height: 1.25;
 }
 
+.spectrumRow > h3 small {
+  color: var(--text-40);
+  font-size: 0.64rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 .spectrumLanes {
+  position: relative;
   min-width: 0;
-  border-left: 1px solid var(--border);
   background-image: linear-gradient(
     to right,
     transparent calc(25% - 1px),
@@ -961,9 +1281,47 @@
   );
 }
 
+.spectrumCoverage,
+.spectrumBpmWindow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.spectrumCoverage {
+  z-index: 0;
+  left: var(--coverage-left);
+  width: var(--coverage-width);
+  min-width: 2px;
+  border-inline: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.discovery[data-palette="color"] .spectrumCoverage {
+  border-color: color-mix(in srgb, var(--style-color) 34%, transparent);
+  background: color-mix(in srgb, var(--style-color) 9%, transparent);
+}
+
+.spectrumBpmWindow {
+  z-index: 1;
+  right: calc(100% - var(--range-end));
+  left: var(--range-start);
+  border-inline: 1px solid color-mix(in srgb, var(--text) 24%, transparent);
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  opacity: 0;
+  transition: opacity 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spectrum[data-bpm-filtered="true"] .spectrumBpmWindow {
+  opacity: 1;
+}
+
 .spectrumLane {
   position: relative;
-  min-height: 3.25rem;
+  z-index: 2;
+  min-height: 4.15rem;
 }
 
 .spectrumEntry {
@@ -973,11 +1331,17 @@
   left: var(--profile-left);
   width: var(--profile-width);
   min-width: 1px;
+  border: 0;
+  padding: 0;
+  background: transparent;
   color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
   opacity: var(--match-opacity);
   transition:
-    opacity 220ms ease,
-    filter 220ms ease;
+    opacity 190ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 190ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .spectrumEntry:hover,
@@ -987,41 +1351,152 @@
   filter: none;
 }
 
+.spectrumEntry[data-footprint="muted"] {
+  opacity: 0.06;
+}
+
+.spectrumEntry[data-footprint="active"] {
+  z-index: 3;
+  opacity: 1;
+  filter: none;
+}
+
 .spectrumEntryLabel {
   position: absolute;
-  top: 0.55rem;
+  top: 0.38rem;
   left: 0;
-  display: flex;
+  display: grid;
   width: max-content;
-  max-width: 12rem;
-  align-items: baseline;
-  gap: 0.5rem;
-  padding: 0.15rem 0.35rem;
+  max-width: 15rem;
+  min-height: 1.9rem;
+  grid-template-columns: 1.65rem auto;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.12rem 0.45rem 0.12rem 0.12rem;
   background: var(--bg);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 760;
   letter-spacing: 0.07em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
-.spectrumEntryLabel small {
-  color: var(--text-40);
-  font-size: 0.58rem;
-  font-variant-numeric: tabular-nums;
+.spectrumEntryLabel[data-align="end"] {
+  right: 0;
+  left: auto;
+}
+
+.spectrumAvatar {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--control-surface);
+}
+
+.spectrumAvatar img {
+  object-fit: cover;
 }
 
 .spectrumRange {
   position: absolute;
+  overflow: hidden;
   right: 0;
-  bottom: 0.45rem;
   left: 0;
-  height: 7px;
-  background: var(--text-60);
+  top: 2.48rem;
+  height: 6px;
+  background: color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+.spectrumRangeValues {
+  position: absolute;
+  top: 3.15rem;
+  right: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-40);
+  font-size: 0.58rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.spectrumRangeMatch {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--bpm-match-left);
+  width: var(--bpm-match-width);
+  min-width: 1px;
+  background: var(--text);
+  transition:
+    left 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spectrumEntry:focus-visible .spectrumEntryLabel {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.spectrumEntry[aria-pressed="true"] .spectrumEntryLabel {
+  outline: 1px solid var(--text);
+  outline-offset: 2px;
+}
+
+.spectrumEntry[aria-pressed="true"] .spectrumEntryLabel {
+  outline: 1px solid var(--text);
+  outline-offset: 2px;
 }
 
 .discovery[data-palette="color"] .spectrumRange {
+  background: color-mix(in srgb, var(--profile-color) 24%, transparent);
+}
+
+.discovery[data-palette="color"] .spectrumRangeMatch {
   background: var(--profile-color);
+}
+
+.spectrumEmpty {
+  display: grid;
+  min-height: 22rem;
+  place-content: center;
+  justify-items: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.spectrumEmpty strong {
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.spectrumEmpty p {
+  margin-top: 0.45rem;
+  color: var(--text-60);
+}
+
+.spectrumEmpty button {
+  min-height: 44px;
+  margin-top: 1.25rem;
+  border: 1px solid var(--text);
+  padding: 0.7rem 1rem;
+  color: var(--text);
+  font-size: 0.7rem;
+  font-weight: 720;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.spectrumEmpty button:hover,
+.spectrumEmpty button:focus-visible {
+  background: var(--text);
+  color: var(--bg);
 }
 
 .bookingPrompt {
@@ -1075,7 +1550,7 @@
 
 @media (max-width: 1100px) {
   .filters {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .filters[data-view="grid"] {
@@ -1084,11 +1559,6 @@
 
   .searchField {
     grid-column: auto;
-  }
-
-  .bpmField {
-    grid-column: span 2;
-    border-top: 1px solid var(--border);
   }
 
   .filterField:nth-child(3) {
@@ -1110,7 +1580,7 @@
   }
 
   .spectrumEntryLabel {
-    font-size: 0.62rem;
+    font-size: 0.68rem;
   }
 }
 
@@ -1127,80 +1597,38 @@
     margin-top: 1rem;
   }
 
-  .spectrumDesktop {
-    display: none;
-  }
-
-  .spectrumMobile {
-    display: block;
-  }
-
-  .spectrumMobile > section > h2 {
-    border-bottom: 1px solid var(--border);
-    padding: 1rem;
-    background: var(--control-surface);
-    font-size: 0.72rem;
-    font-weight: 760;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  .mobileStyle {
-    border-bottom: 1px solid var(--border);
-    padding: 1rem;
-  }
-
-  .mobileStyle h3 {
-    margin-bottom: 0.75rem;
-    color: var(--text-60);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .mobileProfile {
+  .spectrumGuide {
     display: grid;
-    min-height: 44px;
-    grid-template-columns: 0.6rem 1fr auto;
-    align-items: center;
-    gap: 0.75rem;
-    border-top: 1px solid var(--chart-line);
-    color: var(--text);
-    opacity: var(--match-opacity);
-    transition: opacity 180ms ease;
+    gap: 0.3rem;
   }
 
-  .mobileProfile:first-of-type {
-    border-top: 0;
+  .spectrumViewport {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
   }
 
-  .mobileProfile:hover,
-  .mobileProfile:focus-visible {
-    opacity: 1;
+  .spectrumDesktop {
+    display: block;
+    min-width: 48rem;
   }
 
-  .mobileProfile > span {
-    width: 0.6rem;
-    height: 0.6rem;
-    background: var(--text-60);
+  .spectrumRuler,
+  .spectrumRow {
+    grid-template-columns: 11rem minmax(0, 1fr);
   }
 
-  .discovery[data-palette="color"] .mobileProfile > span {
-    background: var(--profile-color);
+  .spectrumRuler > span,
+  .spectrumRow > h3 {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    box-shadow: 0.45rem 0 0.9rem -0.9rem color-mix(in srgb, var(--text) 55%, transparent);
   }
 
-  .mobileProfile strong {
-    font-size: 0.78rem;
-    font-weight: 720;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .mobileProfile small {
-    color: var(--text-60);
-    font-size: 0.68rem;
-    font-variant-numeric: tabular-nums;
+  .spectrumGroup > h2 {
+    position: sticky;
+    left: 0;
+    z-index: 6;
   }
 }
 
@@ -1277,7 +1705,6 @@
   }
 
   .filterField,
-  .bpmField,
   .searchField,
   .choiceField {
     grid-column: auto;
@@ -1286,6 +1713,21 @@
   }
 
   .filters[data-view="grid"] {
+    grid-template-columns: 1fr;
+  }
+
+  .spectrumStylesPanel {
+    position: static;
+    width: 100%;
+    margin-top: 0.75rem;
+    box-shadow: none;
+  }
+
+  .spectrumMomentPanel {
+    width: 100%;
+  }
+
+  .spectrumStyleOptions {
     grid-template-columns: 1fr;
   }
 
@@ -1300,11 +1742,6 @@
 
   .filterField:nth-child(4) {
     border-right: 0;
-  }
-
-  .bpmField {
-    border-top: 0;
-    border-bottom: 0;
   }
 
   .resultBar {
