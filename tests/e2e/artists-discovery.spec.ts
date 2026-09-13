@@ -214,6 +214,22 @@ test("filters the grid to artists compatible with the selected genre and style",
   expect(selectedMetrics.fontSize).toBe(unselectedMetrics.fontSize);
   expect(selectedMetrics.height).toBeCloseTo(unselectedMetrics.height, 1);
   expect(selectedMetrics.width).toBeCloseTo(unselectedMetrics.width, 1);
+  const selectedTreatment = await selectedStyleLabel.evaluate((element) => {
+    const label = getComputedStyle(element);
+    const surface = getComputedStyle(element, "::before");
+    return {
+      background: surface.backgroundColor,
+      borderWidth: surface.borderTopWidth,
+      outline: surface.outlineStyle,
+      text: label.color,
+    };
+  });
+  expect(selectedTreatment).toEqual({
+    background: "rgba(255, 255, 255, 0.14)",
+    borderWidth: "1px",
+    outline: "none",
+    text: "rgba(255, 255, 255, 0.96)",
+  });
 
   await expect(page.getByText("1 artist", { exact: true })).toBeVisible();
   const firstArtist = grid.getByRole("article").first();

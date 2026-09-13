@@ -957,7 +957,7 @@
 }
 
 .artistBadges .styleBadge[data-selected="true"] {
-  color: var(--cta-text);
+  color: rgba(255, 255, 255, 0.96);
 }
 
 .styleBadgeText {
@@ -966,7 +966,7 @@
 }
 
 .styleBadge[data-selected="true"] .styleBadgeText {
-  color: var(--cta-text);
+  color: rgba(255, 255, 255, 0.96);
   white-space: nowrap;
 }
 
@@ -974,15 +974,14 @@
   position: absolute;
   z-index: -1;
   inset: -0.12rem -0.38rem;
-  background: var(--cta-bg);
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  background: rgba(255, 255, 255, 0.14);
   content: "";
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
 }
 
 .discovery[data-palette="color"] .styleBadge[data-selected="true"] .styleBadgeText::before {
-  background: #0a0a0a;
-  outline-color: var(--badge-color);
+  border-color: color-mix(in srgb, var(--badge-color) 72%, transparent);
+  background: rgba(10, 10, 10, 0.72);
 }
 
 .discovery[data-palette="color"] .styleBadge[data-selected="true"] .styleBadgeText {
