@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-30T21:18:04.000Z",
+  "generatedAt": "2026-09-13T22:05:55.000Z",
   "title": "Design System: AAA Artists",
   "extensions": {
     "colorMeta": {
@@ -138,6 +138,126 @@
           "#fca5a5",
           "#fee2e2"
         ]
+      },
+      "progressive-blue": {
+        "role": "secondary",
+        "displayName": "Progressive Blue",
+        "canonical": "#65a2ff",
+        "tonalRamp": [
+          "#0d1b33",
+          "#16335e",
+          "#24508d",
+          "#376fb9",
+          "#4c89df",
+          "#65a2ff",
+          "#a6c8ff",
+          "#eaf2ff"
+        ]
+      },
+      "uplifting-cyan": {
+        "role": "secondary",
+        "displayName": "Uplifting Cyan",
+        "canonical": "#31d6e7",
+        "tonalRamp": [
+          "#06272b",
+          "#0b4850",
+          "#11717d",
+          "#1999aa",
+          "#24bdcf",
+          "#31d6e7",
+          "#8ceaf2",
+          "#e7fbfd"
+        ]
+      },
+      "tech-trance-green": {
+        "role": "secondary",
+        "displayName": "Tech Trance Green",
+        "canonical": "#63e694",
+        "tonalRamp": [
+          "#0b2b1b",
+          "#14502f",
+          "#207746",
+          "#2e9f5e",
+          "#45c879",
+          "#63e694",
+          "#a6f3c1",
+          "#ebfcf1"
+        ]
+      },
+      "euro-trance-violet": {
+        "role": "secondary",
+        "displayName": "Euro Trance Violet",
+        "canonical": "#b27aff",
+        "tonalRamp": [
+          "#241335",
+          "#422260",
+          "#63328e",
+          "#8246b8",
+          "#9c5fda",
+          "#b27aff",
+          "#d5b6ff",
+          "#f4ebff"
+        ]
+      },
+      "hard-trance-pink": {
+        "role": "secondary",
+        "displayName": "Hard Trance Pink",
+        "canonical": "#ff62b4",
+        "tonalRamp": [
+          "#351022",
+          "#631c3d",
+          "#93295a",
+          "#c13877",
+          "#e24998",
+          "#ff62b4",
+          "#ffa6d3",
+          "#ffebf5"
+        ]
+      },
+      "melodic-techno-yellow": {
+        "role": "tertiary",
+        "displayName": "Melodic Techno Yellow",
+        "canonical": "#ffe44f",
+        "tonalRamp": [
+          "#332c05",
+          "#5e5209",
+          "#8b790f",
+          "#b9a117",
+          "#ddc529",
+          "#ffe44f",
+          "#fff09b",
+          "#fffbe4"
+        ]
+      },
+      "peak-time-techno-orange": {
+        "role": "tertiary",
+        "displayName": "Peak-Time Techno Orange",
+        "canonical": "#ff9147",
+        "tonalRamp": [
+          "#351b08",
+          "#63320d",
+          "#934b15",
+          "#c46122",
+          "#e97832",
+          "#ff9147",
+          "#ffc092",
+          "#fff1e3"
+        ]
+      },
+      "hard-techno-red": {
+        "role": "tertiary",
+        "displayName": "Hard Techno Red",
+        "canonical": "#ff4d68",
+        "tonalRamp": [
+          "#350a10",
+          "#64121d",
+          "#941c2c",
+          "#c2293d",
+          "#e43a52",
+          "#ff4d68",
+          "#ff9bac",
+          "#ffe9ed"
+        ]
       }
     },
     "typographyMeta": {
@@ -195,6 +315,20 @@
       "css": ".ds-btn-outline { min-height: 44px; border: 1px solid var(--border, #d0d0d0); border-radius: 0; padding: 12px 20px; background: transparent; color: var(--text-60, #555); font: 600 12px/1.25 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; transition: border-color .2s ease, color .2s ease; } .ds-btn-outline:hover, .ds-btn-outline:focus-visible { border-color: var(--text, #0a0a0a); color: var(--text, #0a0a0a); } .ds-btn-outline:focus-visible { outline: 2px solid var(--text-60, #666); outline-offset: 2px; }"
     },
     {
+      "name": "Discovery Style Control",
+      "kind": "chip",
+      "description": "Neutral filter status followed by equal-sized musical-style selectors and a same-sized neutral reset when styles are active.",
+      "html": "<div class=\"ds-style-filter\"><p>1 OF 5 STYLES SELECTED</p><div><button class=\"ds-style-choice\" aria-pressed=\"true\"><i></i>PROGRESSIVE TRANCE</button><button class=\"ds-style-clear\">CLEAR STYLES</button></div></div>",
+      "css": ".ds-style-filter p { min-height: 44px; color: #8a8a8a; font: 700 10px/1 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; } .ds-style-filter > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; } .ds-style-filter button { min-width: 168px; min-height: 44px; flex: 0 1 calc((100% - 16px) / 3); border-radius: 0; padding: 10px 14px; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; } .ds-style-choice { border: 1px solid #65a2ff; background: #0a0a0a; box-shadow: inset 0 0 0 1px #65a2ff; color: #65a2ff; } .ds-style-choice i { display: inline-block; width: 9px; height: 9px; margin-right: 10px; background: #65a2ff; } .ds-style-clear { border: 1px solid #333; background: transparent; color: #999; } .ds-style-filter button:focus-visible { outline: 2px solid var(--text, #f8f8f8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Artist Card Accent",
+      "kind": "card",
+      "description": "Image-led artist card with a one-pixel style signal beneath the photograph.",
+      "html": "<article class=\"ds-artist-card\"><div></div><strong>ARTIST NAME</strong></article>",
+      "css": ".ds-artist-card { position: relative; width: 280px; border: 1px solid var(--border, #2a2a2a); border-radius: 0; background: #0a0a0a; color: #f8f8f8; font-family: system-ui, sans-serif; } .ds-artist-card div { height: 180px; border-bottom: 1px solid #65a2ff; background: #141414; } .ds-artist-card strong { display: block; padding: 16px; font-size: 18px; } .ds-artist-card:focus-within { outline: 2px solid var(--text, #f8f8f8); outline-offset: 2px; }"
+    },
+    {
       "name": "Text Field",
       "kind": "input",
       "refersTo": "input-light",
@@ -233,9 +367,10 @@
   ],
   "narrative": {
     "northStar": "The Curated Signal",
-    "overview": "AAA Artists uses a monochrome visual signal to help visitors focus on artists, sound, and booking decisions. The identity is precise, restrained, confident, underground, and useful: editorial hierarchy and deliberate spacing carry more weight than decoration. It should feel connected to a serious promoter and artist agency, never like a generic marketplace.\n\nThe existing logo, black-and-white palette, and equal light/dark themes are the anchors. Future work should refine their clarity and craft rather than replace them. Colourful festival graphics, corporate software styling, and luxury-agency ornament are anti-references.",
+    "overview": "AAA Artists uses a monochrome structural system with a controlled spectral signal for artist discovery. The identity is precise, restrained, confident, underground, and useful: editorial hierarchy and deliberate spacing carry more weight than decoration. It should feel connected to a serious promoter and artist agency, never like a generic marketplace.\n\nThe logo, black-and-white product chrome, and equal light/dark themes remain the anchors. Color is functional rather than decorative: cool hues identify Trance styles, warm hues identify Techno styles, and BPM remains encoded by position. Corporate software styling, uncontrolled festival graphics, and luxury-agency ornament are anti-references.",
     "keyCharacteristics": [
-      "Monochrome contrast led by the AAA Artists logo.",
+      "Monochrome product chrome led by the AAA Artists logo.",
+      "A stable cool-to-warm spectrum identifies musical styles across themes.",
       "Equal-quality light and dark experiences.",
       "Square geometry, thin rules, and tonal surfaces.",
       "Bold headlines paired with compact uppercase labels.",
@@ -248,8 +383,8 @@
         "section": "colors"
       },
       {
-        "name": "The Monochrome Signal Rule",
-        "body": "Product chrome remains black, white, and grey; artist media supplies colour when the experience deliberately reveals it.",
+        "name": "The Spectral Signal Rule",
+        "body": "Product chrome remains black, white, and grey. The discovery spectrum is the one systematic color layer, and its hues remain identical in both themes.",
         "section": "colors"
       },
       {
@@ -275,14 +410,15 @@
     ],
     "dos": [
       "Do preserve the logo as a black-and-white identity anchor in both themes.",
-      "Do refine the existing monochrome system through hierarchy, spacing, imagery, and interaction craft.",
+      "Do refine the monochrome-led system through hierarchy, spacing, imagery, and interaction craft.",
+      "Do use the fixed cool Trance and warm Techno spectrum only to identify musical styles.",
       "Do verify every visual change in light and dark, on mobile and desktop.",
       "Do use artist media and audio as the expressive layer while interface chrome stays restrained.",
       "Do keep interaction, keyboard focus, and touch state visible."
     ],
     "donts": [
       "Don't replace the incumbent identity when the task asks for refinement.",
-      "Don't introduce decorative colour into product chrome without an explicit identity decision.",
+      "Don't use spectral colors decoratively or change their hues between light and dark themes.",
       "Don't imitate a corporate dashboard, colourful festival campaign, or luxury-agency aesthetic.",
       "Don't round every surface or use shadows to make ordinary containers feel important.",
       "Don't create extra bordered cards when proximity can express the relationship."

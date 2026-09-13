@@ -164,14 +164,18 @@ test("filters the grid to artists compatible with the selected genre and style",
   const genreChoices = page.getByRole("group", { name: "Genre" });
   const styleChoices = page.getByRole("group", { name: "Style" });
   await genreChoices.getByRole("button", { name: "Trance", exact: true }).click();
+  await expect(styleChoices.getByRole("status")).toHaveText("Showing all Trance styles");
   await expect(styleChoices.getByRole("button")).toHaveText([
-    "All styles",
     "Progressive Trance",
     "Uplifting Trance",
     "Tech Trance",
     "Euro Trance",
     "Hard Trance",
   ]);
+  const styleButtonWidths = await styleChoices
+    .getByRole("button")
+    .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().width));
+  expect(Math.max(...styleButtonWidths) - Math.min(...styleButtonWidths)).toBeLessThan(1);
 
   const progressiveStyle = styleChoices.getByRole("button", {
     name: "Progressive Trance",
@@ -200,7 +204,24 @@ test("filters the grid to artists compatible with the selected genre and style",
       width: bounds.width,
     };
   });
-  await styleChoices.getByRole("button", { name: "Hard Techno", exact: true }).click();
+  const hardTechnoChoice = styleChoices.getByRole("button", {
+    name: "Hard Techno",
+    exact: true,
+  });
+  await hardTechnoChoice.click();
+  await expect(styleChoices.getByRole("status")).toHaveText("1 of 3 styles selected");
+  await expect(
+    styleChoices.getByRole("button", { name: "Clear styles", exact: true })
+  ).toBeVisible();
+  const activeStyleButtonWidths = await styleChoices
+    .getByRole("button")
+    .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().width));
+  expect(Math.max(...activeStyleButtonWidths) - Math.min(...activeStyleButtonWidths)).toBeLessThan(
+    1
+  );
+  await expect
+    .poll(() => hardTechnoChoice.evaluate((element) => getComputedStyle(element).boxShadow))
+    .not.toBe("none");
   const selectedMetrics = await selectedStyleLabel.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
     const styles = getComputedStyle(element);
@@ -233,6 +254,9 @@ test("filters the grid to artists compatible with the selected genre and style",
 
   await expect(page.getByText("1 artist", { exact: true })).toBeVisible();
   const firstArtist = grid.getByRole("article").first();
+  await expect
+    .poll(() => firstArtist.evaluate((element) => getComputedStyle(element, "::after").height))
+    .toBe("1px");
   await firstArtist.hover();
   await expect(
     firstArtist.getByRole("link", { name: "View Thiago Genez profile" })
@@ -255,8 +279,16 @@ test("filters the grid to artists compatible with the selected genre and style",
   await expect(
     styleChoices.getByRole("button", { name: "Melodic Techno", exact: true })
   ).toHaveAttribute("aria-pressed", "true");
+  await expect(styleChoices.getByRole("status")).toHaveText("2 of 3 styles selected");
   await expect(grid.getByRole("article")).toHaveCount(2);
   await expect(grid.getByRole("link", { name: "View Krevix profile" })).toBeVisible();
+
+  await styleChoices.getByRole("button", { name: "Clear styles", exact: true }).click();
+  await expect(styleChoices.getByRole("status")).toHaveText("Showing all Techno styles");
+  await expect(styleChoices.getByRole("button", { name: "Clear styles", exact: true })).toHaveCount(
+    0
+  );
+  await expect(grid.getByRole("article")).toHaveCount(2);
 });
 
 test("ranks artists matching every selected style before partial matches", async ({ page }) => {
@@ -419,6 +451,23 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     )
   ).toBeVisible();
   if (mobileSpectrum) {
+    const mobileRangeAlignment = await page.evaluate(() => {
+      const track = document
+        .querySelector('[data-testid="spectrum-mobile-range"] [data-bpm-slider-selection="true"]')
+        ?.parentElement?.getBoundingClientRect();
+      const rulerScale = document
+        .querySelector('[data-bpm-ruler-scale="true"]')
+        ?.getBoundingClientRect();
+      if (!track || !rulerScale) return null;
+      return {
+        left: Math.abs(track.left - rulerScale.left),
+        width: Math.abs(track.width - rulerScale.width),
+      };
+    });
+    expect(mobileRangeAlignment).not.toBeNull();
+    expect(mobileRangeAlignment?.left).toBeLessThan(1);
+    expect(mobileRangeAlignment?.width).toBeLessThan(1);
+
     const viewportShell = spectrum.locator('[data-scroll-hint="true"]');
     await expect(viewportShell).toBeVisible();
     await expect(spectrum.getByText("Swipe for higher BPM", { exact: true })).toBeVisible();

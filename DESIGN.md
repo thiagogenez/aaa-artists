@@ -1,6 +1,6 @@
 ---
 name: AAA Artists
-description: A precise monochrome system for artist discovery and direct booking.
+description: A precise monochrome-led system with spectral color for artist discovery.
 colors:
   signal-black: "#0a0a0a"
   gallery-white: "#f8f8f8"
@@ -11,6 +11,14 @@ colors:
   dark-border: "#2a2a2a"
   error-light: "#c0341d"
   error-dark: "#f87171"
+  progressive-blue: "#65a2ff"
+  uplifting-cyan: "#31d6e7"
+  tech-trance-green: "#63e694"
+  euro-trance-violet: "#b27aff"
+  hard-trance-pink: "#ff62b4"
+  melodic-techno-yellow: "#ffe44f"
+  peak-time-techno-orange: "#ff9147"
+  hard-techno-red: "#ff4d68"
 typography:
   display:
     fontFamily: "system-ui, -apple-system, sans-serif"
@@ -85,18 +93,20 @@ components:
 
 **Creative North Star: "The Curated Signal"**
 
-AAA Artists uses a monochrome visual signal to help visitors focus on artists, sound, and booking
-decisions. The identity is precise, restrained, confident, underground, and useful: editorial
+AAA Artists uses a monochrome structural system with a controlled spectral signal for artist
+discovery. The identity is precise, restrained, confident, underground, and useful: editorial
 hierarchy and deliberate spacing carry more weight than decoration. It should feel connected to
 a serious promoter and artist agency, never like a generic marketplace.
 
-The existing logo, black-and-white palette, and equal light/dark themes are the anchors. Future
-work should refine their clarity and craft rather than replace them. Colourful festival graphics,
-corporate software styling, and luxury-agency ornament are anti-references.
+The logo, black-and-white product chrome, and equal light/dark themes remain the anchors. Color is
+functional rather than decorative: cool hues identify Trance styles, warm hues identify Techno
+styles, and BPM remains encoded by position. Corporate software styling, uncontrolled festival
+graphics, and luxury-agency ornament are anti-references.
 
 **Key Characteristics:**
 
-- Monochrome contrast led by the AAA Artists logo.
+- Monochrome product chrome led by the AAA Artists logo.
+- A stable cool-to-warm spectrum identifies musical styles across themes.
 - Equal-quality light and dark experiences.
 - Square geometry, thin rules, and tonal surfaces.
 - Bold headlines paired with compact uppercase labels.
@@ -104,8 +114,8 @@ corporate software styling, and luxury-agency ornament are anti-references.
 
 ## Colors
 
-The palette is deliberately achromatic: black, white, and steel greys reverse roles between
-themes while preserving hierarchy.
+Black, white, and steel greys carry the interface hierarchy. A fixed spectral palette identifies
+musical styles without changing between light and dark themes.
 
 ### Primary
 
@@ -123,11 +133,21 @@ themes while preserving hierarchy.
 - **Dark Border:** Structural divisions in the dark theme.
 - **Error Light / Error Dark:** Theme-specific validation colours used only for errors and recovery.
 
+### Functional Spectrum
+
+- **Trance:** Progressive Blue, Uplifting Cyan, Tech Trance Green, Euro Trance Violet, and Hard
+  Trance Pink form a cool progression.
+- **Techno:** Melodic Techno Yellow, Peak-Time Techno Orange, and Hard Techno Red form a warm
+  progression.
+- **Application:** Style color appears in filter controls, selected style labels, card accent
+  rules, and Spectrum ranges. It identifies style; it never replaces BPM position or written
+  labels.
+
 **The Theme Parity Rule.** Light and dark are equal products. Neither may be treated as an
 afterthought or simple colour inversion.
 
-**The Monochrome Signal Rule.** Product chrome remains black, white, and grey; artist media
-supplies colour when the experience deliberately reveals it.
+**The Spectral Signal Rule.** Product chrome remains black, white, and grey. The discovery
+spectrum is the one systematic color layer, and its hues remain identical in both themes.
 
 ## Typography
 
@@ -182,9 +202,10 @@ temporary overlay depth, not decoration.
 
 ## Shapes
 
-The core form language is rectilinear: square corners, one-pixel borders, straight dividers, and
-cropped rectangular media. Circular geometry is limited to naturally circular controls or small
-touch guidance, not used as a general card or button style.
+The core form language is rectilinear: square corners, one-pixel structural borders, straight
+dividers, and cropped rectangular media. Selected style controls use a two-pixel color stroke;
+artist cards use a one-pixel color accent beneath the image. Circular geometry is limited to
+naturally circular controls or small touch guidance, not used as a general card or button style.
 
 **The Square Instrument Rule.** Booking controls, CTAs, navigation controls, and content
 containers remain square unless the function itself calls for a circle.
@@ -202,6 +223,20 @@ rules, and small purposeful motion.
   is subtle and limited to directional affordances.
 - **Outline:** One-pixel structural border and muted text at rest, brightening together on hover
   or keyboard focus.
+
+### Discovery Style Controls
+
+- **All-styles state:** No selected style means every style in the active genre is shown. Express
+  this as a neutral contextual status, never as a peer tile beside musical styles.
+- **Selection summary:** When styles are active, replace the all-styles message with the selected
+  count and append a neutral `Clear styles` control to the option layout.
+- **Resting:** One-pixel neutral border with a colored style marker.
+- **Selected:** One-pixel colored border plus a one-pixel inset stroke, producing a stable
+  two-pixel selection without changing the control's size.
+- **Focus:** A separate two-pixel outer outline appears only for keyboard focus.
+- **Layout:** Controls wrap into as many as three equal-width columns. Incomplete rows stay centered
+  rather than enlarging a musical style, and the neutral reset occupies the next available cell
+  while filters are active. Narrow screens collapse naturally when labels cannot fit.
 
 ### Cards / Containers
 
@@ -230,7 +265,9 @@ background and restrained backdrop blur. Mobile navigation preserves the same hi
 
 Artist cards are image-led, square on small screens, and grid-aligned on desktop. Their resting
 imagery is monochrome; hover, focus, or tap reveals actions with a dark gradient and controlled
-movement. Text and actions remain high-contrast over media.
+movement. A one-pixel style-colored rule beneath the image identifies the artist's selected or
+primary style without competing with the photograph. Text and actions remain high-contrast over
+media.
 
 ### Booking Sections
 
@@ -243,8 +280,9 @@ should read as part of the field group they affect rather than as competing card
 ### Do:
 
 - **Do** preserve the logo as a black-and-white identity anchor in both themes.
-- **Do** refine the existing monochrome system through hierarchy, spacing, imagery, and
-  interaction craft.
+- **Do** refine the monochrome-led system through hierarchy, spacing, imagery, and interaction
+  craft.
+- **Do** use the fixed cool Trance and warm Techno spectrum only to identify musical styles.
 - **Do** verify every visual change in light and dark, on mobile and desktop.
 - **Do** use artist media and audio as the expressive layer while interface chrome stays restrained.
 - **Do** keep interaction, keyboard focus, and touch state visible.
@@ -252,7 +290,7 @@ should read as part of the field group they affect rather than as competing card
 ### Don't:
 
 - **Don't** replace the incumbent identity when the task asks for refinement.
-- **Don't** introduce decorative colour into product chrome without an explicit identity decision.
+- **Don't** use spectral colors decoratively or change their hues between light and dark themes.
 - **Don't** imitate a corporate dashboard, colourful festival campaign, or luxury-agency aesthetic.
 - **Don't** round every surface or use shadows to make ordinary containers feel important.
 - **Don't** create extra bordered cards when proximity can express the relationship.

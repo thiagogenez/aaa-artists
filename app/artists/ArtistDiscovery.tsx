@@ -547,6 +547,8 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
       : [...(SOUND_GROUPS.find((group) => group.id === family)?.styles ?? [])].sort(
           compareSoundStyleSpectrumOrder
         );
+  const familyLabel =
+    family === "all" ? null : (SOUND_GROUPS.find((group) => group.id === family)?.label ?? family);
   const artistSuggestions = useMemo(() => {
     const normalizedQuery = normalizeArtistSearch(query);
     if (normalizedQuery.length === 0) return [];
@@ -1033,33 +1035,45 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                 {family === "all" ? (
                   <p>Choose a genre to see its styles.</p>
                 ) : (
-                  <div>
-                    <button
-                      type="button"
-                      className={styles.allStylesChoice}
-                      aria-pressed={selectedStyles.length === 0}
-                      onClick={(event) => transitionGridFilters(event, family, [])}
-                    >
-                      All styles
-                    </button>
-                    {familyStyles.map((sound) => (
-                      <button
-                        key={sound.id}
-                        type="button"
-                        className={styles.styleChoice}
-                        style={{ "--style-color": SOUND_STYLE_COLORS[sound.id] } as DiscoveryStyle}
-                        aria-pressed={selectedStyles.includes(sound.id)}
-                        onClick={(event) => {
-                          const nextStyles = selectedStyles.includes(sound.id)
-                            ? selectedStyles.filter((styleId) => styleId !== sound.id)
-                            : [...selectedStyles, sound.id];
-                          transitionGridFilters(event, family, nextStyles);
-                        }}
-                      >
-                        {sound.label}
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    <p className={styles.styleSelectionSummary}>
+                      <span role="status" aria-live="polite">
+                        {selectedStyles.length === 0
+                          ? `Showing all ${familyLabel} styles`
+                          : `${selectedStyles.length} of ${familyStyles.length} styles selected`}
+                      </span>
+                    </p>
+                    <div className={styles.styleOptions}>
+                      {familyStyles.map((sound) => (
+                        <button
+                          key={sound.id}
+                          type="button"
+                          className={styles.styleChoice}
+                          style={
+                            { "--style-color": SOUND_STYLE_COLORS[sound.id] } as DiscoveryStyle
+                          }
+                          aria-pressed={selectedStyles.includes(sound.id)}
+                          onClick={(event) => {
+                            const nextStyles = selectedStyles.includes(sound.id)
+                              ? selectedStyles.filter((styleId) => styleId !== sound.id)
+                              : [...selectedStyles, sound.id];
+                            transitionGridFilters(event, family, nextStyles);
+                          }}
+                        >
+                          {sound.label}
+                        </button>
+                      ))}
+                      {selectedStyles.length > 0 && (
+                        <button
+                          type="button"
+                          className={styles.clearStylesChoice}
+                          onClick={(event) => transitionGridFilters(event, family, [])}
+                        >
+                          Clear styles
+                        </button>
+                      )}
+                    </div>
+                  </>
                 )}
               </fieldset>
             </div>
@@ -1390,29 +1404,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             )}
           </div>
 
-          <div className={styles.spectrumMobileRange} data-testid="spectrum-mobile-range">
-            <div className={styles.spectrumMobileRangeHeader}>
-              <span>BPM range</span>
-              <output aria-live="polite">
-                <strong>
-                  {bpmMin}–{bpmMax}
-                </strong>
-                <small>{bpmIsFiltered ? "Selected" : "Full range"}</small>
-              </output>
-            </div>
-            <BpmRangeControl
-              bpmMin={bpmMin}
-              bpmMax={bpmMax}
-              rangeStyle={rangeStyle}
-              onMinimumChange={(value) => setBpmMin(Math.min(value, bpmMax - 1))}
-              onMaximumChange={(value) => setBpmMax(Math.max(value, bpmMin + 1))}
-            />
-            <div className={styles.spectrumMobileRangeLimits} aria-hidden="true">
-              <span>{BPM_DOMAIN.min}</span>
-              <span>{BPM_DOMAIN.max}</span>
-            </div>
-          </div>
-
           <div
             className={styles.spectrumViewportShell}
             data-scroll-hint={spectrumScrolled ? "false" : "true"}
@@ -1431,6 +1422,28 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
               }}
             >
               <div className={styles.spectrumDesktop}>
+                <div className={styles.spectrumMobileRange} data-testid="spectrum-mobile-range">
+                  <div className={styles.spectrumMobileRangeHeader}>
+                    <span>BPM range</span>
+                    <output aria-live="polite">
+                      <strong>
+                        {bpmMin}–{bpmMax}
+                      </strong>
+                      <small>{bpmIsFiltered ? "Selected" : "Full range"}</small>
+                    </output>
+                  </div>
+                  <BpmRangeControl
+                    bpmMin={bpmMin}
+                    bpmMax={bpmMax}
+                    rangeStyle={rangeStyle}
+                    onMinimumChange={(value) => setBpmMin(Math.min(value, bpmMax - 1))}
+                    onMaximumChange={(value) => setBpmMax(Math.max(value, bpmMin + 1))}
+                  />
+                  <div className={styles.spectrumMobileRangeLimits} aria-hidden="true">
+                    <span>{BPM_DOMAIN.min}</span>
+                    <span>{BPM_DOMAIN.max}</span>
+                  </div>
+                </div>
                 <div className={styles.spectrumRuler} data-spectrum-ruler="true">
                   <span data-spectrum-axis-label="true">
                     <span>BPM</span>
