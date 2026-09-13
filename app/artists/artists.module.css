@@ -148,10 +148,15 @@
 
 .spectrumStylesPicker {
   position: relative;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
 }
 
-.spectrumStylesPicker > summary {
+.spectrumPickerTrigger {
   display: flex;
+  width: 100%;
   min-height: 38px;
   align-items: center;
   justify-content: space-between;
@@ -160,26 +165,22 @@
   color: var(--text);
   cursor: pointer;
   font-size: 1rem;
-  list-style: none;
+  text-align: left;
   transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.spectrumStylesPicker > summary::-webkit-details-marker {
-  display: none;
-}
-
-.spectrumStylesPicker > summary:hover,
-.spectrumStylesPicker > summary:focus-visible,
-.spectrumStylesPicker[open] > summary {
+.spectrumPickerTrigger:hover,
+.spectrumPickerTrigger:focus-visible,
+.spectrumStylesPicker[data-open="true"] > .spectrumPickerTrigger {
   border-color: var(--text);
 }
 
-.spectrumStylesPicker > summary:focus-visible {
+.spectrumPickerTrigger:focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 3px;
 }
 
-.spectrumStylesPicker > summary svg {
+.spectrumPickerTrigger svg {
   width: 1rem;
   height: 1rem;
   fill: none;
@@ -189,7 +190,7 @@
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.spectrumStylesPicker[open] > summary svg {
+.spectrumStylesPicker[data-open="true"] > .spectrumPickerTrigger svg {
   transform: rotate(180deg);
 }
 
@@ -229,7 +230,7 @@
 }
 
 .spectrumStylesGroupHeader button,
-.spectrumStylesFooter button {
+.spectrumPickerFooter button {
   color: var(--text-60);
   font-size: 0.65rem;
   font-weight: 700;
@@ -242,8 +243,8 @@
 
 .spectrumStylesGroupHeader button:hover,
 .spectrumStylesGroupHeader button:focus-visible,
-.spectrumStylesFooter button:hover,
-.spectrumStylesFooter button:focus-visible {
+.spectrumPickerFooter button:hover,
+.spectrumPickerFooter button:focus-visible {
   color: var(--text);
 }
 
@@ -253,10 +254,18 @@
   gap: 0.15rem 1rem;
 }
 
+.spectrumStyleOptionRow {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+}
+
 .spectrumStyleOption {
   display: flex;
   min-width: 0;
-  min-height: 40px;
+  min-height: 44px;
+  flex: 1 1 auto;
   align-items: center;
   gap: 0.65rem;
   color: var(--text-60);
@@ -264,7 +273,8 @@
   font-size: 0.78rem;
 }
 
-.spectrumStyleOption:hover {
+.spectrumStyleOptionRow:hover .spectrumStyleOption,
+.spectrumStyleOptionRow:focus-within .spectrumStyleOption {
   color: var(--text);
 }
 
@@ -279,21 +289,51 @@
   accent-color: var(--style-color);
 }
 
-.spectrumStylesFooter {
+.spectrumStyleOnly {
+  min-height: 44px;
+  flex: 0 0 auto;
+  padding-inline: 0.45rem;
+  color: var(--text-60);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  pointer-events: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25rem;
+  text-transform: uppercase;
+  transition:
+    color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spectrumStyleOptionRow:hover .spectrumStyleOnly,
+.spectrumStyleOnly:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.spectrumStyleOnly:hover,
+.spectrumStyleOnly:focus-visible {
+  color: var(--text);
+}
+
+.spectrumPickerFooter {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: flex-end;
+  gap: 0.75rem;
   border-top: 1px solid var(--border);
   padding: 0.9rem 1rem;
 }
 
-.spectrumStylesFooter button:disabled {
+.spectrumPickerFooter button:disabled {
   cursor: default;
   opacity: 0.32;
 }
 
-.spectrumStylesFooter .spectrumStylesDone {
+.spectrumPickerFooter .spectrumPickerDone {
   min-height: 38px;
   border: 1px solid var(--text);
   padding: 0.55rem 1rem;
@@ -302,8 +342,8 @@
   text-decoration: none;
 }
 
-.spectrumStylesFooter .spectrumStylesDone:hover,
-.spectrumStylesFooter .spectrumStylesDone:focus-visible {
+.spectrumPickerFooter .spectrumPickerDone:hover,
+.spectrumPickerFooter .spectrumPickerDone:focus-visible {
   background: transparent;
   color: var(--text);
 }
@@ -316,7 +356,7 @@
   width: min(18rem, calc(100vw - 3rem));
   min-inline-size: 0;
   margin: 0;
-  padding: 0.45rem;
+  padding: 0.45rem 0 0;
 }
 
 .spectrumMomentOption {
@@ -325,7 +365,7 @@
   min-height: 44px;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.65rem;
+  padding: 0.65rem 1rem;
   color: var(--text-60);
   font-size: 0.78rem;
   text-align: left;
@@ -1078,15 +1118,93 @@
   padding: 1.25rem;
 }
 
-.spectrumGuide strong {
+.spectrumGuideCopy {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+.spectrumGuideCopy strong {
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: 1rem;
   font-weight: 720;
 }
 
-.spectrumGuide span {
+.spectrumGuideCopy > span {
   color: var(--text-40);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+}
+
+.spectrumTouchGuide {
+  display: none;
+}
+
+.spectrumGuideActions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.spectrumGuideActions a,
+.spectrumGuideActions button,
+.spectrumClearSelection {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--text-20);
+  padding: 0.65rem 0.85rem;
+  color: var(--text-60);
+  font-size: 0.75rem;
+  font-weight: 720;
+  letter-spacing: 0.09em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  transition:
+    border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spectrumGuideActions a:first-child {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+}
+
+.spectrumGuideActions a,
+.spectrumGuideActions button {
+  flex: 0 0 auto;
+}
+
+.spectrumGuideActions a:hover,
+.spectrumGuideActions a:focus-visible,
+.spectrumGuideActions button:hover,
+.spectrumGuideActions button:focus-visible,
+.spectrumClearSelection:hover,
+.spectrumClearSelection:focus-visible {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+}
+
+.spectrumGuideActions a:first-child:hover,
+.spectrumGuideActions a:first-child:focus-visible {
+  background: transparent;
+  color: var(--text);
+}
+
+.spectrumMobileRange {
+  display: none;
+}
+
+.spectrumViewportShell {
+  position: relative;
+}
+
+.spectrumScrollHint {
+  display: none;
 }
 
 .spectrumViewport {
@@ -1255,6 +1373,8 @@
 }
 
 .spectrumRow > h3 small {
+  display: grid;
+  gap: 0.15rem;
   color: var(--text-40);
   font-size: 0.64rem;
   font-variant-numeric: tabular-nums;
@@ -1307,9 +1427,8 @@
   z-index: 1;
   right: calc(100% - var(--range-end));
   left: var(--range-start);
-  border-inline: 1px solid color-mix(in srgb, var(--text) 24%, transparent);
   background: color-mix(in srgb, var(--text) 5%, transparent);
-  opacity: 0;
+  opacity: 0.38;
   transition: opacity 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1581,6 +1700,12 @@
   .spectrumEntryLabel {
     font-size: 0.68rem;
   }
+
+  .spectrumRuler output {
+    display: grid;
+    justify-items: start;
+    gap: 0.2rem;
+  }
 }
 
 @media (max-width: 767px) {
@@ -1601,6 +1726,144 @@
     gap: 0.3rem;
   }
 
+  .spectrumGuideActions {
+    width: 100%;
+    flex-wrap: wrap;
+    margin-top: 0.65rem;
+  }
+
+  .spectrumGuideActions a,
+  .spectrumGuideActions button {
+    flex: 1 1 8rem;
+  }
+
+  .spectrumClearSelection {
+    width: 100%;
+    margin-top: 0.65rem;
+  }
+
+  .spectrumMobileRange {
+    display: block;
+    border-bottom: 1px solid var(--border);
+    padding: 1rem;
+  }
+
+  .spectrumMobileRangeHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .spectrumMobileRangeHeader > span {
+    color: var(--text-40);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .spectrumMobileRangeHeader output {
+    display: grid;
+    min-width: 0;
+    justify-items: end;
+    gap: 0.15rem;
+  }
+
+  .spectrumMobileRangeHeader output strong {
+    color: var(--text);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
+
+  .spectrumMobileRangeHeader output small {
+    color: var(--text-40);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .spectrumMobileRange .spectrumRangeControl {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    height: 44px;
+    margin-top: 0.2rem;
+  }
+
+  .spectrumMobileRange .spectrumRangeControl input[type="range"] {
+    height: 44px;
+  }
+
+  .spectrumMobileRangeLimits {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -0.25rem;
+    color: var(--text-40);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  .spectrumViewportShell::after {
+    position: absolute;
+    z-index: 12;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 2.75rem;
+    background: linear-gradient(to left, var(--bg), transparent);
+    content: "";
+    opacity: 0.88;
+    pointer-events: none;
+    transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .spectrumViewportShell[data-scroll-hint="false"]::after {
+    opacity: 0;
+  }
+
+  .spectrumScrollHint {
+    position: absolute;
+    z-index: 13;
+    top: 0.55rem;
+    right: 0.65rem;
+    display: flex;
+    min-height: 36px;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid var(--text);
+    padding: 0.5rem 0.65rem;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 0.75rem;
+    font-weight: 720;
+    letter-spacing: 0.08em;
+    opacity: 1;
+    pointer-events: none;
+    text-transform: uppercase;
+    transition:
+      opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .spectrumScrollHint svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: square;
+    stroke-width: 1.5;
+  }
+
+  .spectrumViewportShell[data-scroll-hint="false"] .spectrumScrollHint {
+    opacity: 0;
+    transform: translateX(0.5rem);
+  }
+
   .spectrumViewport {
     overflow-x: auto;
     overscroll-behavior-inline: contain;
@@ -1608,12 +1871,37 @@
 
   .spectrumDesktop {
     display: block;
-    min-width: 48rem;
+    min-width: 42rem;
   }
 
   .spectrumRuler,
   .spectrumRow {
-    grid-template-columns: 11rem minmax(0, 1fr);
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+  }
+
+  .spectrumRuler {
+    min-height: 3.75rem;
+  }
+
+  .spectrumRuler > span {
+    padding: 0.75rem;
+  }
+
+  .spectrumRuler > span > * {
+    display: none;
+  }
+
+  .spectrumRuler > span::after {
+    color: var(--text-40);
+    content: "Style";
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .spectrumRuler .spectrumRangeControl {
+    display: none;
   }
 
   .spectrumRuler > span,
@@ -1628,6 +1916,21 @@
     position: sticky;
     left: 0;
     z-index: 6;
+  }
+}
+
+@media (hover: none) {
+  .spectrumPointerGuide {
+    display: none;
+  }
+
+  .spectrumTouchGuide {
+    display: block;
+  }
+
+  .spectrumStyleOnly {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 

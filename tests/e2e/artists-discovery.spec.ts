@@ -359,8 +359,8 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   if (await filterToggle.isVisible()) await filterToggle.click();
   const momentPicker = page.getByTestId("spectrum-moment-picker");
   await expect(momentPicker).toBeVisible();
-  const momentSummary = momentPicker.locator("summary");
-  const stylesSummary = page.getByTestId("spectrum-styles-picker").locator("summary");
+  const momentSummary = momentPicker.locator("[data-picker-trigger]");
+  const stylesSummary = page.getByTestId("spectrum-styles-picker").locator("[data-picker-trigger]");
   const pickerHeights = await Promise.all([
     momentSummary.evaluate((element) => element.getBoundingClientRect().height),
     stylesSummary.evaluate((element) => element.getBoundingClientRect().height),
@@ -368,25 +368,39 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   expect(Math.abs(pickerHeights[0] - pickerHeights[1])).toBeLessThan(1);
 
   await momentSummary.click();
-  const momentOptions = page.getByLabel("Moment options");
+  const momentOptions = page.locator("#spectrum-moment-options");
   await expect(momentOptions).toBeVisible();
-  await momentOptions.getByRole("button", { name: "Peak-time" }).click();
-  await expect(momentOptions).not.toBeVisible();
+  const peakTimeMoment = momentOptions.getByRole("button", { name: "Peak-time" });
+  const warmUpMoment = momentOptions.getByRole("button", { name: "Warm-up" });
+  await peakTimeMoment.click();
+  await expect(momentOptions).toBeVisible();
   await expect(momentSummary).toContainText("Peak-time");
-  await momentSummary.click();
-  await momentOptions.getByRole("button", { name: "Any moment" }).click();
+  await warmUpMoment.click();
+  await expect(momentSummary).toContainText("2 moments");
+  await expect(peakTimeMoment).toHaveAttribute("aria-pressed", "true");
+  await expect(warmUpMoment).toHaveAttribute("aria-pressed", "true");
+  const resetMoment = momentOptions.getByRole("button", { name: "Reset" });
+  await expect(resetMoment).toBeEnabled();
+  await resetMoment.click();
   await expect(momentSummary).toContainText("Any moment");
+  await expect(resetMoment).toBeDisabled();
+  await momentOptions.getByRole("button", { name: "Done" }).click();
+  await expect(momentOptions).not.toBeVisible();
   const spectrumRuler = page.locator('[data-spectrum-ruler="true"]');
-  await expect(spectrumRuler.getByText("BPM", { exact: true })).toBeVisible();
-  await expect(spectrumRuler.getByText("Full range selected", { exact: true })).toBeVisible();
-  const minimumBpmSlider = spectrumRuler.getByRole("slider", { name: "Minimum BPM" });
-  const maximumBpmSlider = spectrumRuler.getByRole("slider", { name: "Maximum BPM" });
+  const mobileSpectrum = (page.viewportSize()?.width ?? 0) <= 767;
+  const bpmControls = mobileSpectrum ? page.getByTestId("spectrum-mobile-range") : spectrumRuler;
+  await expect(bpmControls.getByText(/BPM(?: range)?/, { exact: true })).toBeVisible();
+  await expect(
+    bpmControls.getByText(mobileSpectrum ? "Full range" : "Full range selected", { exact: true })
+  ).toBeVisible();
+  const minimumBpmSlider = bpmControls.getByRole("slider", { name: "Minimum BPM" });
+  const maximumBpmSlider = bpmControls.getByRole("slider", { name: "Maximum BPM" });
   await expect(minimumBpmSlider).toBeVisible();
   await expect(maximumBpmSlider).toBeVisible();
   await expect(minimumBpmSlider).toHaveAttribute("data-edge", "start");
   await expect(maximumBpmSlider).toHaveAttribute("data-edge", "end");
 
-  const sliderSelection = page.locator('[data-bpm-slider-selection="true"]');
+  const sliderSelection = bpmControls.locator('[data-bpm-slider-selection="true"]');
   const fullSelectionRatio = await sliderSelection.evaluate((selection) => {
     const track = selection.parentElement;
     if (!track) return 0;
@@ -396,6 +410,32 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
 
   const spectrum = page.getByTestId("artist-spectrum");
   await expect(spectrum).toBeVisible();
+  await expect
+    .poll(() =>
+      spectrum
+        .locator('[data-bpm-window="true"]')
+        .first()
+        .evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))
+    )
+    .toBeGreaterThan(0);
+  const touchGuidance = await page.evaluate(() => window.matchMedia("(hover: none)").matches);
+  await expect(
+    spectrum.getByText(
+      touchGuidance
+        ? "Tap an artist to trace every style and compare."
+        : "Point to trace every style. Select to compare.",
+      { exact: true }
+    )
+  ).toBeVisible();
+  if (mobileSpectrum) {
+    const viewportShell = spectrum.locator('[data-scroll-hint="true"]');
+    await expect(viewportShell).toBeVisible();
+    await expect(spectrum.getByText("Swipe for higher BPM", { exact: true })).toBeVisible();
+    await viewportShell
+      .getByRole("region", { name: "Artist BPM spectrum" })
+      .evaluate((element) => element.scrollTo({ left: 100 }));
+    await expect(spectrum.locator('[data-scroll-hint="false"]')).toBeVisible();
+  }
   const rulerTicks = spectrum.locator("[data-bpm-tick]");
   await expect(rulerTicks).toHaveCount(21);
   await expect(spectrum.locator('[data-bpm-tick][data-major="true"]')).toHaveCount(5);
@@ -410,12 +450,14 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     spectrum.getByRole("heading", { name: "Euro Trance", exact: true }).first()
   ).toBeVisible();
 
-  const frogrRange = spectrum.getByRole("button", { name: "FROGR, 140 to 145 BPM" }).first();
+  const frogrRange = spectrum
+    .getByRole("button", { name: "FROGR, Euro Trance, 140 to 145 BPM" })
+    .first();
   await expect(frogrRange).not.toHaveAttribute("title");
   await expect(spectrum.locator('[data-spectrum-coverage="true"]')).toHaveCount(8);
-  await expect(spectrum.locator('[data-spectrum-style="progressive-trance"] h3')).toContainText(
-    "5 artists · 126–136 BPM"
-  );
+  const progressiveMeta = spectrum.locator('[data-spectrum-style="progressive-trance"] h3');
+  await expect(progressiveMeta.locator("[data-spectrum-style-count]")).toHaveText("5 artists");
+  await expect(progressiveMeta.locator("[data-spectrum-style-bpm]")).toHaveText("126–136 BPM");
   await expect
     .poll(() =>
       spectrum
@@ -425,7 +467,7 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     .toEqual(["dim3nsion", "krevix", "mr-b", "thiago", "c-systems"]);
 
   const dimensionProgressive = spectrum.getByRole("button", {
-    name: "DIM3NSION, 126 to 134 BPM",
+    name: "DIM3NSION, Progressive Trance, 126 to 134 BPM",
   });
   const dimensionRangeValues = dimensionProgressive.locator('[data-bpm-range-values="true"]');
   await expect(dimensionRangeValues.locator("span").first()).toHaveText("126");
@@ -519,6 +561,9 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   await expect(thiagoEntries.first()).toHaveAttribute("aria-pressed", "true");
   await expect(page).toHaveURL(/\/artists$/);
   await expect(page.getByLabel("Selected artists")).toContainText("Thiago Genez");
+  await expect(spectrum).toContainText("Selected: Thiago Genez");
+  await expect(page.getByRole("navigation", { name: "Actions for Thiago Genez" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Clear filters" })).toHaveCount(0);
   if ((page.viewportSize()?.width ?? 0) > 767) {
     await frogrRange.hover();
     await expect(frogrRange).toHaveAttribute("data-footprint", "active");
@@ -541,6 +586,7 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   }
   await expect(frogrRange).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByLabel("Selected artists")).toContainText("FROGR");
+  await expect(page.getByRole("button", { name: "Clear selected" })).toBeVisible();
   await expect
     .poll(() =>
       thiagoEntries.evaluateAll((entries) => entries.map((entry) => entry.dataset.footprint))
@@ -556,7 +602,21 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   await minimumBpmSlider.fill("132");
   await expect(minimumBpmSlider).not.toHaveAttribute("data-edge");
   await expect(maximumBpmSlider).not.toHaveAttribute("data-edge");
-  await expect(page.getByText("Selected range", { exact: true })).toBeVisible();
+  await expect(
+    bpmControls.getByText(mobileSpectrum ? "Selected" : "Selected range", { exact: true })
+  ).toBeVisible();
+  if (!mobileSpectrum) {
+    const selectedRangeFitsAxis = await spectrumRuler
+      .getByText("Selected range", { exact: true })
+      .evaluate((status) => {
+        const axisLabel = status.closest('[data-spectrum-axis-label="true"]');
+        return (
+          axisLabel instanceof HTMLElement &&
+          status.getBoundingClientRect().right <= axisLabel.getBoundingClientRect().right
+        );
+      });
+    expect(selectedRangeFitsAxis).toBe(true);
+  }
   await expect(spectrum).toHaveAttribute("data-bpm-filtered", "true");
   await expect(spectrum.locator('[data-bpm-tick="130"]')).toHaveAttribute("data-in-range", "false");
   await expect(spectrum.locator('[data-bpm-tick="132"]')).toHaveAttribute("data-in-range", "true");
@@ -574,9 +634,13 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
         .evaluate((element) => getComputedStyle(element).opacity)
     )
     .toBe("1");
+  await expect(spectrum.locator('[data-bpm-window="true"]').first()).toHaveCSS(
+    "border-left-width",
+    "0px"
+  );
 
   const thiagoProgressive = spectrum.getByRole("button", {
-    name: "Thiago Genez, 128 to 136 BPM",
+    name: "Thiago Genez, Progressive Trance, 128 to 136 BPM",
   });
   await expect(thiagoProgressive).toHaveAttribute("data-bpm-match", "partial");
   const overlapRatio = await thiagoProgressive.evaluate((entry) => {
@@ -588,6 +652,33 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   expect(overlapRatio).toBeCloseTo(0.5, 1);
 
   await page.getByText("All 8 styles", { exact: true }).click();
+  const progressiveStyleOption = page.locator('[data-spectrum-style-option="progressive-trance"]');
+  const showOnlyProgressive = progressiveStyleOption.getByRole("button", {
+    name: "Show only Progressive Trance",
+  });
+  if ((page.viewportSize()?.width ?? 0) > 1100) {
+    await expect(showOnlyProgressive).toHaveCSS("opacity", "0");
+    await progressiveStyleOption.scrollIntoViewIfNeeded();
+    await progressiveStyleOption.getByText("Progressive Trance", { exact: true }).hover();
+    await expect(showOnlyProgressive).toHaveCSS("opacity", "1");
+    await page.getByRole("heading", { name: "Our Artists" }).hover();
+    await expect(showOnlyProgressive).toHaveCSS("opacity", "0");
+    await progressiveStyleOption.getByText("Progressive Trance", { exact: true }).hover();
+  } else {
+    await expect(showOnlyProgressive).toHaveCSS("opacity", "1");
+  }
+  await showOnlyProgressive.click();
+  await expect(page.getByText("1 of 8 styles", { exact: true })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Progressive Trance" })).toBeChecked();
+  await expect(
+    spectrum.getByRole("heading", { name: "Uplifting Trance", exact: true })
+  ).toHaveCount(0);
+  await page
+    .getByTestId("spectrum-styles-picker")
+    .getByRole("button", { name: "Reset", exact: true })
+    .click();
+  await expect(page.getByText("All 8 styles", { exact: true })).toBeVisible();
+
   const technoStyles = page.getByRole("region", { name: "Techno styles" });
   await technoStyles.getByRole("button", { name: "Hide all Techno styles" }).click();
   await expect(spectrum.getByRole("heading", { name: "Techno", exact: true })).toHaveCount(0);
