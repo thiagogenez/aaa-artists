@@ -29,7 +29,6 @@ import styles from "./artists.module.css";
 type DiscoveryArtist = Pick<Artist, "slug" | "name" | "image" | "soundProfiles">;
 type SoundProfile = DiscoveryArtist["soundProfiles"][number];
 type ViewMode = "grid" | "spectrum";
-type PaletteMode = "mono" | "color";
 type OptionalGroup = "all" | SoundGroupId;
 type RosterTransitionDirection = "expand" | "collapse" | "reorder";
 type SpectrumFootprint = "idle" | "active" | "muted";
@@ -485,7 +484,6 @@ function SpectrumEntry({
 
 export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[] }) {
   const [view, setView] = useState<ViewMode>("grid");
-  const [palette, setPalette] = useState<PaletteMode>("mono");
   const [family, setFamily] = useState<OptionalGroup>("all");
   const [selectedStyles, setSelectedStyles] = useState<SoundStyleId[]>([]);
   const [visibleSpectrumStyles, setVisibleSpectrumStyles] = useState<SoundStyleId[]>([
@@ -866,7 +864,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     "--range-end": `${((bpmMax - BPM_DOMAIN.min) / (BPM_DOMAIN.max - BPM_DOMAIN.min)) * 100}%`,
   };
   return (
-    <section className={styles.discovery} aria-label="Artist discovery" data-palette={palette}>
+    <section className={styles.discovery} aria-label="Artist discovery">
       <div className={styles.discoveryBar}>
         <fieldset className={styles.viewSwitch}>
           <legend className="sr-only">Roster view</legend>
@@ -882,24 +880,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             }}
           >
             Spectrum
-          </button>
-        </fieldset>
-
-        <fieldset className={styles.paletteSwitch}>
-          <legend className="sr-only">Color treatment</legend>
-          <button
-            type="button"
-            aria-pressed={palette === "mono"}
-            onClick={() => setPalette("mono")}
-          >
-            Without colors
-          </button>
-          <button
-            type="button"
-            aria-pressed={palette === "color"}
-            onClick={() => setPalette("color")}
-          >
-            With colors
           </button>
         </fieldset>
 

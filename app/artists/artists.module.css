@@ -47,8 +47,7 @@
   margin-bottom: 1rem;
 }
 
-.viewSwitch,
-.paletteSwitch {
+.viewSwitch {
   display: grid;
   min-inline-size: 0;
   grid-template-columns: 1fr 1fr;
@@ -60,12 +59,7 @@
   min-width: 21rem;
 }
 
-.paletteSwitch {
-  min-width: 22rem;
-}
-
-.viewSwitch button,
-.paletteSwitch button {
+.viewSwitch button {
   min-height: 48px;
   padding: 0.75rem 1.25rem;
   color: var(--text-60);
@@ -78,20 +72,16 @@
     color 180ms ease;
 }
 
-.viewSwitch button + button,
-.paletteSwitch button + button {
+.viewSwitch button + button {
   border-left: 1px solid var(--border);
 }
 
 .viewSwitch button:hover,
-.viewSwitch button:focus-visible,
-.paletteSwitch button:hover,
-.paletteSwitch button:focus-visible {
+.viewSwitch button:focus-visible {
   color: var(--text);
 }
 
-.viewSwitch button[aria-pressed="true"],
-.paletteSwitch button[aria-pressed="true"] {
+.viewSwitch button[aria-pressed="true"] {
   background: var(--cta-bg);
   color: var(--cta-text);
 }
@@ -282,10 +272,6 @@
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
-  accent-color: var(--text);
-}
-
-.discovery[data-palette="color"] .spectrumStyleOption input {
   accent-color: var(--style-color);
 }
 
@@ -640,7 +626,7 @@
   width: 0.55rem;
   height: 0.55rem;
   flex: 0 0 auto;
-  background: var(--text-40);
+  background: var(--style-color);
   content: "";
 }
 
@@ -652,26 +638,11 @@
 }
 
 .styleChoices .styleChoice[aria-pressed="true"] {
-  border-color: var(--cta-bg);
-  background: var(--cta-bg);
-  color: var(--cta-text);
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
-}
-
-.styleChoices .styleChoice[aria-pressed="true"]::before {
-  background: currentColor;
-}
-
-.discovery[data-palette="color"] .styleChoices .styleChoice::before {
-  background: var(--style-color);
-}
-
-.discovery[data-palette="color"] .styleChoices .styleChoice[aria-pressed="true"] {
   border-color: var(--style-color);
   background: #0a0a0a;
   color: var(--style-color);
-  outline-color: var(--style-color);
+  outline: 2px solid var(--style-color);
+  outline-offset: 2px;
 }
 
 .spectrumRangeControl {
@@ -866,7 +837,7 @@
   bottom: 0;
   left: 0;
   height: 2px;
-  background: var(--card-line);
+  background: var(--style-color);
   content: "";
   transform: scaleX(0);
   transform-origin: left;
@@ -877,10 +848,6 @@
 .artistCard:focus-visible::after,
 .artistCard[data-highlighted="true"]::after {
   transform: scaleX(1);
-}
-
-.discovery[data-palette="color"] .artistCard::after {
-  background: var(--style-color);
 }
 
 .artistImage {
@@ -1006,7 +973,7 @@
 }
 
 .styleBadge[data-selected="true"] .styleBadgeText {
-  color: rgba(255, 255, 255, 0.96);
+  color: var(--badge-color);
   white-space: nowrap;
 }
 
@@ -1014,18 +981,9 @@
   position: absolute;
   z-index: -1;
   inset: -0.12rem -0.38rem;
-  border: 1px solid rgba(255, 255, 255, 0.48);
-  background: rgba(255, 255, 255, 0.14);
-  content: "";
-}
-
-.discovery[data-palette="color"] .styleBadge[data-selected="true"] .styleBadgeText::before {
-  border-color: color-mix(in srgb, var(--badge-color) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--badge-color) 72%, transparent);
   background: rgba(10, 10, 10, 0.72);
-}
-
-.discovery[data-palette="color"] .styleBadge[data-selected="true"] .styleBadgeText {
-  color: var(--badge-color);
+  content: "";
 }
 
 .artistActions {
@@ -1413,14 +1371,9 @@
   left: var(--coverage-left);
   width: var(--coverage-width);
   min-width: 2px;
-  border-inline: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
-  background: color-mix(in srgb, var(--text) 5%, transparent);
-  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.discovery[data-palette="color"] .spectrumCoverage {
-  border-color: color-mix(in srgb, var(--style-color) 34%, transparent);
+  border-inline: 1px solid color-mix(in srgb, var(--style-color) 34%, transparent);
   background: color-mix(in srgb, var(--style-color) 9%, transparent);
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .spectrumBpmWindow {
@@ -1526,7 +1479,7 @@
   left: 0;
   top: 2.48rem;
   height: 6px;
-  background: color-mix(in srgb, var(--text) 22%, transparent);
+  background: color-mix(in srgb, var(--profile-color) 24%, transparent);
 }
 
 .spectrumRangeValues {
@@ -1551,7 +1504,7 @@
   left: var(--bpm-match-left);
   width: var(--bpm-match-width);
   min-width: 1px;
-  background: var(--text);
+  background: var(--profile-color);
   transition:
     left 120ms cubic-bezier(0.22, 1, 0.36, 1),
     width 120ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -1565,19 +1518,6 @@
 .spectrumEntry[aria-pressed="true"] .spectrumEntryLabel {
   outline: 1px solid var(--text);
   outline-offset: 2px;
-}
-
-.spectrumEntry[aria-pressed="true"] .spectrumEntryLabel {
-  outline: 1px solid var(--text);
-  outline-offset: 2px;
-}
-
-.discovery[data-palette="color"] .spectrumRange {
-  background: color-mix(in srgb, var(--profile-color) 24%, transparent);
-}
-
-.discovery[data-palette="color"] .spectrumRangeMatch {
-  background: var(--profile-color);
 }
 
 .spectrumEmpty {
@@ -1952,11 +1892,6 @@
     min-width: 0;
   }
 
-  .paletteSwitch {
-    width: 100%;
-    min-width: 0;
-  }
-
   .mobileFilterToggle {
     display: flex;
     width: 100%;
@@ -2086,7 +2021,6 @@
   .spectrumEntry,
   .mobileProfile,
   .viewSwitch button,
-  .paletteSwitch button,
   .choiceField button {
     transition: none;
   }

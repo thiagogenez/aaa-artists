@@ -184,7 +184,7 @@ test("filters the grid to artists compatible with the selected genre and style",
   const darkThemeAccent = await progressiveStyle.evaluate(
     (element) => getComputedStyle(element, "::before").backgroundColor
   );
-  expect(darkThemeAccent).not.toBe(lightThemeAccent);
+  expect(darkThemeAccent).toBe(lightThemeAccent);
 
   await genreChoices.getByRole("button", { name: "Techno", exact: true }).click();
   const thiagoCard = grid.getByRole("article").filter({
@@ -225,10 +225,10 @@ test("filters the grid to artists compatible with the selected genre and style",
     };
   });
   expect(selectedTreatment).toEqual({
-    background: "rgba(255, 255, 255, 0.14)",
+    background: "rgba(10, 10, 10, 0.72)",
     borderWidth: "1px",
     outline: "none",
-    text: "rgba(255, 255, 255, 0.96)",
+    text: "rgb(255, 77, 104)",
   });
 
   await expect(page.getByText("1 artist", { exact: true })).toBeVisible();
@@ -305,14 +305,10 @@ test("orders partial style matches by the canonical sound spectrum", async ({ pa
   await expect(cards.nth(8)).toContainText("SAGO");
 });
 
-test("switches between monochrome and restrained color treatments", async ({ page }) => {
+test("uses the restrained color treatment across themes", async ({ page }) => {
   await page.goto("/artists");
 
-  const palette = page.getByRole("group", { name: "Color treatment" });
-  const withoutColors = palette.getByRole("button", { name: "Without colors" });
-  const withColors = palette.getByRole("button", { name: "With colors" });
-  await expect(withoutColors).toHaveAttribute("aria-pressed", "true");
-  await expect(withColors).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("group", { name: "Color treatment" })).toHaveCount(0);
 
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
@@ -324,16 +320,11 @@ test("switches between monochrome and restrained color treatments", async ({ pag
   const progressiveStyle = page
     .getByRole("group", { name: "Style" })
     .getByRole("button", { name: "Progressive Trance", exact: true });
-  const monochromeAccent = await progressiveStyle.evaluate(
-    (element) => getComputedStyle(element, "::before").backgroundColor
-  );
-
-  await withColors.click();
-  await progressiveStyle.click();
   const lightColorAccent = await progressiveStyle.evaluate(
     (element) => getComputedStyle(element, "::before").backgroundColor
   );
-  expect(lightColorAccent).not.toBe(monochromeAccent);
+  expect(lightColorAccent).toBe("rgb(101, 162, 255)");
+  await progressiveStyle.click();
   await expect
     .poll(() =>
       progressiveStyle.evaluate((element) => {
