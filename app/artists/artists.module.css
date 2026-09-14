@@ -47,6 +47,29 @@
   margin-bottom: 1rem;
 }
 
+.clearFiltersButton,
+.styleChoices .clearStylesAction {
+  min-height: 44px;
+  border: 0;
+  padding: 0.5rem 0;
+  color: var(--text-60);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25rem;
+  text-transform: uppercase;
+  transition: color 180ms ease;
+}
+
+.clearFiltersButton:hover,
+.clearFiltersButton:focus-visible,
+.styleChoices .clearStylesAction:hover,
+.styleChoices .clearStylesAction:focus-visible {
+  color: var(--text);
+}
+
 .viewSwitch {
   display: grid;
   min-inline-size: 0;
@@ -105,6 +128,34 @@
   grid-row: span 2;
   flex-direction: column;
   justify-content: center;
+}
+
+.filtersReset {
+  display: flex;
+  min-height: 44px;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-inline: 1rem;
+}
+
+.gridResultSummary {
+  color: var(--text-60);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.gridResultSummary strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.filtersReset .clearFiltersButton {
+  margin-left: auto;
 }
 
 .filterField,
@@ -336,6 +387,7 @@
 
 .momentFilter {
   z-index: 34;
+  border-right: 0;
 }
 
 .spectrumMomentPanel {
@@ -611,14 +663,34 @@
 
 .styleChoices .styleOptions {
   display: flex;
-  flex-wrap: wrap;
+  max-width: 100%;
+  flex-wrap: nowrap;
   gap: 0.5rem;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding-bottom: 0.25rem;
+  scrollbar-color: var(--text-20) transparent;
+  scrollbar-width: thin;
+  scroll-snap-type: inline proximity;
 }
 
 .styleChoices .styleOptions button {
-  min-width: 10.5rem;
-  flex: 0 1 calc((100% - 1rem) / 3);
+  min-width: 0;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.styleChoices .styleOptions::-webkit-scrollbar {
+  height: 4px;
+}
+
+.styleChoices .styleOptions::-webkit-scrollbar-thumb {
+  background: var(--text-20);
+}
+
+.styleChoices .styleOptions::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .styleChoices > fieldset > p {
@@ -630,6 +702,11 @@
 }
 
 .styleChoices .styleSelectionSummary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   color: var(--text-40);
   font-size: 0.66rem;
   font-weight: 700;
@@ -637,17 +714,8 @@
   text-transform: uppercase;
 }
 
-.styleChoices .clearStylesChoice {
-  border-color: var(--text-20);
-  background: var(--control-surface);
-  color: var(--text-60);
-}
-
-.styleChoices .clearStylesChoice:hover,
-.styleChoices .clearStylesChoice:focus-visible {
-  border-color: var(--text);
-  background: var(--cta-bg);
-  color: var(--cta-text);
+.styleChoices .clearStylesAction {
+  flex: 0 0 auto;
 }
 
 .styleChoices .styleChoice {
@@ -802,29 +870,10 @@
   font-size: 1rem;
 }
 
-.resultBar button {
-  min-height: 44px;
-  color: var(--text-60);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.13em;
-  text-decoration: underline;
-  text-underline-offset: 0.3rem;
-  text-transform: uppercase;
-  transition: color 180ms ease;
-}
-
-.resultBar button:hover,
-.resultBar button:focus-visible {
-  color: var(--text);
-}
-
 .artistGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
-  margin-top: 1px;
-  border-top: 1px solid var(--border);
 }
 
 .emptyGrid {
@@ -1937,21 +1986,24 @@
   }
 
   .discoveryBar {
-    display: block;
+    display: flex;
   }
 
   .viewSwitch {
+    order: 1;
     width: 100%;
     min-width: 0;
+    flex: 1 0 100%;
   }
 
   .mobileFilterToggle {
     display: flex;
-    width: 100%;
+    width: auto;
     min-height: 54px;
+    flex: 1 1 0;
     align-items: center;
     justify-content: space-between;
-    margin-top: 0.75rem;
+    order: 2;
     border: 1px solid var(--border);
     padding: 0.75rem 1rem;
     color: var(--text);
@@ -1976,12 +2028,8 @@
     stroke-width: 1.5;
   }
 
-  .mobileFilterToggle small {
-    color: var(--text-40);
-    font-size: 0.66rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+  .filtersReset {
+    border-top: 0;
   }
 
   .filters {

@@ -42,6 +42,11 @@ typography:
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.625
+  metadata:
+    fontFamily: "system-ui, -apple-system, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 600
+    lineHeight: 1.4
   label:
     fontFamily: "system-ui, -apple-system, sans-serif"
     fontSize: "0.75rem"
@@ -165,6 +170,8 @@ Headlines are direct and heavy; labels are compact, uppercase, and widely tracke
 - **Title** (700, 1.5rem, 1.25 line-height): Cards and strong local headings.
 - **Body** (400, 1rem, 1.625 line-height): Explanatory and booking copy; keep sustained reading to
   a restrained measure.
+- **Metadata** (600, 0.875rem, 1.4 line-height): Compact result summaries and supporting data that
+  must remain readable without competing with body copy.
 - **Label** (600, 0.75rem, 0.1em tracking, uppercase): Navigation, field labels, steps, genres,
   and compact actions.
 
@@ -223,20 +230,38 @@ rules, and small purposeful motion.
   is subtle and limited to directional affordances.
 - **Outline:** One-pixel structural border and muted text at rest, brightening together on hover
   or keyboard focus.
+- **Tertiary reset:** Contextual reset actions such as `Clear styles` and `Clear all filters` use
+  the same quiet underlined text treatment without a surrounding box. They appear only when there
+  is state to clear and retain a minimum 44px interaction target.
 
 ### Discovery Style Controls
 
 - **All-styles state:** No selected style means every style in the active genre is shown. Express
   this as a neutral contextual status, never as a peer tile beside musical styles.
 - **Selection summary:** When styles are active, replace the all-styles message with the selected
-  count and append a neutral `Clear styles` control to the option layout.
+  count and show `Clear styles` as a quiet inline action beside that status. It never becomes a
+  peer tile or changes the option layout.
 - **Resting:** One-pixel neutral border with a colored style marker.
 - **Selected:** One-pixel colored border plus a one-pixel inset stroke, producing a stable
   two-pixel selection without changing the control's size.
 - **Focus:** A separate two-pixel outer outline appears only for keyboard focus.
-- **Layout:** Controls wrap into as many as three equal-width columns. Incomplete rows stay centered
-  rather than enlarging a musical style, and the neutral reset occupies the next available cell
-  while filters are active. Narrow screens collapse naturally when labels cannot fit.
+- **Labels:** Because the selected Genre supplies context, visible Style labels omit the repeated
+  genre suffix (`Progressive`, not `Progressive Trance`). Preserve the full label for accessible
+  names and anywhere the Genre is not already explicit.
+- **Layout:** Style controls form one compact, content-width row aligned to the start. Never stretch
+  them into equal columns or wrap an odd final row. When the row cannot fit, it scrolls horizontally
+  with usable 44px targets and a visible, themed scrollbar.
+
+### Discovery Filter Resets
+
+- **Hierarchy:** `All` is the Genre reset, `Clear styles` resets only the Style multiselect, and
+  `Clear all filters` resets the complete discovery state. Do not add a redundant `Clear genre`.
+- **Placement:** The global reset is the final action inside the filter panel, aligned right after
+  all filter groups. Grid / Spectrum remains exclusively a view switch.
+- **Grid feedback:** The filter footer summarizes the artists and distinct styles represented by
+  the current Grid result. Do not include BPM there or insert a second summary bar before the cards.
+- **Spectrum feedback:** Keep the aggregate artists, styles, and BPM coverage summary because it
+  explains the macro roster view.
 
 ### Cards / Containers
 

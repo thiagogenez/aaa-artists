@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-13T22:05:55.000Z",
+  "generatedAt": "2026-09-14T14:37:51Z",
   "title": "Design System: AAA Artists",
   "extensions": {
     "colorMeta": {
@@ -268,6 +268,10 @@
       },
       "title": { "displayName": "Title", "purpose": "Cards and strong local headings." },
       "body": { "displayName": "Body", "purpose": "Explanatory and booking copy." },
+      "metadata": {
+        "displayName": "Metadata",
+        "purpose": "Compact result summaries and supporting data."
+      },
       "label": {
         "displayName": "Label",
         "purpose": "Navigation, genres, fields, steps, and compact actions."
@@ -317,9 +321,16 @@
     {
       "name": "Discovery Style Control",
       "kind": "chip",
-      "description": "Neutral filter status followed by equal-sized musical-style selectors and a same-sized neutral reset when styles are active.",
-      "html": "<div class=\"ds-style-filter\"><p>1 OF 5 STYLES SELECTED</p><div><button class=\"ds-style-choice\" aria-pressed=\"true\"><i></i>PROGRESSIVE TRANCE</button><button class=\"ds-style-clear\">CLEAR STYLES</button></div></div>",
-      "css": ".ds-style-filter p { min-height: 44px; color: #8a8a8a; font: 700 10px/1 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; } .ds-style-filter > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; } .ds-style-filter button { min-width: 168px; min-height: 44px; flex: 0 1 calc((100% - 16px) / 3); border-radius: 0; padding: 10px 14px; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; } .ds-style-choice { border: 1px solid #65a2ff; background: #0a0a0a; box-shadow: inset 0 0 0 1px #65a2ff; color: #65a2ff; } .ds-style-choice i { display: inline-block; width: 9px; height: 9px; margin-right: 10px; background: #65a2ff; } .ds-style-clear { border: 1px solid #333; background: transparent; color: #999; } .ds-style-filter button:focus-visible { outline: 2px solid var(--text, #f8f8f8); outline-offset: 2px; }"
+      "description": "Neutral selection status with a quiet inline reset above a single content-width rail of musical-style selectors.",
+      "html": "<div class=\"ds-style-filter\"><header><span>1 OF 5 STYLES SELECTED</span><button class=\"ds-reset\">CLEAR STYLES</button></header><div><button class=\"ds-style-choice\" aria-label=\"Progressive Trance\" aria-pressed=\"true\"><i></i>PROGRESSIVE</button><button class=\"ds-style-choice\" aria-label=\"Uplifting Trance\" aria-pressed=\"false\"><i></i>UPLIFTING</button></div></div>",
+      "css": ".ds-style-filter header { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 16px; color: #8a8a8a; font: 700 10px/1.25 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; } .ds-style-filter > div { display: flex; max-width: 100%; flex-wrap: nowrap; justify-content: flex-start; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-color: var(--text-20, #333) transparent; scrollbar-width: thin; scroll-snap-type: inline proximity; } .ds-style-choice { min-width: 0; min-height: 44px; flex: 0 0 auto; border: 1px solid #333; border-radius: 0; padding: 10px 14px; background: transparent; color: #999; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .1em; scroll-snap-align: start; text-transform: uppercase; } .ds-style-choice[aria-pressed=\"true\"] { border-color: #65a2ff; background: #0a0a0a; box-shadow: inset 0 0 0 1px #65a2ff; color: #65a2ff; } .ds-style-choice i { display: inline-block; width: 9px; height: 9px; margin-right: 10px; background: #65a2ff; } .ds-style-choice:focus-visible { outline: 2px solid var(--text, #f8f8f8); outline-offset: 2px; } .ds-reset { min-height: 44px; border: 0; padding: 8px 0; background: transparent; color: #999; font: 700 12px/1 system-ui, sans-serif; letter-spacing: .1em; text-decoration: underline; text-underline-offset: 4px; } .ds-reset:hover, .ds-reset:focus-visible { color: var(--text, #f8f8f8); } .ds-reset:focus-visible { outline: 2px solid var(--text, #f8f8f8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Summary and Reset",
+      "kind": "button",
+      "description": "Compact Grid result summary paired with the global reset at the end of the filter panel.",
+      "html": "<footer class=\"ds-filter-footer\"><p><strong>9</strong> artists · <strong>8</strong> styles</p><button class=\"ds-reset\">CLEAR ALL FILTERS</button></footer>",
+      "css": ".ds-filter-footer { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--border, #d0d0d0); padding: 0 16px; color: var(--text-60, #666); font: 600 14px/1.4 system-ui, sans-serif; } .ds-filter-footer strong { color: var(--text, #0a0a0a); font-variant-numeric: tabular-nums; font-weight: 700; } .ds-reset { min-height: 44px; border: 0; border-radius: 0; padding: 8px 0; background: transparent; color: var(--text-60, #666); font: 700 12px/1 system-ui, sans-serif; letter-spacing: .1em; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-transform: uppercase; transition: color .18s ease; } .ds-reset:hover, .ds-reset:focus-visible { color: var(--text, #0a0a0a); } .ds-reset:focus-visible { outline: 2px solid var(--text, #0a0a0a); outline-offset: 2px; }"
     },
     {
       "name": "Artist Card Accent",

@@ -59,6 +59,11 @@ function normalizeArtistSearch(value: string) {
   return value.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
 }
 
+function contextualStyleLabel(styleLabel: string, groupLabel: string) {
+  const groupSuffix = ` ${groupLabel}`;
+  return styleLabel.endsWith(groupSuffix) ? styleLabel.slice(0, -groupSuffix.length) : styleLabel;
+}
+
 function artistNameMatchRank(name: string, rawQuery: string) {
   const query = normalizeArtistSearch(rawQuery);
   if (query.length === 0) return 0;
@@ -627,6 +632,13 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
       artistMatchesGridFilters(artist, selectedArtistSlugs, family, selectedStyles)
     );
   }, [family, rankedArtists, selectedArtistSlugs, selectedStyles]);
+  const gridStyleCount = new Set(
+    gridArtists.flatMap(({ artist }) =>
+      artist.soundProfiles
+        .filter((profile) => family === "all" || getSoundStyle(profile.style).groupId === family)
+        .map((profile) => profile.style)
+    )
+  ).size;
 
   const transitionGridFilters = (
     event: ReactMouseEvent<HTMLButtonElement>,
@@ -764,8 +776,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     Number(selectedArtistSlugs.length > 0);
   const activeFilterCount =
     view === "grid" ? gridFilterCount : Number(spectrumStylesCustomized) + spectrumMatchFilterCount;
-  const showClearFilters =
-    activeFilterCount > 0 && (view === "grid" || selectedArtistSlugs.length === 0);
+  const showClearFilters = activeFilterCount > 0;
   const matchFiltersActive = view === "grid" ? gridFilterCount > 0 : spectrumMatchFilterCount > 0;
   const allSpectrumProfiles = spectrumGroups.flatMap((group) =>
     group.styles.flatMap((sound) => sound.profiles.map(({ profile }) => profile))
@@ -867,7 +878,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   };
   return (
     <section className={styles.discovery} aria-label="Artist discovery">
-      <div className={styles.discoveryBar}>
+      <div className={styles.discoveryBar} data-testid="discovery-toolbar">
         <fieldset className={styles.viewSwitch}>
           <legend className="sr-only">Roster view</legend>
           <button type="button" aria-pressed={view === "grid"} onClick={() => setView("grid")}>
@@ -898,7 +909,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             </svg>
             Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </span>
-          <small>{view === "grid" ? gridArtists.length : spectrumArtistCount} artists</small>
         </button>
       </div>
 
@@ -1036,13 +1046,22 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                   <p>Choose a genre to see its styles.</p>
                 ) : (
                   <>
-                    <p className={styles.styleSelectionSummary}>
+                    <div className={styles.styleSelectionSummary}>
                       <span role="status" aria-live="polite">
                         {selectedStyles.length === 0
                           ? `Showing all ${familyLabel} styles`
                           : `${selectedStyles.length} of ${familyStyles.length} styles selected`}
                       </span>
-                    </p>
+                      {selectedStyles.length > 0 && (
+                        <button
+                          type="button"
+                          className={styles.clearStylesAction}
+                          onClick={(event) => transitionGridFilters(event, family, [])}
+                        >
+                          Clear styles
+                        </button>
+                      )}
+                    </div>
                     <div className={styles.styleOptions}>
                       {familyStyles.map((sound) => (
                         <button
@@ -1052,6 +1071,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                           style={
                             { "--style-color": SOUND_STYLE_COLORS[sound.id] } as DiscoveryStyle
                           }
+                          aria-label={sound.label}
                           aria-pressed={selectedStyles.includes(sound.id)}
                           onClick={(event) => {
                             const nextStyles = selectedStyles.includes(sound.id)
@@ -1060,18 +1080,9 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                             transitionGridFilters(event, family, nextStyles);
                           }}
                         >
-                          {sound.label}
+                          {contextualStyleLabel(sound.label, familyLabel)}
                         </button>
                       ))}
-                      {selectedStyles.length > 0 && (
-                        <button
-                          type="button"
-                          className={styles.clearStylesChoice}
-                          onClick={(event) => transitionGridFilters(event, family, [])}
-                        >
-                          Clear styles
-                        </button>
-                      )}
                     </div>
                   </>
                 )}
@@ -1278,16 +1289,28 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             </fieldset>
           </div>
         )}
+
+        {(view === "grid" || showClearFilters) && (
+          <footer className={styles.filtersReset}>
+            {view === "grid" && (
+              <p className={styles.gridResultSummary} data-testid="grid-summary" aria-live="polite">
+                <strong>{gridArtists.length}</strong>{" "}
+                {gridArtists.length === 1 ? "artist" : "artists"} ·{" "}
+                <strong>{gridStyleCount}</strong> {gridStyleCount === 1 ? "style" : "styles"}
+              </p>
+            )}
+            {showClearFilters && (
+              <button type="button" className={styles.clearFiltersButton} onClick={resetFilters}>
+                Clear all filters
+              </button>
+            )}
+          </footer>
+        )}
       </div>
 
-      <div className={styles.resultBar} aria-live="polite">
-        <p>
-          {view === "grid" ? (
-            <>
-              <strong>{gridArtists.length}</strong>{" "}
-              {gridArtists.length === 1 ? "artist" : "artists"}
-            </>
-          ) : (
+      {view === "spectrum" && (
+        <div className={styles.resultBar} aria-live="polite">
+          <p>
             <span data-testid="spectrum-summary">
               <strong>{spectrumArtistCount}</strong>{" "}
               {spectrumArtistCount === 1 ? "artist" : "artists"} ·{" "}
@@ -1308,14 +1331,9 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                 </span>
               )}
             </span>
-          )}
-        </p>
-        {showClearFilters && (
-          <button type="button" onClick={resetFilters}>
-            Clear filters
-          </button>
-        )}
-      </div>
+          </p>
+        </div>
+      )}
 
       {view === "grid" ? (
         gridArtists.length > 0 ? (

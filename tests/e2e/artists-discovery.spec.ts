@@ -156,6 +156,7 @@ test("filters the grid to artists compatible with the selected genre and style",
   await expect(grid.getByRole("link", { name: /View .* profile/ })).toHaveCount(9);
   await expect(grid.getByRole("link", { name: /Book .*/ })).toHaveCount(9);
   await expect(page.getByTestId("spectrum-moment-picker")).toHaveCount(0);
+  await expect(page.getByTestId("spectrum-summary")).toHaveCount(0);
   await expect(page.getByText("BPM range", { exact: true })).toHaveCount(0);
   await expect(grid.getByText("Trance", { exact: true }).first()).toBeVisible();
 
@@ -163,6 +164,9 @@ test("filters the grid to artists compatible with the selected genre and style",
   if (await filterToggle.isVisible()) await filterToggle.click();
   const genreChoices = page.getByRole("group", { name: "Genre" });
   const styleChoices = page.getByRole("group", { name: "Style" });
+  const gridSummary = page.getByTestId("grid-summary");
+  await expect(gridSummary).toHaveText("9 artists · 8 styles");
+  await expect(gridSummary).not.toContainText("BPM");
   await genreChoices.getByRole("button", { name: "Trance", exact: true }).click();
   await expect(styleChoices.getByRole("status")).toHaveText("Showing all Trance styles");
   await expect(styleChoices.getByRole("button")).toHaveText([
@@ -173,7 +177,7 @@ test("filters the grid to artists compatible with the selected genre and style",
     "Hard Trance",
   ]);
   const styleButtonWidths = await styleChoices
-    .getByRole("button")
+    .locator("button[aria-pressed]")
     .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().width));
   expect(Math.max(...styleButtonWidths) - Math.min(...styleButtonWidths)).toBeLessThan(1);
 
@@ -214,7 +218,7 @@ test("filters the grid to artists compatible with the selected genre and style",
     styleChoices.getByRole("button", { name: "Clear styles", exact: true })
   ).toBeVisible();
   const activeStyleButtonWidths = await styleChoices
-    .getByRole("button")
+    .locator("button[aria-pressed]")
     .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().width));
   expect(Math.max(...activeStyleButtonWidths) - Math.min(...activeStyleButtonWidths)).toBeLessThan(
     1
@@ -252,7 +256,11 @@ test("filters the grid to artists compatible with the selected genre and style",
     text: "rgb(255, 77, 104)",
   });
 
-  await expect(page.getByText("1 artist", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 artist", { exact: true })).toHaveCount(0);
+  await expect(gridSummary).toHaveText("1 artist · 3 styles");
+  await expect(
+    page.locator("#artist-filters").getByRole("button", { name: "Clear all filters" })
+  ).toBeVisible();
   const firstArtist = grid.getByRole("article").first();
   await expect
     .poll(() => firstArtist.evaluate((element) => getComputedStyle(element, "::after").height))
@@ -289,6 +297,17 @@ test("filters the grid to artists compatible with the selected genre and style",
     0
   );
   await expect(grid.getByRole("article")).toHaveCount(2);
+
+  await page.locator("#artist-filters").getByRole("button", { name: "Clear all filters" }).click();
+  await expect(genreChoices.getByRole("button", { name: "All", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
+  await expect(grid.getByRole("article")).toHaveCount(9);
+  await expect(gridSummary).toHaveText("9 artists · 8 styles");
+  await expect(
+    page.locator("#artist-filters").getByRole("button", { name: "Clear all filters" })
+  ).toHaveCount(0);
 });
 
 test("ranks artists matching every selected style before partial matches", async ({ page }) => {
@@ -603,7 +622,9 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   await expect(page.getByLabel("Selected artists")).toContainText("Thiago Genez");
   await expect(spectrum).toContainText("Selected: Thiago Genez");
   await expect(page.getByRole("navigation", { name: "Actions for Thiago Genez" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Clear filters" })).toHaveCount(0);
+  await expect(
+    page.locator("#artist-filters").getByRole("button", { name: "Clear all filters" })
+  ).toBeVisible();
   if ((page.viewportSize()?.width ?? 0) > 767) {
     await frogrRange.hover();
     await expect(frogrRange).toHaveAttribute("data-footprint", "active");
