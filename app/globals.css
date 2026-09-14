@@ -292,8 +292,90 @@ input[type="date"] {
   min-height: 44px;
 }
 
+/* Preserve card identity while roster filters rearrange the grid. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: 415ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation: none;
+}
+
+::view-transition-old(*.roster-card):only-child {
+  animation: roster-card-exit 210ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(*.roster-card):only-child {
+  animation: roster-card-enter 360ms 20ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+::view-transition-old(*.roster-card):not(:only-child) {
+  animation: roster-card-refresh-out 240ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(*.roster-card):not(:only-child) {
+  animation: roster-card-refresh-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+html[data-roster-transition="expand"]::view-transition-group(*.roster-card),
+html[data-roster-transition="expand"]::view-transition-group(*.roster-followup) {
+  animation-duration: 460ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[data-roster-transition="expand"]::view-transition-new(*.roster-card):only-child {
+  animation: roster-card-enter 330ms 85ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+html[data-roster-transition="collapse"]::view-transition-group(*.roster-followup),
+html[data-roster-transition="reorder"]::view-transition-group(*.roster-followup) {
+  animation: none;
+}
+
+@keyframes roster-card-exit {
+  to {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.98);
+  }
+}
+
+@keyframes roster-card-enter {
+  from {
+    opacity: 0;
+    filter: blur(1px);
+    transform: translateY(10px) scale(0.985);
+  }
+}
+
+@keyframes roster-card-refresh-out {
+  to {
+    opacity: 0;
+    filter: blur(1px);
+  }
+}
+
+@keyframes roster-card-refresh-in {
+  from {
+    opacity: 0;
+    filter: blur(1px);
+  }
+}
+
 /* Respect users who prefer reduced motion — kill animations, transitions and the card flip */
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {

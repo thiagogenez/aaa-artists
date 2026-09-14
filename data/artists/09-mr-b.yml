@@ -10,6 +10,16 @@ bio: >-
   His sets sit in trance and progressive territory, and when the afterparty calls for it he pushes
   into harder ground.
 image: /artists/placeholder.webp
+soundProfiles:
+  - style: progressive-trance
+    bpm: { min: 126, max: 134 }
+    moments: [opening, warm-up]
+  - style: uplifting-trance
+    bpm: { min: 136, max: 142 }
+    moments: [warm-up, peak-time]
+  - style: hard-trance
+    bpm: { min: 140, max: 145 }
+    moments: [peak-time, closing]
 socials:
   soundcloud: https://soundcloud.com/mrbthedj # verified via AAA Events set recordings
   # The links below pointed at unrelated people — restore with his real profiles:

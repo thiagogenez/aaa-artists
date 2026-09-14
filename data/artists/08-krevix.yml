@@ -11,6 +11,16 @@ bio: >-
   B Jones, and his music has picked up support from Armin van Buuren, David Guetta, Robin Schulz,
   Dimitri Vegas & Like Mike and Andrew Rayel. He makes his Tomorrowland debut in 2026.
 image: /artists/krevix.webp
+soundProfiles:
+  - style: melodic-techno
+    bpm: { min: 124, max: 128 }
+    moments: [opening, warm-up]
+  - style: progressive-trance
+    bpm: { min: 126, max: 134 }
+    moments: [opening, warm-up]
+  - style: uplifting-trance
+    bpm: { min: 138, max: 142 }
+    moments: [peak-time]
 socials:
   instagram: https://instagram.com/krevix
   soundcloud: https://soundcloud.com/krevix_official # his real account (soundcloud.com/krevix is someone else)

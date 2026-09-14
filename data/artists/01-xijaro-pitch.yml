@@ -11,6 +11,13 @@ bio: >-
   FSOE and Who's Afraid Of 138, and they have played Tomorrowland, Transmission, A State Of Trance
   and EDC Las Vegas. They also run Chasing Dreams, a podcast, livestream and label in one.
 image: /artists/xijaro-pitch.webp
+soundProfiles:
+  - style: uplifting-trance
+    bpm: { min: 136, max: 142 }
+    moments: [warm-up, peak-time, closing]
+  - style: hard-trance
+    bpm: { min: 140, max: 143 }
+    moments: [peak-time, closing]
 socials:
   instagram: https://instagram.com/xijaroandpitch
   soundcloud: https://soundcloud.com/xijaroandpitch
