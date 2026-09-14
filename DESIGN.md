@@ -232,8 +232,9 @@ rules, and small purposeful motion.
 - **Outline:** One-pixel structural border and muted text at rest, brightening together on hover
   or keyboard focus.
 - **Tertiary reset:** Contextual reset actions such as `Clear styles` and `Clear all filters` use
-  the same quiet underlined text treatment without a surrounding box. They appear only when there
-  is state to clear and retain a minimum 44px interaction target.
+  the same compact type size as filter-option labels, at a lower weight, with a quiet underline
+  and no surrounding box. They appear only when there is state to clear and retain a minimum 44px
+  interaction target.
 
 ### Discovery Style Controls
 

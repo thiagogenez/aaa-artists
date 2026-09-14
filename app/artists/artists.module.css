@@ -53,9 +53,10 @@
   border: 0;
   padding: 0.5rem 0;
   color: var(--text-60);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
+  line-height: 1;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.25rem;
