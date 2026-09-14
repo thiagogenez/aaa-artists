@@ -144,9 +144,10 @@ musical styles without changing between light and dark themes.
   Trance Pink form a cool progression.
 - **Techno:** Melodic Techno Yellow, Peak-Time Techno Orange, and Hard Techno Red form a warm
   progression.
-- **Application:** Style color appears in filter controls, selected style labels, card accent
-  rules, and Spectrum ranges. It identifies style; it never replaces BPM position or written
-  labels.
+- **Application:** Style color appears as a marker or keyline in filter controls and card labels,
+  and as the data signal in Spectrum ranges. Filter and card selection share neutral text and
+  neutral backing; the color does not become a control fill or text color. It identifies style;
+  it never replaces BPM position or written labels.
 
 **The Theme Parity Rule.** Light and dark are equal products. Neither may be treated as an
 afterthought or simple colour inversion.
@@ -242,15 +243,15 @@ rules, and small purposeful motion.
   count and show `Clear styles` as a quiet inline action beside that status. It never becomes a
   peer tile or changes the option layout.
 - **Resting:** One-pixel neutral border with a colored style marker.
-- **Selected:** One-pixel colored border plus a one-pixel inset stroke, producing a stable
-  two-pixel selection without changing the control's size.
+- **Selected:** Keep text and background neutral while Style color owns the marker, one-pixel
+  border, and one-pixel inset stroke. The neutral control surface adapts to light and dark themes;
+  the Style border mixes toward the theme foreground so pale accents remain legible in light mode.
+- **Card parity:** A selected Style label over photography follows the same grammar: neutral white
+  text and a colored keyline over the dark readability backing. The photographic backing remains
+  dark in both page themes because its substrate is the image, not the page canvas.
 - **Focus:** A separate two-pixel outer outline appears only for keyboard focus.
-- **Labels:** Because the selected Genre supplies context, visible Style labels omit the repeated
-  genre suffix (`Progressive`, not `Progressive Trance`). Preserve the full label for accessible
-  names and anywhere the Genre is not already explicit.
-- **Layout:** Style controls form one compact, content-width row aligned to the start. Never stretch
-  them into equal columns or wrap an odd final row. When the row cannot fit, it scrolls horizontally
-  with usable 44px targets and a visible, themed scrollbar.
+- **Layout:** Controls wrap into as many as three equal-width columns. Incomplete rows stay centered
+  rather than enlarging a musical style. Narrow screens collapse naturally when labels cannot fit.
 
 ### Discovery Filter Resets
 

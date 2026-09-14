@@ -176,7 +176,7 @@
   display: block;
   margin-bottom: 0.5rem;
   color: var(--text-40);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -663,34 +663,14 @@
 
 .styleChoices .styleOptions {
   display: flex;
-  max-width: 100%;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  justify-content: flex-start;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  padding-bottom: 0.25rem;
-  scrollbar-color: var(--text-20) transparent;
-  scrollbar-width: thin;
-  scroll-snap-type: inline proximity;
+  justify-content: center;
 }
 
 .styleChoices .styleOptions button {
-  min-width: 0;
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-}
-
-.styleChoices .styleOptions::-webkit-scrollbar {
-  height: 4px;
-}
-
-.styleChoices .styleOptions::-webkit-scrollbar-thumb {
-  background: var(--text-20);
-}
-
-.styleChoices .styleOptions::-webkit-scrollbar-track {
-  background: transparent;
+  min-width: 10.5rem;
+  flex: 0 1 calc((100% - 1rem) / 3);
 }
 
 .styleChoices > fieldset > p {
@@ -708,7 +688,7 @@
   justify-content: space-between;
   gap: 1rem;
   color: var(--text-40);
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -738,10 +718,10 @@
 }
 
 .styleChoices .styleChoice[aria-pressed="true"] {
-  border-color: var(--style-color);
-  background: #0a0a0a;
-  box-shadow: inset 0 0 0 1px var(--style-color);
-  color: var(--style-color);
+  border-color: color-mix(in srgb, var(--style-color) 68%, var(--text));
+  background: var(--control-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--style-color) 68%, var(--text));
+  color: var(--text);
 }
 
 .styleChoices .styleChoice:focus-visible {
@@ -1058,7 +1038,7 @@
 }
 
 .styleBadge[data-selected="true"] .styleBadgeText {
-  color: var(--badge-color);
+  color: rgba(255, 255, 255, 0.96);
   white-space: nowrap;
 }
 

@@ -59,11 +59,6 @@ function normalizeArtistSearch(value: string) {
   return value.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
 }
 
-function contextualStyleLabel(styleLabel: string, groupLabel: string) {
-  const groupSuffix = ` ${groupLabel}`;
-  return styleLabel.endsWith(groupSuffix) ? styleLabel.slice(0, -groupSuffix.length) : styleLabel;
-}
-
 function artistNameMatchRank(name: string, rawQuery: string) {
   const query = normalizeArtistSearch(rawQuery);
   if (query.length === 0) return 0;
@@ -1071,7 +1066,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                           style={
                             { "--style-color": SOUND_STYLE_COLORS[sound.id] } as DiscoveryStyle
                           }
-                          aria-label={sound.label}
                           aria-pressed={selectedStyles.includes(sound.id)}
                           onClick={(event) => {
                             const nextStyles = selectedStyles.includes(sound.id)
@@ -1080,7 +1074,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                             transitionGridFilters(event, family, nextStyles);
                           }}
                         >
-                          {contextualStyleLabel(sound.label, familyLabel)}
+                          {sound.label}
                         </button>
                       ))}
                     </div>
