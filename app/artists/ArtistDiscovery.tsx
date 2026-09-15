@@ -1149,11 +1149,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                               key={sound.id}
                               className={styles.spectrumStyleOptionRow}
                               data-spectrum-style-option={sound.id}
-                              style={
-                                {
-                                  "--style-color": SOUND_STYLE_COLORS[sound.id],
-                                } as DiscoveryStyle
-                              }
                             >
                               <label className={styles.spectrumStyleOption}>
                                 <input
@@ -1246,22 +1241,20 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                   id="spectrum-moment-options"
                   className={`${styles.spectrumStylesPanel} ${styles.spectrumMomentPanel}`}
                 >
-                  {MOMENT_OPTIONS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={styles.spectrumMomentOption}
-                      aria-pressed={selectedMoments.includes(item.id)}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        toggleMoment(item.id);
-                      }}
-                    >
-                      <span className={styles.spectrumMomentIndicator} aria-hidden="true" />
-                      <span>{item.label}</span>
-                    </button>
-                  ))}
+                  <div className={styles.spectrumMomentOptions}>
+                    {MOMENT_OPTIONS.map((item) => (
+                      <div key={item.id} className={styles.spectrumStyleOptionRow}>
+                        <label className={styles.spectrumStyleOption}>
+                          <input
+                            type="checkbox"
+                            checked={selectedMoments.includes(item.id)}
+                            onChange={() => toggleMoment(item.id)}
+                          />
+                          <span>{item.label}</span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                   <footer className={styles.spectrumPickerFooter}>
                     <button
                       type="button"

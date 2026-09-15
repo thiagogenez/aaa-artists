@@ -324,7 +324,7 @@
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
-  accent-color: var(--style-color);
+  accent-color: var(--text);
 }
 
 .spectrumStyleOnly {
@@ -395,47 +395,12 @@
   width: min(18rem, calc(100vw - 3rem));
   min-inline-size: 0;
   margin: 0;
-  padding: 0.45rem 0 0;
 }
 
-.spectrumMomentOption {
-  display: flex;
-  width: 100%;
-  min-height: 44px;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.65rem 1rem;
-  color: var(--text-60);
-  font-size: 0.78rem;
-  text-align: left;
-}
-
-.spectrumMomentOption + .spectrumMomentOption {
-  border-top: 1px solid var(--border);
-}
-
-.spectrumMomentOption:hover,
-.spectrumMomentOption:focus-visible {
-  color: var(--text);
-}
-
-.spectrumMomentOption[aria-pressed="true"] {
-  background: var(--control-surface);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.spectrumMomentIndicator {
-  width: 1rem;
-  height: 1rem;
-  flex: 0 0 auto;
-  border: 1px solid var(--text-40);
-}
-
-.spectrumMomentOption[aria-pressed="true"] .spectrumMomentIndicator {
-  border: 3px solid var(--control-surface);
-  background: var(--text);
-  outline: 1px solid var(--text);
+.spectrumMomentOptions {
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: 0.55rem 1rem;
 }
 
 .filterField input[type="search"],

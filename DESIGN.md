@@ -264,6 +264,12 @@ rules, and small purposeful motion.
   the current Grid result. Do not include BPM there or insert a second summary bar before the cards.
 - **Spectrum feedback:** Keep the aggregate artists, styles, and BPM coverage summary because it
   explains the macro roster view.
+- **Spectrum visibility controls:** Style checkboxes manage row visibility, so they remain neutral
+  and follow the theme foreground. Style color belongs to the chart rows themselves; repeating all
+  hues inside the picker creates a competing legend and unnecessary visual noise.
+- **Spectrum picker parity:** `Styles shown` and `Moment` are both multiselect popovers and share
+  the same neutral checkbox rows, panel surface, density, and `Reset` / `Done` footer. Taxonomy may
+  add group headings to Styles; it does not justify a second selection pattern for Moment.
 
 ### Cards / Containers
 
