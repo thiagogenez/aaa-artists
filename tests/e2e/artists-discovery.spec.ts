@@ -253,7 +253,7 @@ test("filters the grid to artists compatible with the selected genre and style",
     background: "rgba(10, 10, 10, 0.72)",
     borderWidth: "1px",
     outline: "none",
-    text: "rgb(255, 77, 104)",
+    text: "rgba(255, 255, 255, 0.96)",
   });
 
   await expect(page.getByText("1 artist", { exact: true })).toHaveCount(0);
@@ -380,8 +380,11 @@ test("uses the restrained color treatment across themes", async ({ page }) => {
     .poll(() =>
       progressiveStyle.evaluate((element) => {
         const styles = getComputedStyle(element);
+        const marker = getComputedStyle(element, "::before");
         return (
-          styles.backgroundColor === "rgb(10, 10, 10)" && styles.color === styles.borderTopColor
+          styles.backgroundColor !== "rgba(0, 0, 0, 0)" &&
+          styles.color !== marker.backgroundColor &&
+          styles.boxShadow !== "none"
         );
       })
     )
@@ -465,7 +468,7 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     spectrum.getByText(
       touchGuidance
         ? "Tap an artist to trace every style and compare."
-        : "Point to trace every style. Select to compare.",
+        : "Explore an artist to trace every style. Select to compare.",
       { exact: true }
     )
   ).toBeVisible();

@@ -1097,11 +1097,14 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                 }
               }}
             >
-              <legend className={styles.filterLabel}>Styles shown</legend>
+              <legend id="artist-spectrum-styles-label" className={styles.filterLabel}>
+                Styles shown
+              </legend>
               <button
                 type="button"
                 className={styles.spectrumPickerTrigger}
                 data-picker-trigger
+                aria-labelledby="artist-spectrum-styles-label artist-spectrum-styles-value"
                 aria-expanded={spectrumStylesPickerOpen}
                 aria-controls="spectrum-styles-panel"
                 onClick={() => {
@@ -1111,7 +1114,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                   });
                 }}
               >
-                <span>
+                <span id="artist-spectrum-styles-value">
                   {visibleSpectrumStyleIds.length === availableSpectrumStyleIds.length
                     ? `All ${availableSpectrumStyleIds.length} styles`
                     : `${visibleSpectrumStyleIds.length} of ${availableSpectrumStyleIds.length} styles`}
@@ -1295,33 +1298,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
         )}
       </div>
 
-      {view === "spectrum" && (
-        <div className={styles.resultBar} aria-live="polite">
-          <p>
-            <span data-testid="spectrum-summary">
-              <strong>{spectrumArtistCount}</strong>{" "}
-              {spectrumArtistCount === 1 ? "artist" : "artists"} ·{" "}
-              <strong>{spectrumStyleCount}</strong> {spectrumStyleCount === 1 ? "style" : "styles"}
-              {rosterCoverage && (
-                <span>
-                  {" "}
-                  ·{" "}
-                  <strong>
-                    {rosterCoverage.min}–{rosterCoverage.max}
-                  </strong>{" "}
-                  BPM
-                </span>
-              )}
-              {activeFilterCount > 0 && (
-                <span>
-                  · <strong>{bestMatches}</strong> best {bestMatches === 1 ? "match" : "matches"}
-                </span>
-              )}
-            </span>
-          </p>
-        </div>
-      )}
-
       {view === "grid" ? (
         gridArtists.length > 0 ? (
           <div className={styles.artistGrid} data-testid="artist-grid">
@@ -1364,17 +1340,43 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
               ) : (
                 <>
                   <strong className={styles.spectrumPointerGuide}>
-                    Point to trace every style. Select to compare.
+                    Explore an artist to trace every style. Select to compare.
                   </strong>
                   <strong className={styles.spectrumTouchGuide}>
                     Tap an artist to trace every style and compare.
                   </strong>
                 </>
               )}
-              <span>
-                {selectedArtists.length > 1 && !activeSpectrumArtist
-                  ? "Point to an artist to inspect its range."
-                  : "Each artist appears in every style they play."}
+              <span className={styles.spectrumGuideMeta}>
+                <span data-testid="spectrum-summary" aria-live="polite">
+                  <strong>{spectrumArtistCount}</strong>{" "}
+                  {spectrumArtistCount === 1 ? "artist" : "artists"} ·{" "}
+                  <strong>{spectrumStyleCount}</strong>{" "}
+                  {spectrumStyleCount === 1 ? "style" : "styles"}
+                  {rosterCoverage && (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <strong>
+                        {rosterCoverage.min}–{rosterCoverage.max}
+                      </strong>{" "}
+                      BPM
+                    </>
+                  )}
+                  {activeFilterCount > 0 && (
+                    <>
+                      {" "}
+                      · <strong>{bestMatches}</strong> best{" "}
+                      {bestMatches === 1 ? "match" : "matches"}
+                    </>
+                  )}
+                </span>
+                <span aria-hidden="true"> · </span>
+                <span>
+                  {selectedArtists.length > 1 && !activeSpectrumArtist
+                    ? "Explore an artist to inspect its range."
+                    : "Each artist appears in every style they play."}
+                </span>
               </span>
             </div>
 

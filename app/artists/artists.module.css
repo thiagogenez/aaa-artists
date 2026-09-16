@@ -73,14 +73,11 @@
 
 .viewSwitch {
   display: grid;
+  width: clamp(18rem, 24vw, 20rem);
   min-inline-size: 0;
   grid-template-columns: 1fr 1fr;
   border: 1px solid var(--border);
   padding: 0;
-}
-
-.viewSwitch {
-  min-width: 21rem;
 }
 
 .viewSwitch button {
@@ -116,12 +113,12 @@
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(12rem, 1.25fr) repeat(3, minmax(9rem, 0.8fr));
+  grid-template-columns: minmax(18rem, 1.6fr) minmax(13rem, 1fr) minmax(11rem, 0.75fr);
   border-block: 1px solid var(--border);
 }
 
 .filters[data-view="grid"] {
-  grid-template-columns: minmax(14rem, 0.75fr) minmax(0, 1.25fr);
+  grid-template-columns: minmax(18rem, 1.6fr) minmax(0, 1.75fr);
 }
 
 .filters[data-view="grid"] .searchField {
@@ -185,7 +182,10 @@
 
 .spectrumStylesField {
   z-index: 35;
-  grid-column: span 2;
+}
+
+.filters[data-view="spectrum"] .momentFilter {
+  border-right: 0;
 }
 
 .spectrumStylesPicker {
@@ -199,11 +199,11 @@
 .spectrumPickerTrigger {
   display: flex;
   width: 100%;
-  min-height: 38px;
+  min-height: 44px;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border-bottom: 1px solid var(--text-20);
+  border-bottom: 1px solid var(--text-40);
   color: var(--text);
   cursor: pointer;
   font-size: 1rem;
@@ -392,6 +392,8 @@
 }
 
 .spectrumMomentPanel {
+  right: 0;
+  left: auto;
   width: min(18rem, calc(100vw - 3rem));
   min-inline-size: 0;
   margin: 0;
@@ -444,6 +446,15 @@
   gap: 0.4rem;
   border-bottom: 1px solid var(--text-20);
   transition: border-color 180ms ease;
+}
+
+.filters[data-view="spectrum"] .searchInputShell {
+  min-height: 44px;
+  border-bottom-color: var(--text-40);
+}
+
+.filters[data-view="spectrum"] .searchInputShell input[type="search"] {
+  min-height: 42px;
 }
 
 .searchInputShell:focus-within {
@@ -804,23 +815,6 @@
   outline-offset: 3px;
 }
 
-.resultBar {
-  display: flex;
-  min-height: 4.5rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-60);
-  font-size: 0.82rem;
-}
-
-.resultBar strong {
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  font-size: 1rem;
-}
-
 .artistGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1104,12 +1098,12 @@
 
 .spectrumGuide {
   display: flex;
-  min-height: 5.25rem;
+  min-height: 5rem;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
   border-bottom: 1px solid var(--border);
-  padding: 1.25rem;
+  padding: 1rem 1.25rem;
 }
 
 .spectrumGuideCopy {
@@ -1124,9 +1118,17 @@
   font-weight: 720;
 }
 
-.spectrumGuideCopy > span {
+.spectrumGuideMeta {
   color: var(--text-40);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.spectrumGuideMeta strong {
+  color: var(--text-60);
+  font-size: inherit;
+  font-variant-numeric: tabular-nums;
+  font-weight: 720;
 }
 
 .spectrumTouchGuide {
@@ -1642,12 +1644,8 @@
 }
 
 @media (max-width: 1100px) {
-  .filters {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .filters[data-view="grid"] {
-    grid-template-columns: minmax(12rem, 0.75fr) minmax(0, 1.25fr);
+    grid-template-columns: minmax(18rem, 1.6fr) minmax(0, 1.75fr);
   }
 
   .searchField {
@@ -1680,6 +1678,30 @@
     display: grid;
     justify-items: start;
     gap: 0.2rem;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 900px) {
+  .filters[data-view="spectrum"] {
+    grid-template-columns: minmax(0, 13fr) minmax(0, 7fr);
+  }
+
+  .filters[data-view="spectrum"] .searchField {
+    grid-column: 1 / -1;
+    border-right: 0;
+  }
+
+  .filters[data-view="spectrum"] .spectrumStylesField,
+  .filters[data-view="spectrum"] .momentFilter {
+    border-top: 1px solid var(--border);
+  }
+
+  .filters[data-view="spectrum"] .spectrumStylesField {
+    grid-column: 1;
+  }
+
+  .filters[data-view="spectrum"] .momentFilter {
+    grid-column: 2;
   }
 }
 
@@ -2030,10 +2052,6 @@
 
   .filterField:nth-child(4) {
     border-right: 0;
-  }
-
-  .resultBar {
-    min-height: 4rem;
   }
 
   .artistGrid {
