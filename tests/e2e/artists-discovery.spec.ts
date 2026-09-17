@@ -435,13 +435,21 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   const mobileSpectrum = (page.viewportSize()?.width ?? 0) <= 767;
   const bpmControls = mobileSpectrum ? page.getByTestId("spectrum-mobile-range") : spectrumRuler;
   await expect(bpmControls.getByText(/BPM(?: range)?/, { exact: true })).toBeVisible();
-  await expect(
-    bpmControls.getByText(mobileSpectrum ? "Full range" : "Full range selected", { exact: true })
-  ).toBeVisible();
+  await expect(bpmControls.getByText("Full range", { exact: true })).toBeVisible();
   const minimumBpmSlider = bpmControls.getByRole("slider", { name: "Minimum BPM" });
   const maximumBpmSlider = bpmControls.getByRole("slider", { name: "Maximum BPM" });
+  const minimumBpmValue = bpmControls.locator('[data-handle="minimum"]');
+  const maximumBpmValue = bpmControls.locator('[data-handle="maximum"]');
   await expect(minimumBpmSlider).toBeVisible();
   await expect(maximumBpmSlider).toBeVisible();
+  await expect(minimumBpmSlider).toHaveAttribute("min", "120");
+  await expect(minimumBpmSlider).toHaveAttribute("max", "160");
+  await expect(maximumBpmSlider).toHaveAttribute("min", "120");
+  await expect(maximumBpmSlider).toHaveAttribute("max", "160");
+  await expect(minimumBpmValue).toHaveText("120");
+  await expect(maximumBpmValue).toHaveText("160");
+  await expect(minimumBpmValue).toHaveCSS("opacity", "0");
+  await expect(maximumBpmValue).toHaveCSS("opacity", "0");
   await expect(minimumBpmSlider).toHaveAttribute("data-edge", "start");
   await expect(maximumBpmSlider).toHaveAttribute("data-edge", "end");
 
@@ -452,6 +460,24 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     return selection.getBoundingClientRect().width / track.getBoundingClientRect().width;
   });
   expect(fullSelectionRatio).toBeCloseTo(1, 2);
+  const sliderGeometry = await bpmControls.evaluate((control) => {
+    const track = control.querySelector('[data-bpm-slider-selection="true"]')?.parentElement;
+    const sliders = [...control.querySelectorAll('input[type="range"]')];
+    if (!(track instanceof HTMLElement) || sliders.length !== 2) return null;
+    const trackBounds = track.getBoundingClientRect();
+    return sliders.map((slider) => {
+      const sliderBounds = slider.getBoundingClientRect();
+      return {
+        startExtension: trackBounds.left - sliderBounds.left,
+        endExtension: sliderBounds.right - trackBounds.right,
+      };
+    });
+  });
+  expect(sliderGeometry).not.toBeNull();
+  for (const geometry of sliderGeometry ?? []) {
+    expect(geometry.startExtension).toBeCloseTo(8, 0);
+    expect(geometry.endExtension).toBeCloseTo(8, 0);
+  }
 
   const spectrum = page.getByTestId("artist-spectrum");
   await expect(spectrum).toBeVisible();
@@ -549,26 +575,36 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     const firstTick = scale?.querySelector('[data-bpm-tick="120"]');
     const lastTick = scale?.querySelector('[data-bpm-tick="160"]');
     const firstStyle = element.querySelector('[data-spectrum-style="progressive-trance"] h3');
+    const firstLanes = firstStyle?.nextElementSibling;
+    const firstWindow = firstLanes?.querySelector('[data-bpm-window="true"]');
     if (
       !(ruler instanceof HTMLElement) ||
       !(label instanceof HTMLElement) ||
       !(scale instanceof HTMLElement) ||
       !(firstTick instanceof HTMLElement) ||
       !(lastTick instanceof HTMLElement) ||
-      !firstStyle
+      !(firstStyle instanceof HTMLElement) ||
+      !(firstLanes instanceof HTMLElement) ||
+      !(firstWindow instanceof HTMLElement)
     ) {
       return {
         heightDifference: Number.POSITIVE_INFINITY,
         edgeDifference: Number.POSITIVE_INFINITY,
         firstTickDifference: Number.POSITIVE_INFINITY,
         lastTickDifference: Number.POSITIVE_INFINITY,
-        firstLabelInset: Number.NEGATIVE_INFINITY,
-        lastLabelInset: Number.NEGATIVE_INFINITY,
+        laneStartDifference: Number.POSITIVE_INFINITY,
+        laneEndDifference: Number.POSITIVE_INFINITY,
+        windowStartDifference: Number.POSITIVE_INFINITY,
+        windowEndDifference: Number.POSITIVE_INFINITY,
+        firstLabelCenterDifference: Number.POSITIVE_INFINITY,
+        lastLabelCenterDifference: Number.POSITIVE_INFINITY,
       };
     }
     const scaleBounds = scale.getBoundingClientRect();
     const firstTickBounds = firstTick.getBoundingClientRect();
     const lastTickBounds = lastTick.getBoundingClientRect();
+    const lanesBounds = firstLanes.getBoundingClientRect();
+    const axisInset = Number.parseFloat(getComputedStyle(firstLanes).marginLeft);
     return {
       heightDifference: Math.abs(
         label.getBoundingClientRect().height - ruler.getBoundingClientRect().height
@@ -586,16 +622,32 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
           Number.parseFloat(getComputedStyle(lastTick, "::after").left) -
           scaleBounds.right
       ),
-      firstLabelInset: firstTickBounds.left - scaleBounds.left,
-      lastLabelInset: scaleBounds.right - lastTickBounds.right,
+      laneStartDifference: Math.abs(scaleBounds.left - firstLanes.getBoundingClientRect().left),
+      laneEndDifference: Math.abs(scaleBounds.right - firstLanes.getBoundingClientRect().right),
+      windowStartDifference: Math.abs(
+        firstWindow.getBoundingClientRect().left - (lanesBounds.left - axisInset)
+      ),
+      windowEndDifference: Math.abs(
+        firstWindow.getBoundingClientRect().right - (lanesBounds.right + axisInset)
+      ),
+      firstLabelCenterDifference: Math.abs(
+        firstTickBounds.left + firstTickBounds.width / 2 - scaleBounds.left
+      ),
+      lastLabelCenterDifference: Math.abs(
+        lastTickBounds.left + lastTickBounds.width / 2 - scaleBounds.right
+      ),
     };
   });
   expect(axisAlignment.heightDifference).toBeLessThanOrEqual(1);
   expect(axisAlignment.edgeDifference).toBeLessThan(1);
   expect(axisAlignment.firstTickDifference).toBeLessThan(1);
   expect(axisAlignment.lastTickDifference).toBeLessThan(1);
-  expect(axisAlignment.firstLabelInset).toBeGreaterThanOrEqual(3);
-  expect(axisAlignment.lastLabelInset).toBeGreaterThanOrEqual(3);
+  expect(axisAlignment.laneStartDifference).toBeLessThan(1);
+  expect(axisAlignment.laneEndDifference).toBeLessThan(1);
+  expect(axisAlignment.windowStartDifference).toBeLessThan(1);
+  expect(axisAlignment.windowEndDifference).toBeLessThan(1);
+  expect(axisAlignment.firstLabelCenterDifference).toBeLessThan(1);
+  expect(axisAlignment.lastLabelCenterDifference).toBeLessThan(1);
   const thiagoEntries = spectrum.locator('[data-artist="thiago"]');
   await expect(thiagoEntries).toHaveCount(5);
   await thiagoEntries.first().focus();
@@ -664,6 +716,10 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
 
   await maximumBpmSlider.fill("140");
   await minimumBpmSlider.fill("132");
+  await expect(minimumBpmValue).toHaveText("132");
+  await expect(maximumBpmValue).toHaveText("140");
+  await expect(minimumBpmValue).toHaveCSS("opacity", "1");
+  await expect(maximumBpmValue).toHaveCSS("opacity", "1");
   await expect(minimumBpmSlider).not.toHaveAttribute("data-edge");
   await expect(maximumBpmSlider).not.toHaveAttribute("data-edge");
   await expect(
@@ -690,6 +746,28 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     return selection.getBoundingClientRect().width / track.getBoundingClientRect().width;
   });
   expect(rulerSelectionRatio).toBeCloseTo(0.2, 2);
+  const handleValueAlignment = await bpmControls.evaluate((control) => {
+    const selection = control.querySelector('[data-bpm-slider-selection="true"]');
+    const minimum = control.querySelector('[data-handle="minimum"]');
+    const maximum = control.querySelector('[data-handle="maximum"]');
+    if (
+      !(selection instanceof HTMLElement) ||
+      !(minimum instanceof HTMLElement) ||
+      !(maximum instanceof HTMLElement)
+    ) {
+      return null;
+    }
+    const selectionBounds = selection.getBoundingClientRect();
+    const minimumBounds = minimum.getBoundingClientRect();
+    const maximumBounds = maximum.getBoundingClientRect();
+    return {
+      minimum: Math.abs(minimumBounds.left + minimumBounds.width / 2 - selectionBounds.left),
+      maximum: Math.abs(maximumBounds.left + maximumBounds.width / 2 - selectionBounds.right),
+    };
+  });
+  expect(handleValueAlignment).not.toBeNull();
+  expect(handleValueAlignment?.minimum).toBeLessThan(1);
+  expect(handleValueAlignment?.maximum).toBeLessThan(1);
   await expect
     .poll(() =>
       spectrum

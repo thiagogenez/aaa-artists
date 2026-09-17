@@ -1,4 +1,18 @@
 .page {
+  --type-display: clamp(3.5rem, 8vw, 6rem);
+  --type-headline: clamp(1.5rem, 3vw, 2.25rem);
+  --type-title: 1.5rem;
+  --type-body: 1rem;
+  --type-metadata: 0.875rem;
+  --type-label: 0.75rem;
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-heavy: 800;
+  --leading-body: 1.625;
+  --leading-metadata: 1.4;
+  --leading-label: 1.25;
+  --leading-title: 1.25;
   min-height: 100vh;
   padding: clamp(4rem, 8vw, 7rem) 1.5rem 7rem;
   background: var(--bg);
@@ -19,8 +33,8 @@
 .header h1 {
   max-width: 10ch;
   color: var(--text);
-  font-size: clamp(3.5rem, 8vw, 6rem);
-  font-weight: 760;
+  font-size: var(--type-display);
+  font-weight: var(--weight-heavy);
   letter-spacing: -0.04em;
   line-height: 0.9;
 }
@@ -29,13 +43,14 @@
   max-width: 31rem;
   padding-bottom: 0.35rem;
   color: var(--text-60);
-  font-size: clamp(1rem, 1.3vw, 1.2rem);
-  line-height: 1.6;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .discovery {
   --chart-line: color-mix(in srgb, var(--text) 13%, transparent);
   --control-surface: color-mix(in srgb, var(--text) 4%, var(--bg));
+  --spectrum-axis-inset: 1rem;
 }
 
 .discoveryBar {
@@ -53,10 +68,10 @@
   border: 0;
   padding: 0.5rem 0;
   color: var(--text-60);
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.1em;
-  line-height: 1;
+  line-height: var(--leading-label);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.25rem;
@@ -84,8 +99,9 @@
   min-height: 48px;
   padding: 0.75rem 1.25rem;
   color: var(--text-60);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition:
@@ -141,15 +157,15 @@
 
 .gridResultSummary {
   color: var(--text-60);
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: var(--type-metadata);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-metadata);
 }
 
 .gridResultSummary strong {
   color: var(--text);
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
 }
 
 .filtersReset .clearFiltersButton {
@@ -174,8 +190,9 @@
   display: block;
   margin-bottom: 0.5rem;
   color: var(--text-40);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
@@ -206,7 +223,8 @@
   border-bottom: 1px solid var(--text-40);
   color: var(--text);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
   text-align: left;
   transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -265,8 +283,9 @@
 
 .spectrumStylesGroupHeader strong {
   color: var(--text);
-  font-size: 0.72rem;
-  font-weight: 760;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -274,8 +293,9 @@
 .spectrumStylesGroupHeader button,
 .spectrumPickerFooter button {
   color: var(--text-60);
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.08em;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -312,7 +332,8 @@
   gap: 0.65rem;
   color: var(--text-60);
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: var(--type-metadata);
+  line-height: var(--leading-metadata);
 }
 
 .spectrumStyleOptionRow:hover .spectrumStyleOption,
@@ -332,8 +353,9 @@
   flex: 0 0 auto;
   padding-inline: 0.45rem;
   color: var(--text-60);
-  font-size: 0.62rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.06em;
   opacity: 0;
   pointer-events: none;
@@ -415,7 +437,8 @@
   outline: 0;
   background: transparent;
   color: var(--text);
-  font-size: 1rem;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
   transition: border-color 180ms ease;
 }
 
@@ -489,8 +512,9 @@
   border: 1px solid var(--text-20);
   background: var(--surface);
   color: var(--text);
-  font-size: 0.7rem;
-  font-weight: 720;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -547,8 +571,9 @@
   gap: 1rem;
   padding: 0.7rem 0.85rem;
   color: var(--text);
-  font-size: 0.78rem;
-  font-weight: 720;
+  font-size: var(--type-metadata);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-metadata);
   letter-spacing: 0.04em;
   text-align: left;
   text-transform: uppercase;
@@ -560,8 +585,9 @@
 
 .searchSuggestion small {
   color: var(--text-40);
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.12em;
 }
 
@@ -605,10 +631,10 @@
   padding: 0.65rem 0.9rem;
   border: 1px solid var(--border);
   color: var(--text-60);
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-size: var(--type-label);
+  font-weight: var(--weight-heavy);
   letter-spacing: 0.1em;
-  line-height: 1;
+  line-height: var(--leading-label);
   text-transform: uppercase;
   transition:
     border-color 180ms ease,
@@ -660,7 +686,8 @@
   min-height: 44px;
   align-items: center;
   color: var(--text-40);
-  font-size: 0.82rem;
+  font-size: var(--type-metadata);
+  line-height: var(--leading-metadata);
 }
 
 .styleChoices .styleSelectionSummary {
@@ -670,8 +697,10 @@
   justify-content: space-between;
   gap: 1rem;
   color: var(--text-40);
-  font-size: 0.75rem;
-  font-weight: 700;
+  flex-wrap: wrap;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -712,43 +741,92 @@
 }
 
 .spectrumRangeControl {
+  --range-thumb-radius: 8px;
   position: absolute;
   right: 0;
-  bottom: -15px;
+  bottom: 0;
   left: 0;
   z-index: 4;
-  height: 30px;
+  height: 46px;
+  overflow: visible;
 }
 
 .rangeTrack {
   position: absolute;
-  top: 50%;
+  top: 15px;
   right: 0;
   left: 0;
   height: 1px;
   background: var(--text-20);
-  transform: translateY(-50%);
 }
 
 .rangeSelection {
   position: absolute;
-  top: 50%;
+  top: 0;
   right: calc(100% - var(--range-end));
   left: var(--range-start);
   height: 3px;
   background: var(--text);
-  transform: translateY(-50%);
+  transform: translateY(-1px);
 }
 
 .spectrumRangeControl input[type="range"] {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  top: 0;
+  left: calc(-1 * var(--range-thumb-radius));
+  width: calc(100% + 2 * var(--range-thumb-radius));
   height: 30px;
   margin: 0;
   appearance: none;
   background: transparent;
+  overflow: visible;
   pointer-events: none;
+}
+
+.rangeHandleValue {
+  position: absolute;
+  top: 28px;
+  z-index: 5;
+  color: var(--text-60);
+  font-size: var(--type-label);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  line-height: var(--leading-label);
+  pointer-events: none;
+}
+
+.rangeHandleValue[data-handle="minimum"] {
+  left: var(--range-start);
+  transform: translateX(-50%);
+}
+
+.rangeHandleValue[data-handle="maximum"] {
+  left: var(--range-end);
+  transform: translateX(-50%);
+}
+
+.rangeHandleValue[data-edge="start"] {
+  left: 0.5rem;
+  transform: none;
+}
+
+.rangeHandleValue[data-edge="end"] {
+  right: 0.5rem;
+  left: auto;
+  transform: none;
+}
+
+.rangeHandleValue[data-edge] {
+  opacity: 0;
+}
+
+.spectrumRangeControl[data-close="true"] .rangeHandleValue[data-handle="minimum"]:not([data-edge]) {
+  transform: translateX(calc(-100% - 0.25rem));
+}
+
+.spectrumRangeControl[data-close="true"] .rangeHandleValue[data-handle="maximum"]:not([data-edge]) {
+  transform: translateX(0.25rem);
 }
 
 .spectrumRangeControl input[type="range"]::-webkit-slider-runnable-track {
@@ -769,14 +847,6 @@
   transform: translateY(-7px);
 }
 
-.spectrumRangeControl input[data-edge="start"]::-webkit-slider-thumb {
-  transform: translate(8px, -7px);
-}
-
-.spectrumRangeControl input[data-edge="end"]::-webkit-slider-thumb {
-  transform: translate(-8px, -7px);
-}
-
 .spectrumRangeControl input[type="range"]::-moz-range-track {
   height: 3px;
   background: transparent;
@@ -791,14 +861,6 @@
   box-shadow: 0 0 0 1px var(--text);
   cursor: grab;
   pointer-events: auto;
-}
-
-.spectrumRangeControl input[data-edge="start"]::-moz-range-thumb {
-  transform: translateX(6px);
-}
-
-.spectrumRangeControl input[data-edge="end"]::-moz-range-thumb {
-  transform: translateX(-6px);
 }
 
 .spectrumRangeControl input[type="range"]:focus-visible {
@@ -831,7 +893,9 @@
 
 .emptyGrid strong {
   color: var(--text);
-  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  font-size: var(--type-title);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-title);
   letter-spacing: -0.03em;
 }
 
@@ -918,8 +982,9 @@
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(0, 0, 0, 0.6);
   color: white;
-  font-size: 0.6rem;
-  font-weight: 800;
+  font-size: var(--type-label);
+  font-weight: var(--weight-heavy);
+  line-height: var(--leading-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -957,10 +1022,10 @@
 
 .artistResting strong {
   overflow-wrap: anywhere;
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 760;
+  font-size: var(--type-title);
+  font-weight: var(--weight-heavy);
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: var(--leading-title);
   text-transform: uppercase;
 }
 
@@ -976,10 +1041,10 @@
   display: inline-flex;
   align-items: center;
   color: rgba(255, 255, 255, 0.72);
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.09em;
-  line-height: 1.55;
+  line-height: var(--leading-label);
   text-transform: uppercase;
 }
 
@@ -1040,8 +1105,9 @@
   padding: 0.75rem;
   background: white;
   color: #0a0a0a;
-  font-size: 0.66rem;
-  font-weight: 800;
+  font-size: var(--type-label);
+  font-weight: var(--weight-heavy);
+  line-height: var(--leading-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   transition:
@@ -1109,26 +1175,29 @@
 .spectrumGuideCopy {
   display: grid;
   min-width: 0;
+  max-width: 72ch;
   gap: 0.35rem;
 }
 
 .spectrumGuideCopy strong {
   color: var(--text);
-  font-size: 1rem;
-  font-weight: 720;
+  font-size: var(--type-body);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-title);
+  overflow-wrap: anywhere;
 }
 
 .spectrumGuideMeta {
   color: var(--text-40);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: var(--type-metadata);
+  line-height: var(--leading-metadata);
 }
 
 .spectrumGuideMeta strong {
   color: var(--text-60);
   font-size: inherit;
   font-variant-numeric: tabular-nums;
-  font-weight: 720;
+  font-weight: var(--weight-bold);
 }
 
 .spectrumTouchGuide {
@@ -1152,8 +1221,9 @@
   border: 1px solid var(--text-20);
   padding: 0.65rem 0.85rem;
   color: var(--text-60);
-  font-size: 0.75rem;
-  font-weight: 720;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.09em;
   white-space: nowrap;
   text-transform: uppercase;
@@ -1210,7 +1280,7 @@
 
 .spectrumRuler {
   display: grid;
-  min-height: 4.75rem;
+  min-height: 5.75rem;
   grid-template-columns: 13rem minmax(0, 1fr);
   align-items: end;
   border-bottom: 1px solid var(--border);
@@ -1230,46 +1300,53 @@
 
 .spectrumRuler > span > span {
   color: var(--text-40);
-  font-size: 0.64rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.13em;
 }
 
 .spectrumRuler output {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
+  display: grid;
+  justify-items: start;
+  gap: 0.2rem;
   white-space: nowrap;
 }
 
 .spectrumRuler output strong {
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: var(--type-metadata);
   font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-metadata);
   letter-spacing: 0.04em;
 }
 
 .spectrumRuler output small {
   color: var(--text-40);
-  font-size: 0.55rem;
+  font-size: var(--type-label);
+  font-weight: var(--weight-semibold);
   letter-spacing: 0.07em;
+  line-height: var(--leading-label);
   text-transform: uppercase;
 }
 
 .spectrumRuler > div {
   position: relative;
   height: 100%;
+  margin-inline: var(--spectrum-axis-inset);
 }
 
 .spectrumRuler [data-bpm-tick] {
   position: absolute;
-  bottom: 0.85rem;
+  bottom: 2.4rem;
   left: var(--tick-position);
   z-index: 3;
   color: var(--text-60);
-  font-size: 0.74rem;
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   transform: translateX(-50%);
 }
 
@@ -1292,7 +1369,7 @@
 }
 
 .spectrumRuler [data-bpm-tick][data-major="false"] {
-  bottom: -1px;
+  bottom: 1.875rem;
   width: 1px;
   height: 0.3rem;
   background: var(--text-20);
@@ -1308,25 +1385,6 @@
   display: none;
 }
 
-.spectrumRuler [data-bpm-tick="120"] {
-  left: 0.25rem;
-  transform: none;
-}
-
-.spectrumRuler [data-bpm-tick="120"]::after {
-  left: -0.25rem;
-}
-
-.spectrumRuler [data-bpm-tick="160"] {
-  right: 0.25rem;
-  left: auto;
-  transform: none;
-}
-
-.spectrumRuler [data-bpm-tick="160"]::after {
-  left: calc(100% + 0.25rem);
-}
-
 .spectrumGroup > h2 {
   display: flex;
   min-height: 3.75rem;
@@ -1335,8 +1393,9 @@
   padding: 1rem 1.25rem;
   background: var(--control-surface);
   color: var(--text);
-  font-size: 0.72rem;
-  font-weight: 760;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -1363,18 +1422,19 @@
   padding: 1.2rem 1.25rem;
   background: color-mix(in srgb, var(--control-surface) 72%, var(--bg));
   color: var(--text);
-  font-size: 0.98rem;
-  font-weight: 720;
-  line-height: 1.25;
+  font-size: var(--type-body);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-title);
 }
 
 .spectrumRow > h3 small {
   display: grid;
   gap: 0.15rem;
   color: var(--text-40);
-  font-size: 0.64rem;
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-label);
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
@@ -1382,6 +1442,7 @@
 .spectrumLanes {
   position: relative;
   min-width: 0;
+  margin-inline: var(--spectrum-axis-inset);
   background-image: linear-gradient(
     to right,
     transparent calc(25% - 1px),
@@ -1425,6 +1486,11 @@
 
 .spectrum[data-bpm-filtered="true"] .spectrumBpmWindow {
   opacity: 1;
+}
+
+.spectrum[data-bpm-filtered="false"] .spectrumBpmWindow {
+  right: calc(0px - var(--spectrum-axis-inset));
+  left: calc(0px - var(--spectrum-axis-inset));
 }
 
 .spectrumLane {
@@ -1476,17 +1542,24 @@
   left: 0;
   display: grid;
   width: max-content;
-  max-width: 15rem;
+  max-width: min(15rem, calc(100vw - 4rem));
   min-height: 1.9rem;
   grid-template-columns: 1.65rem auto;
   align-items: center;
   gap: 0.45rem;
   padding: 0.12rem 0.45rem 0.12rem 0.12rem;
-  font-size: 0.72rem;
-  font-weight: 760;
+  font-size: var(--type-metadata);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.07em;
-  line-height: 1.2;
+  line-height: var(--leading-metadata);
   text-transform: uppercase;
+}
+
+.spectrumEntryLabel > span:last-child {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .spectrumEntryLabel[data-align="end"] {
@@ -1527,11 +1600,13 @@
   display: flex;
   justify-content: space-between;
   color: var(--text-40);
-  font-size: 0.58rem;
+  font-size: var(--type-label);
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
-  line-height: 1;
+  line-height: var(--leading-label);
+  opacity: 1;
+  transition: opacity 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .spectrumRangeMatch {
@@ -1568,7 +1643,9 @@
 
 .spectrumEmpty strong {
   color: var(--text);
-  font-size: 1.2rem;
+  font-size: var(--type-title);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-title);
 }
 
 .spectrumEmpty p {
@@ -1582,8 +1659,9 @@
   border: 1px solid var(--text);
   padding: 0.7rem 1rem;
   color: var(--text);
-  font-size: 0.7rem;
-  font-weight: 720;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1606,17 +1684,17 @@
 
 .bookingPrompt h2 {
   color: var(--text);
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
-  font-weight: 740;
+  font-size: var(--type-headline);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: var(--leading-title);
 }
 
 .bookingPrompt p {
-  max-width: 43rem;
+  max-width: 65ch;
   margin-top: 0.65rem;
   color: var(--text-60);
-  line-height: 1.6;
+  line-height: var(--leading-body);
 }
 
 .bookingPrompt > a {
@@ -1626,8 +1704,9 @@
   align-items: center;
   justify-content: center;
   padding: 0.75rem 1.5rem;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-label);
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
@@ -1669,19 +1748,18 @@
   .spectrumRow {
     grid-template-columns: 10.5rem minmax(0, 1fr);
   }
-
-  .spectrumEntryLabel {
-    font-size: 0.68rem;
-  }
-
-  .spectrumRuler output {
-    display: grid;
-    justify-items: start;
-    gap: 0.2rem;
-  }
 }
 
 @media (min-width: 640px) and (max-width: 900px) {
+  .spectrumGuide {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .spectrumGuideCopy {
+    flex: 1 1 100%;
+  }
+
   .filters[data-view="spectrum"] {
     grid-template-columns: minmax(0, 13fr) minmax(0, 7fr);
   }
@@ -1710,17 +1788,13 @@
     display: block;
   }
 
-  .header h1 {
-    font-size: clamp(3.4rem, 14vw, 5.5rem);
-  }
-
   .header p {
     margin-top: 1rem;
   }
 
   .spectrumGuide {
     display: grid;
-    gap: 0.3rem;
+    gap: 0.75rem;
   }
 
   .spectrumGuideActions {
@@ -1767,8 +1841,9 @@
 
   .spectrumMobileRangeHeader > span {
     color: var(--text-40);
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--type-label);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-label);
     letter-spacing: 0.13em;
     text-transform: uppercase;
   }
@@ -1782,15 +1857,18 @@
 
   .spectrumMobileRangeHeader output strong {
     color: var(--text);
-    font-size: 1rem;
+    font-size: var(--type-body);
     font-variant-numeric: tabular-nums;
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-title);
     letter-spacing: 0.04em;
   }
 
   .spectrumMobileRangeHeader output small {
     color: var(--text-40);
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--type-label);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -1802,12 +1880,14 @@
     left: auto;
     grid-row: 1;
     grid-column: 2;
-    height: 44px;
+    z-index: 8;
+    height: 46px;
     align-self: end;
+    margin-inline: var(--spectrum-axis-inset);
   }
 
   .spectrumMobileRange .spectrumRangeControl input[type="range"] {
-    height: 44px;
+    height: 30px;
   }
 
   .spectrumMobileRangeLimits {
@@ -1817,9 +1897,11 @@
     justify-content: space-between;
     align-items: start;
     color: var(--text-40);
-    font-size: 0.75rem;
+    font-size: var(--type-label);
     font-variant-numeric: tabular-nums;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-label);
+    margin-inline: var(--spectrum-axis-inset);
   }
 
   .spectrumViewportShell::after {
@@ -1853,8 +1935,9 @@
     padding: 0.5rem 0.65rem;
     background: var(--text);
     color: var(--bg);
-    font-size: 0.75rem;
-    font-weight: 720;
+    font-size: var(--type-label);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-label);
     letter-spacing: 0.08em;
     opacity: 1;
     pointer-events: none;
@@ -1908,8 +1991,9 @@
   .spectrumRuler > span::after {
     color: var(--text-40);
     content: "Style";
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--type-label);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-label);
     letter-spacing: 0.13em;
     text-transform: uppercase;
   }
@@ -1985,8 +2069,9 @@
     display: flex;
     align-items: center;
     gap: 0.7rem;
-    font-size: 0.72rem;
-    font-weight: 700;
+    font-size: var(--type-label);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-label);
     letter-spacing: 0.13em;
     text-transform: uppercase;
   }
@@ -2001,6 +2086,7 @@
   }
 
   .filtersReset {
+    flex-wrap: wrap;
     border-top: 0;
   }
 

@@ -255,14 +255,18 @@ function BpmRangeControl({
   onMaximumChange: (value: number) => void;
 }) {
   return (
-    <div className={styles.spectrumRangeControl} style={rangeStyle}>
+    <div
+      className={styles.spectrumRangeControl}
+      style={rangeStyle}
+      data-close={bpmMax - bpmMin < 4 ? "true" : "false"}
+    >
       <span className={styles.rangeTrack} aria-hidden="true">
         <span className={styles.rangeSelection} data-bpm-slider-selection="true" />
       </span>
       <input
         type="range"
         min={BPM_DOMAIN.min}
-        max={BPM_DOMAIN.max - 1}
+        max={BPM_DOMAIN.max}
         value={bpmMin}
         data-edge={bpmMin === BPM_DOMAIN.min ? "start" : undefined}
         aria-label="Minimum BPM"
@@ -270,13 +274,29 @@ function BpmRangeControl({
       />
       <input
         type="range"
-        min={BPM_DOMAIN.min + 1}
+        min={BPM_DOMAIN.min}
         max={BPM_DOMAIN.max}
         value={bpmMax}
         data-edge={bpmMax === BPM_DOMAIN.max ? "end" : undefined}
         aria-label="Maximum BPM"
         onChange={(event) => onMaximumChange(Number(event.target.value))}
       />
+      <output
+        className={styles.rangeHandleValue}
+        data-handle="minimum"
+        data-edge={bpmMin === BPM_DOMAIN.min ? "start" : undefined}
+        aria-hidden="true"
+      >
+        {bpmMin}
+      </output>
+      <output
+        className={styles.rangeHandleValue}
+        data-handle="maximum"
+        data-edge={bpmMax === BPM_DOMAIN.max ? "end" : undefined}
+        aria-hidden="true"
+      >
+        {bpmMax}
+      </output>
     </div>
   );
 }
@@ -1458,7 +1478,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                       <strong>
                         {bpmMin}–{bpmMax}
                       </strong>
-                      <small>{bpmIsFiltered ? "Selected range" : "Full range selected"}</small>
+                      <small>{bpmIsFiltered ? "Selected range" : "Full range"}</small>
                     </output>
                   </span>
                   <div data-bpm-ruler-scale="true">
