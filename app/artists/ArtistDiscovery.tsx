@@ -959,12 +959,12 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                       <button
                         type="button"
                         aria-label={`Remove ${artist.name}`}
-                        onClick={(event) =>
-                          transitionArtistSelection(
-                            event,
+                        onClick={() =>
+                          commitArtistSelection(
                             selectedArtistSlugs.filter((slug) => slug !== artist.slug)
                           )
                         }
+                        onPointerDown={(event) => event.preventDefault()}
                       >
                         <svg viewBox="0 0 16 16" aria-hidden="true">
                           <path d="m4 4 8 8m0-8-8 8" />

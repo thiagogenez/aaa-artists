@@ -709,7 +709,10 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     )
     .toEqual(["active", "active", "active", "active", "active"]);
 
-  await page.getByRole("button", { name: "Remove FROGR" }).click();
+  const removeFrogr = page.getByRole("button", { name: "Remove FROGR" });
+  await removeFrogr.click();
+  await expect(removeFrogr).toHaveCount(0);
+  await expect(page.getByLabel("Selected artists")).toContainText("Thiago Genez");
   await page.getByRole("button", { name: "Remove Thiago Genez" }).click();
   await expect(thiagoEntries.first()).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByLabel("Selected artists")).toHaveCount(0);
