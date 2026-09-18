@@ -16,7 +16,7 @@ bio: >-
   debut in Asia last year. With a versatile and forward-thinking approach, he consistently delivers
   high-impact releases and performances, positioning himself among the leading artists of the new
   generation.
-image: /artists/dim3nsion.jpg
+image: /artists/dim3nsion.webp
 soundProfiles:
   - style: progressive-trance
     bpm: { min: 126, max: 134 }
