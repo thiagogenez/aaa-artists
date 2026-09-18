@@ -135,17 +135,10 @@ test("shows the refreshed roster profiles and preserves biography paragraphs", a
   );
 });
 
-test("reveals artist card actions to keyboard navigation", async ({ page }) => {
+test("opens artist cards directly with keyboard navigation", async ({ page }) => {
   await page.goto("/artists");
 
-  const reveal = page.getByRole("button", { name: /Show actions for/ }).first();
-  const actionsId = await reveal.getAttribute("aria-controls");
-  const stableReveal = page.locator(`button[aria-controls="${actionsId}"]`);
-  await reveal.focus();
-  await reveal.press("Enter");
-  await expect(stableReveal).toHaveAttribute("aria-expanded", "true");
-
-  const profileLink = page.locator(`#${actionsId}`).getByRole("link", { name: /View .* profile/ });
+  const profileLink = page.getByRole("link", { name: /View .* profile/ }).first();
   await profileLink.focus();
   await expect(profileLink).toBeFocused();
   await profileLink.press("Enter");

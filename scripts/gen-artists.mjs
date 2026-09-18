@@ -5,6 +5,7 @@
 import * as yaml from "js-yaml";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { BPM_DOMAIN, NIGHT_MOMENTS, SOUND_GROUPS } from "../config/artist-discovery.mjs";
 
 const DIR = "data/artists";
 const OUT = "data/artists.data.json";
@@ -23,6 +24,10 @@ const SOCIAL_FIELDS = new Set([
 // gig source. Build tooling only — stripped from the generated JSON below, so
 // none of it ships to the browser. "ra" is a review link, never fetched.
 const SOURCE_FIELDS = new Set(["skiddle", "bandsintown", "ra"]);
+const SOUND_STYLE_IDS = new Set(
+  SOUND_GROUPS.flatMap((group) => group.styles.map((style) => style.id))
+);
+const NIGHT_MOMENT_IDS = new Set(NIGHT_MOMENTS.map((moment) => moment.id));
 
 const errors = [];
 const seenSlugs = new Map();
@@ -64,6 +69,54 @@ function isLocalAsset(value) {
     /^\/[A-Za-z0-9/_-]+\.(?:avif|jpe?g|png|webp)$/i.test(value) &&
     !value.includes("..")
   );
+}
+
+function checkSoundProfiles(profiles, file) {
+  if (!Array.isArray(profiles) || profiles.length === 0) {
+    errors.push(`${file}: "soundProfiles" must contain at least one profile`);
+    return [];
+  }
+
+  const seenStyles = new Set();
+  return profiles.map((profile, index) => {
+    const where = `${file} → soundProfiles[${index + 1}]`;
+    if (!profile || typeof profile !== "object" || Array.isArray(profile)) {
+      errors.push(`${where}: must be an object`);
+      return profile;
+    }
+    if (!SOUND_STYLE_IDS.has(profile.style)) {
+      errors.push(`${where}: unsupported style "${profile.style ?? ""}"`);
+    } else if (seenStyles.has(profile.style)) {
+      errors.push(`${where}: style "${profile.style}" is already listed for this artist`);
+    }
+    seenStyles.add(profile.style);
+
+    const min = profile.bpm?.min;
+    const max = profile.bpm?.max;
+    if (!Number.isInteger(min) || !Number.isInteger(max)) {
+      errors.push(`${where}: "bpm.min" and "bpm.max" must be whole numbers`);
+    } else if (min < BPM_DOMAIN.min || max > BPM_DOMAIN.max || min > max) {
+      errors.push(
+        `${where}: BPM range must stay between ${BPM_DOMAIN.min} and ${BPM_DOMAIN.max}, with min not greater than max`
+      );
+    }
+
+    if (!Array.isArray(profile.moments) || profile.moments.length === 0) {
+      errors.push(`${where}: "moments" must contain at least one moment`);
+    } else {
+      const seenMoments = new Set();
+      for (const moment of profile.moments) {
+        if (!NIGHT_MOMENT_IDS.has(moment)) {
+          errors.push(`${where}: unsupported moment "${moment}"`);
+        } else if (seenMoments.has(moment)) {
+          errors.push(`${where}: moment "${moment}" is listed more than once`);
+        }
+        seenMoments.add(moment);
+      }
+    }
+
+    return profile;
+  });
 }
 
 function checkGigs(gigs, file, listName) {
@@ -163,6 +216,8 @@ for (const file of files) {
   }
   if (doc.image && !isLocalAsset(doc.image))
     errors.push(`${file}: "image" must be a local /path image`);
+
+  doc.soundProfiles = checkSoundProfiles(doc.soundProfiles, file);
 
   doc.socials = doc.socials ?? {};
   if (!doc.socials || typeof doc.socials !== "object" || Array.isArray(doc.socials)) {

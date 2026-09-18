@@ -9,6 +9,13 @@ bio: >-
   SAGO is an emerging trance DJ known for uplifting melodies and high-energy sets. A resident for
   AAA Events, he has played Euphoria Weekender, Ibiza Trance Week and ADE.
 image: /artists/sago.webp
+soundProfiles:
+  - style: uplifting-trance
+    bpm: { min: 136, max: 142 }
+    moments: [warm-up, peak-time]
+  - style: hard-trance
+    bpm: { min: 140, max: 145 }
+    moments: [peak-time, closing]
 socials:
   instagram: https://instagram.com/sagomusic
   soundcloud: https://soundcloud.com/daniel-huckett # SAGO's real account (soundcloud.com/sago is someone else)

@@ -15,6 +15,16 @@ bio: >-
   to mention a few, have regularly played his tracks. This international acclaim has propelled
   some of his works to the summit of the Beatport charts on multiple occasions.
 image: /artists/steve-dekay.jpeg
+soundProfiles:
+  - style: uplifting-trance
+    bpm: { min: 136, max: 142 }
+    moments: [warm-up, peak-time]
+  - style: tech-trance
+    bpm: { min: 140, max: 146 }
+    moments: [peak-time, closing]
+  - style: hard-trance
+    bpm: { min: 145, max: 150 }
+    moments: [peak-time, closing]
 socials:
   instagram: https://www.instagram.com/steve_dekay/
   website: https://stevedekaymusic.com/

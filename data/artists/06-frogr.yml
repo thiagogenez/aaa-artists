@@ -9,6 +9,13 @@ bio: >-
   FROGR is a high-energy rave project born in 2024, reviving the sound of 90s and 00s trance, hard
   house and euro rave at 145 BPM. The result is fast and euphoric, built for modern dancefloors.
 image: /artists/frogr.webp
+soundProfiles:
+  - style: euro-trance
+    bpm: { min: 140, max: 145 }
+    moments: [peak-time, closing]
+  - style: hard-trance
+    bpm: { min: 142, max: 146 }
+    moments: [peak-time, closing]
 socials:
   instagram: https://instagram.com/frogr_music
   soundcloud: https://soundcloud.com/user-555399327 # FROGR's real account (soundcloud.com/frogr is someone else)
