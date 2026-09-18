@@ -69,8 +69,9 @@
     "react-dom": "^19.2.8"
   },
   "overrides": {
+    "baseline-browser-mapping": "^2.11.0",
     "sharp": "^0.35.4",
-    "qs": "^6.15.3"
+    "qs": "^6.16.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",
