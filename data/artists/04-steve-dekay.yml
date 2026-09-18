@@ -14,7 +14,7 @@ bio: >-
   Fila, Armin van Buuren, Paul van Dyk, Solarstone, Giuseppe Ottaviani, Marco V, and Ferry Corsten,
   to mention a few, have regularly played his tracks. This international acclaim has propelled
   some of his works to the summit of the Beatport charts on multiple occasions.
-image: /artists/steve-dekay.jpeg
+image: /artists/steve-dekay.webp
 soundProfiles:
   - style: uplifting-trance
     bpm: { min: 136, max: 142 }

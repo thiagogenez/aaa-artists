@@ -9,7 +9,7 @@ bio: >-
   Mr B is a London DJ and a regular on the AAA Fusion lineups at Basing House, Egg London and XOYO.
   His sets sit in trance and progressive territory, and when the afterparty calls for it he pushes
   into harder ground.
-image: /artists/placeholder.webp
+image: /artists/mr-b.webp
 soundProfiles:
   - style: progressive-trance
     bpm: { min: 126, max: 134 }
