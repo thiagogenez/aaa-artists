@@ -678,7 +678,7 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   await expect(spectrum).toContainText("Selected: Thiago Genez");
   await expect(page.getByRole("navigation", { name: "Actions for Thiago Genez" })).toBeVisible();
   await expect(
-    page.locator("#artist-filters").getByRole("button", { name: "Clear all filters" })
+    page.getByTestId("discovery-toolbar").getByRole("button", { name: "Clear all filters" })
   ).toBeVisible();
   if ((page.viewportSize()?.width ?? 0) > 767) {
     await frogrRange.hover();
@@ -714,8 +714,19 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   await expect(thiagoEntries.first()).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByLabel("Selected artists")).toHaveCount(0);
 
+  const spectrumTopBeforeBpmFilter = await spectrum.evaluate(
+    (element) => element.getBoundingClientRect().top + window.scrollY
+  );
   await maximumBpmSlider.fill("140");
   await minimumBpmSlider.fill("132");
+  await expect(
+    page.getByTestId("discovery-toolbar").getByRole("button", { name: "Clear all filters" })
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      spectrum.evaluate((element) => element.getBoundingClientRect().top + window.scrollY)
+    )
+    .toBeCloseTo(spectrumTopBeforeBpmFilter, 1);
   await expect(minimumBpmValue).toHaveText("132");
   await expect(maximumBpmValue).toHaveText("140");
   await expect(minimumBpmValue).toHaveCSS("opacity", "1");
@@ -794,24 +805,15 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   expect(overlapRatio).toBeCloseTo(0.5, 1);
 
   await page.getByText("All 8 styles", { exact: true }).click();
-  const progressiveStyleOption = page.locator('[data-spectrum-style-option="progressive-trance"]');
-  const showOnlyProgressive = progressiveStyleOption.getByRole("button", {
-    name: "Show only Progressive Trance",
-  });
-  if ((page.viewportSize()?.width ?? 0) > 1100) {
-    await expect(showOnlyProgressive).toHaveCSS("opacity", "0");
-    await progressiveStyleOption.scrollIntoViewIfNeeded();
-    await progressiveStyleOption.getByText("Progressive Trance", { exact: true }).hover();
-    await expect(showOnlyProgressive).toHaveCSS("opacity", "1");
-    await page.getByRole("heading", { name: "Our Artists" }).hover();
-    await expect(showOnlyProgressive).toHaveCSS("opacity", "0");
-    await progressiveStyleOption.getByText("Progressive Trance", { exact: true }).hover();
-  } else {
-    await expect(showOnlyProgressive).toHaveCSS("opacity", "1");
-  }
-  await showOnlyProgressive.click();
-  await expect(page.getByText("1 of 8 styles", { exact: true })).toBeVisible();
+  const stylesPicker = page.getByTestId("spectrum-styles-picker");
+  const stylesStatus = stylesPicker.getByRole("status");
+  const tranceGroupAction = page.getByRole("button", { name: "Hide all Trance styles" });
+  await expect
+    .poll(() => tranceGroupAction.evaluate((element) => element.getBoundingClientRect().height))
+    .toBeGreaterThanOrEqual(44);
   await expect(page.getByRole("checkbox", { name: "Progressive Trance" })).toBeChecked();
+  await page.getByRole("checkbox", { name: "Uplifting Trance" }).uncheck();
+  await expect(page.getByText("7 of 8 styles", { exact: true })).toBeVisible();
   await expect(
     spectrum.getByRole("heading", { name: "Uplifting Trance", exact: true })
   ).toHaveCount(0);
@@ -819,11 +821,18 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     .getByTestId("spectrum-styles-picker")
     .getByRole("button", { name: "Reset", exact: true })
     .click();
+  await expect(stylesStatus).toHaveText("Showing all styles.");
   await expect(page.getByText("All 8 styles", { exact: true })).toBeVisible();
 
   const technoStyles = page.getByRole("region", { name: "Techno styles" });
   await technoStyles.getByRole("button", { name: "Hide all Techno styles" }).click();
+  await expect(stylesStatus).toHaveText("Techno styles hidden.");
   await expect(spectrum.getByRole("heading", { name: "Techno", exact: true })).toHaveCount(0);
+  await technoStyles.getByRole("button", { name: "Show all Techno styles" }).click();
+  await expect(stylesStatus).toHaveText("Showing all Techno styles.");
+  await expect(spectrum.getByRole("heading", { name: "Techno", exact: true })).toBeVisible();
+  await technoStyles.getByRole("button", { name: "Hide all Techno styles" }).click();
+  await expect(stylesStatus).toHaveText("Techno styles hidden.");
   await expect(
     spectrum.getByRole("heading", { name: "Trance", exact: true }).first()
   ).toBeVisible();
@@ -838,7 +847,6 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   ).toBeVisible();
   await expect(page.getByText("4 of 8 styles", { exact: true })).toBeVisible();
 
-  const stylesPicker = page.getByTestId("spectrum-styles-picker");
   await stylesPicker.getByRole("button", { name: "Done", exact: true }).click();
   await expect(technoStyles).not.toBeVisible();
 

@@ -522,6 +522,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const [spectrumScrolled, setSpectrumScrolled] = useState(false);
   const [spectrumStylesPickerOpen, setSpectrumStylesPickerOpen] = useState(false);
   const [spectrumMomentPickerOpen, setSpectrumMomentPickerOpen] = useState(false);
+  const [spectrumStyleStatus, setSpectrumStyleStatus] = useState("");
   const spectrumStylesPickerRef = useRef<HTMLFieldSetElement>(null);
   const spectrumMomentPickerRef = useRef<HTMLFieldSetElement>(null);
 
@@ -849,10 +850,10 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   };
 
   const toggleSpectrumGroup = (groupId: SoundGroupId) => {
-    const groupStyleIds = allSpectrumGroups
-      .find((group) => group.id === groupId)
-      ?.styles.map((sound) => sound.id);
-    if (!groupStyleIds?.length) return;
+    const group = allSpectrumGroups.find((candidate) => candidate.id === groupId);
+    if (!group) return;
+    const groupStyleIds = group.styles.map((sound) => sound.id);
+    if (!groupStyleIds.length) return;
 
     const allGroupStylesVisible = groupStyleIds.every((styleId) =>
       visibleSpectrumStyles.includes(styleId)
@@ -863,6 +864,9 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
           ? current.includes(styleId) && !groupStyleIds.includes(styleId)
           : current.includes(styleId) || groupStyleIds.includes(styleId)
       )
+    );
+    setSpectrumStyleStatus(
+      allGroupStylesVisible ? `${group.label} styles hidden.` : `Showing all ${group.label} styles.`
     );
   };
 
@@ -894,6 +898,16 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   return (
     <section className={styles.discovery} aria-label="Artist discovery">
       <div className={styles.discoveryBar} data-testid="discovery-toolbar">
+        {view === "spectrum" && showClearFilters && (
+          <button
+            type="button"
+            className={`${styles.clearFiltersButton} ${styles.spectrumToolbarClear}`}
+            onClick={resetFilters}
+          >
+            Clear all filters
+          </button>
+        )}
+
         <fieldset className={styles.viewSwitch}>
           <legend className="sr-only">Roster view</legend>
           <button type="button" aria-pressed={view === "grid"} onClick={() => setView("grid")}>
@@ -1128,10 +1142,11 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                 aria-expanded={spectrumStylesPickerOpen}
                 aria-controls="spectrum-styles-panel"
                 onClick={() => {
-                  setSpectrumStylesPickerOpen((current) => {
-                    if (!current) setSpectrumMomentPickerOpen(false);
-                    return !current;
-                  });
+                  if (!spectrumStylesPickerOpen) {
+                    setSpectrumMomentPickerOpen(false);
+                    setSpectrumStyleStatus("");
+                  }
+                  setSpectrumStylesPickerOpen(!spectrumStylesPickerOpen);
                 }}
               >
                 <span id="artist-spectrum-styles-value">
@@ -1181,14 +1196,6 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                                 />
                                 <span>{sound.label}</span>
                               </label>
-                              <button
-                                type="button"
-                                className={styles.spectrumStyleOnly}
-                                aria-label={`Show only ${sound.label}`}
-                                onClick={() => setVisibleSpectrumStyles([sound.id])}
-                              >
-                                Show only
-                              </button>
                             </div>
                           ))}
                         </div>
@@ -1199,7 +1206,10 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                     <button
                       type="button"
                       disabled={!spectrumStylesCustomized}
-                      onClick={() => setVisibleSpectrumStyles([...ALL_SOUND_STYLE_IDS])}
+                      onClick={() => {
+                        setVisibleSpectrumStyles([...ALL_SOUND_STYLE_IDS]);
+                        setSpectrumStyleStatus("Showing all styles.");
+                      }}
                     >
                       Reset
                     </button>
@@ -1211,6 +1221,9 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                       Done
                     </button>
                   </footer>
+                  <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+                    {spectrumStyleStatus}
+                  </p>
                 </div>
               )}
             </fieldset>
@@ -1300,15 +1313,13 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
           </div>
         )}
 
-        {(view === "grid" || showClearFilters) && (
+        {view === "grid" && (
           <footer className={styles.filtersReset}>
-            {view === "grid" && (
-              <p className={styles.gridResultSummary} data-testid="grid-summary" aria-live="polite">
-                <strong>{gridArtists.length}</strong>{" "}
-                {gridArtists.length === 1 ? "artist" : "artists"} ·{" "}
-                <strong>{gridStyleCount}</strong> {gridStyleCount === 1 ? "style" : "styles"}
-              </p>
-            )}
+            <p className={styles.gridResultSummary} data-testid="grid-summary" aria-live="polite">
+              <strong>{gridArtists.length}</strong>{" "}
+              {gridArtists.length === 1 ? "artist" : "artists"} · <strong>{gridStyleCount}</strong>{" "}
+              {gridStyleCount === 1 ? "style" : "styles"}
+            </p>
             {showClearFilters && (
               <button type="button" className={styles.clearFiltersButton} onClick={resetFilters}>
                 Clear all filters
