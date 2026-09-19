@@ -103,9 +103,11 @@ function transitionRoster(
   update: () => void
 ) {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
   const canAnimate =
     event.detail !== 0 &&
     !prefersReducedMotion &&
+    !hasCoarsePointer &&
     typeof document.startViewTransition === "function";
 
   if (!canAnimate) {
@@ -523,10 +525,13 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const [spectrumStylesPickerOpen, setSpectrumStylesPickerOpen] = useState(false);
   const [spectrumMomentPickerOpen, setSpectrumMomentPickerOpen] = useState(false);
   const [spectrumStyleStatus, setSpectrumStyleStatus] = useState("");
+  const discoveryRef = useRef<HTMLElement>(null);
   const spectrumStylesPickerRef = useRef<HTMLFieldSetElement>(null);
   const spectrumMomentPickerRef = useRef<HTMLFieldSetElement>(null);
 
   useEffect(() => {
+    const discovery = discoveryRef.current;
+    if (discovery) discovery.dataset.hydrated = "true";
     const closeOnOutsidePointer = (event: PointerEvent) => {
       if (!(event.target instanceof Node)) return;
       if (
@@ -543,7 +548,10 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
       }
     };
     document.addEventListener("pointerdown", closeOnOutsidePointer);
-    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      if (discovery) discovery.dataset.hydrated = "false";
+    };
   }, []);
 
   const closeSpectrumStylesPicker = () => {
@@ -877,7 +885,12 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     "--range-end": `${((bpmMax - BPM_DOMAIN.min) / (BPM_DOMAIN.max - BPM_DOMAIN.min)) * 100}%`,
   };
   return (
-    <section className={styles.discovery} aria-label="Artist discovery">
+    <section
+      ref={discoveryRef}
+      className={styles.discovery}
+      aria-label="Artist discovery"
+      data-hydrated="false"
+    >
       <div className={styles.discoveryBar} data-testid="discovery-toolbar">
         {view === "spectrum" && showClearFilters && (
           <button

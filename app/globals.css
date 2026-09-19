@@ -298,10 +298,6 @@ input[type="date"] {
   animation: none;
 }
 
-html[data-roster-transition]::view-transition {
-  pointer-events: none;
-}
-
 ::view-transition-group(*) {
   animation-duration: 415ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
