@@ -1,7 +1,22 @@
-import { expect, test } from "playwright/test";
+import { expect, test, type Locator, type Page } from "playwright/test";
+
+async function openArtistDiscovery(page: Page) {
+  await page.goto("/artists");
+  await expect(page.getByRole("region", { name: "Artist discovery" })).toHaveAttribute(
+    "data-hydrated",
+    "true"
+  );
+}
+
+async function bringIntoStableViewport(locator: Locator) {
+  await locator.evaluate((element) => {
+    element.scrollIntoView({ behavior: "instant", block: "center", inline: "nearest" });
+  });
+  await expect(locator).toBeInViewport();
+}
 
 test("filters by multiple artist names with an accessible autocomplete", async ({ page }) => {
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
 
@@ -53,7 +68,7 @@ test("filters by multiple artist names with an accessible autocomplete", async (
   await expect(grid.getByRole("article")).toHaveCount(9);
 });
 
-test("animates pointer filter changes without slowing keyboard or reduced-motion users", async ({
+test("animates fine-pointer filters without slowing touch, keyboard, or reduced-motion users", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -82,7 +97,10 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
       },
     });
   });
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
+  const finePointer = await page.evaluate(() => !window.matchMedia("(pointer: coarse)").matches);
+  const firstTransitionCount = finePointer ? 1 : 0;
+  const secondTransitionCount = finePointer ? 2 : 0;
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
 
@@ -94,7 +112,7 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
         () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
       )
     )
-    .toBe(1);
+    .toBe(firstTransitionCount);
   await expect
     .poll(() =>
       page.evaluate(
@@ -103,7 +121,7 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
             .__rosterTransitionDirections
       )
     )
-    .toEqual(["collapse"]);
+    .toEqual(finePointer ? ["collapse"] : []);
 
   const trance = genreChoices.getByRole("button", { name: "Trance", exact: true });
   await trance.click();
@@ -113,7 +131,7 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
         () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
       )
     )
-    .toBe(2);
+    .toBe(secondTransitionCount);
   await expect
     .poll(() =>
       page.evaluate(
@@ -122,7 +140,7 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
             .__rosterTransitionDirections
       )
     )
-    .toEqual(["collapse", "expand"]);
+    .toEqual(finePointer ? ["collapse", "expand"] : []);
 
   const techno = genreChoices.getByRole("button", { name: "Techno", exact: true });
   await techno.focus();
@@ -133,7 +151,7 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
         () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
       )
     )
-    .toBe(2);
+    .toBe(secondTransitionCount);
 
   const search = page.getByRole("combobox", { name: "Artists" });
   await search.fill("thi");
@@ -148,7 +166,7 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
         () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
       )
     )
-    .toBe(2);
+    .toBe(secondTransitionCount);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await genreChoices.getByRole("button", { name: "All", exact: true }).click();
@@ -158,13 +176,13 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
         () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
       )
     )
-    .toBe(2);
+    .toBe(secondTransitionCount);
 });
 
 test("filters the grid to artists compatible with the selected genre and style", async ({
   page,
 }) => {
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
 
   const grid = page.getByTestId("artist-grid");
   await expect(grid.getByRole("article")).toHaveCount(9);
@@ -295,7 +313,12 @@ test("filters the grid to artists compatible with the selected genre and style",
   await expect(grid.getByText("Uplifting Trance", { exact: true })).toHaveCount(0);
   await expect(grid.getByRole("article")).toHaveCount(1);
 
-  await styleChoices.getByRole("button", { name: "Melodic Techno", exact: true }).click();
+  const melodicTechnoChoice = styleChoices.getByRole("button", {
+    name: "Melodic Techno",
+    exact: true,
+  });
+  await bringIntoStableViewport(melodicTechnoChoice);
+  await melodicTechnoChoice.click();
   await expect(
     styleChoices.getByRole("button", { name: "Hard Techno", exact: true })
   ).toHaveAttribute("aria-pressed", "true");
@@ -306,14 +329,20 @@ test("filters the grid to artists compatible with the selected genre and style",
   await expect(grid.getByRole("article")).toHaveCount(2);
   await expect(grid.getByRole("link", { name: "View Krevix profile" })).toBeVisible();
 
-  await styleChoices.getByRole("button", { name: "Clear styles", exact: true }).click();
+  const clearStyles = styleChoices.getByRole("button", { name: "Clear styles", exact: true });
+  await bringIntoStableViewport(clearStyles);
+  await clearStyles.click();
   await expect(styleChoices.getByRole("status")).toHaveText("Showing all Techno styles");
   await expect(styleChoices.getByRole("button", { name: "Clear styles", exact: true })).toHaveCount(
     0
   );
   await expect(grid.getByRole("article")).toHaveCount(2);
 
-  await page.locator("#artist-filters").getByRole("button", { name: "Clear all filters" }).click();
+  const clearAllFilters = page
+    .locator("#artist-filters")
+    .getByRole("button", { name: "Clear all filters" });
+  await bringIntoStableViewport(clearAllFilters);
+  await clearAllFilters.click();
   await expect(genreChoices.getByRole("button", { name: "All", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true"
@@ -326,7 +355,7 @@ test("filters the grid to artists compatible with the selected genre and style",
 });
 
 test("ranks artists matching every selected style before partial matches", async ({ page }) => {
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
 
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
@@ -347,7 +376,7 @@ test("ranks artists matching every selected style before partial matches", async
 });
 
 test("orders partial style matches by the canonical sound spectrum", async ({ page }) => {
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
 
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
@@ -372,7 +401,7 @@ test("orders partial style matches by the canonical sound spectrum", async ({ pa
 });
 
 test("uses the restrained color treatment across themes", async ({ page }) => {
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
 
   await expect(page.getByRole("group", { name: "Color treatment" })).toHaveCount(0);
 
@@ -413,7 +442,7 @@ test("uses the restrained color treatment across themes", async ({ page }) => {
 });
 
 test("shares name filters with a selectable BPM-ordered spectrum", async ({ page }) => {
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
   await page.getByRole("button", { name: "Spectrum" }).click();
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
@@ -735,10 +764,13 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     .toEqual(["active", "active", "active", "active", "active"]);
 
   const removeFrogr = page.getByRole("button", { name: "Remove FROGR" });
+  await bringIntoStableViewport(removeFrogr);
   await removeFrogr.click();
   await expect(removeFrogr).toHaveCount(0);
   await expect(page.getByLabel("Selected artists")).toContainText("Thiago Genez");
-  await page.getByRole("button", { name: "Remove Thiago Genez" }).click();
+  const removeThiago = page.getByRole("button", { name: "Remove Thiago Genez" });
+  await bringIntoStableViewport(removeThiago);
+  await removeThiago.click();
   await expect(thiagoEntries.first()).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByLabel("Selected artists")).toHaveCount(0);
 
@@ -887,7 +919,7 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
 test("preserves the BPM map as a horizontally scrollable spectrum on mobile", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) > 767, "Mobile spectrum behavior");
 
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
   await page.getByRole("button", { name: "Spectrum" }).click();
 
   const viewport = page.getByRole("region", { name: "Artist BPM spectrum" });
@@ -904,7 +936,7 @@ test("preserves the BPM map as a horizontally scrollable spectrum on mobile", as
 
 test("collapses filters on mobile and keeps square artist photography", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/artists");
+  await openArtistDiscovery(page);
 
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   await expect(filterToggle).toHaveAttribute("aria-expanded", "false");

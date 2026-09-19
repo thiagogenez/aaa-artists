@@ -193,9 +193,7 @@ test.describe("booking form regression coverage", () => {
     await phoneInput.fill("");
     await phoneField.getByRole("button", { name: "Clear country selection" }).click();
 
-    await phoneCountry.click();
-    await page.locator(".iti__search-input").fill("Jersey");
-    await page.locator(".iti__country").filter({ hasText: "Jersey" }).click();
+    await selectPhoneCountry(page, phoneField, "Jersey");
 
     await phoneInput.fill("01534 123456");
     await expect(phoneCountry).toHaveAttribute(
