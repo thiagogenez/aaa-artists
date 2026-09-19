@@ -135,6 +135,21 @@ test("animates pointer filter changes without slowing keyboard or reduced-motion
     )
     .toBe(2);
 
+  const search = page.getByRole("combobox", { name: "Artists" });
+  await search.fill("thi");
+  await page
+    .getByRole("listbox", { name: "Artist suggestions" })
+    .getByRole("option", { name: /Thiago Genez/ })
+    .click();
+  await expect(page.getByRole("list", { name: "Selected artists" })).toContainText("Thiago Genez");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as Window & { __rosterTransitionCalls?: number }).__rosterTransitionCalls
+      )
+    )
+    .toBe(2);
+
   await page.emulateMedia({ reducedMotion: "reduce" });
   await genreChoices.getByRole("button", { name: "All", exact: true }).click();
   await expect
@@ -681,9 +696,19 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
     page.getByTestId("discovery-toolbar").getByRole("button", { name: "Clear all filters" })
   ).toBeVisible();
   if ((page.viewportSize()?.width ?? 0) > 767) {
+    const spectrumGuide = spectrum.locator(':scope > [aria-live="polite"]');
+    const guideHeightBeforeHover = await spectrumGuide.evaluate(
+      (element) => element.getBoundingClientRect().height
+    );
     await frogrRange.hover();
     await expect(frogrRange).toHaveAttribute("data-footprint", "active");
     await expect(spectrum).toContainText("FROGR · 2 visible styles · 140–146 BPM");
+    if ((page.viewportSize()?.width ?? 0) <= 900) {
+      const guideHeightAfterHover = await spectrumGuide.evaluate(
+        (element) => element.getBoundingClientRect().height
+      );
+      expect(Math.abs(guideHeightAfterHover - guideHeightBeforeHover)).toBeLessThan(1);
+    }
     await expect
       .poll(() =>
         thiagoEntries.evaluateAll((entries) => entries.map((entry) => entry.dataset.footprint))
