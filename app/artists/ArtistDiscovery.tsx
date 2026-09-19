@@ -677,27 +677,8 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
     setActiveSuggestionIndex(-1);
   };
 
-  const transitionArtistSelection = (
-    event: ReactMouseEvent<HTMLButtonElement>,
-    nextArtistSlugs: readonly string[]
-  ) => {
-    const nextCount = artists.filter((artist) =>
-      artistMatchesGridFilters(artist, nextArtistSlugs, family, selectedStyles)
-    ).length;
-    transitionRoster(event, getRosterTransitionDirection(gridArtists.length, nextCount), () => {
-      commitArtistSelection(nextArtistSlugs);
-    });
-  };
-
-  const selectArtistSuggestion = (
-    artist: DiscoveryArtist,
-    event?: ReactMouseEvent<HTMLButtonElement>
-  ) => {
+  const selectArtistSuggestion = (artist: DiscoveryArtist) => {
     const nextArtistSlugs = [...selectedArtistSlugs, artist.slug];
-    if (event) {
-      transitionArtistSelection(event, nextArtistSlugs);
-      return;
-    }
     commitArtistSelection(nextArtistSlugs);
   };
 
@@ -1030,7 +1011,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                     data-active={activeSuggestionIndex === index ? "true" : "false"}
                     onMouseEnter={() => setActiveSuggestionIndex(index)}
                     onPointerDown={(event) => event.preventDefault()}
-                    onClick={(event) => selectArtistSuggestion(artist, event)}
+                    onClick={() => selectArtistSuggestion(artist)}
                   >
                     <span>{artist.name}</span>
                     <small>Artist</small>

@@ -1734,6 +1734,7 @@
 
 @media (min-width: 640px) and (max-width: 900px) {
   .spectrumGuide {
+    min-height: 9.25rem;
     align-items: flex-start;
     flex-wrap: wrap;
   }
