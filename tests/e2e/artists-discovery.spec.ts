@@ -932,6 +932,29 @@ test("preserves the BPM map as a horizontally scrollable spectrum on mobile", as
     "position",
     "sticky"
   );
+
+  const mobileRange = page.getByTestId("spectrum-mobile-range");
+  const rangeHeader = mobileRange.getByText("BPM range", { exact: true }).locator("..");
+  await viewport.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth - element.clientWidth;
+  });
+  const sliderLayering = await rangeHeader.evaluate((header) => {
+    const selection = document.querySelector<HTMLElement>(
+      '[data-testid="spectrum-mobile-range"] [data-bpm-slider-selection="true"]'
+    );
+    if (!selection) return null;
+    const headerBounds = header.getBoundingClientRect();
+    const selectionBounds = selection.getBoundingClientRect();
+    const sampleX = headerBounds.left + headerBounds.width / 2;
+    const sampleY = selectionBounds.top + selectionBounds.height / 2;
+    const topElement = document.elementFromPoint(sampleX, sampleY);
+    return {
+      overlaps:
+        selectionBounds.left < headerBounds.right && selectionBounds.right > headerBounds.left,
+      headerIsOnTop: topElement === header || (topElement ? header.contains(topElement) : false),
+    };
+  });
+  expect(sliderLayering).toEqual({ overlaps: true, headerIsOnTop: true });
 });
 
 test("collapses filters on mobile and keeps square artist photography", async ({ page }) => {
