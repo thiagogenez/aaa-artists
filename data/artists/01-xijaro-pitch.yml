@@ -113,3 +113,12 @@ gigs:
     country: Netherlands
     ticketLink: https://shop.weeztix.com/92918835-5ab1-4ae3-ad8e-4f56c82f9993/tickets
     flyer: /flyers/ablazing-sense-chasing-dreams-2026.webp
+
+  # proposed automatically from skiddle — verify before merging
+  - date: "2027-05-26"
+    eventId: gianpula-village-2027-05-26
+    venue: Gianpula Village
+    city: Rabat
+    country: Malta
+    ticketLink: https://www.skiddle.com/whats-on/malta/Gianpula-Village/Euphoria-Weekender-Malta-2027/42497444/
+    ticketStatus: available
