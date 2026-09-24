@@ -42,6 +42,7 @@ const BPM_RULER_TICKS = Array.from(
   { length: (BPM_DOMAIN.max - BPM_DOMAIN.min) / 2 + 1 },
   (_, index) => BPM_DOMAIN.min + index * 2
 );
+const BPM_MAJOR_TICKS = BPM_RULER_TICKS.filter((bpm) => bpm % 10 === 0);
 const MIN_SUBSTRING_SEARCH_LENGTH = 3;
 const ALL_SOUND_STYLE_IDS: readonly SoundStyleId[] = SOUND_GROUPS.flatMap((group) =>
   group.styles.map((style) => style.id)
@@ -57,6 +58,11 @@ let rosterTransitionSequence = 0;
 
 function normalizeArtistSearch(value: string) {
   return value.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase().trim();
+}
+
+function compactSpectrumStyleLabel(label: string, groupLabel: string) {
+  const groupSuffix = ` ${groupLabel}`;
+  return label.endsWith(groupSuffix) ? label.slice(0, -groupSuffix.length) : label;
 }
 
 function artistNameMatchRank(name: string, rawQuery: string) {
@@ -264,6 +270,23 @@ function BpmRangeControl({
     >
       <span className={styles.rangeTrack} aria-hidden="true">
         <span className={styles.rangeSelection} data-bpm-slider-selection="true" />
+        {BPM_MAJOR_TICKS.filter((bpm) => bpm > BPM_DOMAIN.min && bpm < BPM_DOMAIN.max).map(
+          (bpm) => (
+            <span
+              key={bpm}
+              className={styles.rangeTick}
+              data-bpm-slider-tick={bpm}
+              data-in-range={bpm >= bpmMin && bpm <= bpmMax ? "true" : "false"}
+              style={
+                {
+                  "--tick-position": `${
+                    ((bpm - BPM_DOMAIN.min) / (BPM_DOMAIN.max - BPM_DOMAIN.min)) * 100
+                  }%`,
+                } as DiscoveryStyle
+              }
+            />
+          )
+        )}
       </span>
       <input
         type="range"
@@ -522,6 +545,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const [hoveredSpectrumArtistSlug, setHoveredSpectrumArtistSlug] = useState<string | null>(null);
   const [focusedSpectrumArtistSlug, setFocusedSpectrumArtistSlug] = useState<string | null>(null);
   const [spectrumScrolled, setSpectrumScrolled] = useState(false);
+  const [spectrumStyleRailExpanded, setSpectrumStyleRailExpanded] = useState(false);
   const [spectrumStylesPickerOpen, setSpectrumStylesPickerOpen] = useState(false);
   const [spectrumMomentPickerOpen, setSpectrumMomentPickerOpen] = useState(false);
   const [spectrumStyleStatus, setSpectrumStyleStatus] = useState("");
@@ -1440,8 +1464,11 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
             className={styles.spectrumViewportShell}
             data-scroll-hint={spectrumScrolled ? "false" : "true"}
           >
-            <div className={styles.spectrumScrollHint} aria-hidden="true">
-              <span>Swipe for higher BPM</span>
+            <div
+              className={styles.spectrumScrollHint}
+              data-testid="spectrum-scroll-hint"
+              aria-hidden="true"
+            >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 12h14m-5-5 5 5-5 5" />
               </svg>
@@ -1453,10 +1480,37 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                 if (event.currentTarget.scrollLeft > 12) setSpectrumScrolled(true);
               }}
             >
-              <div className={styles.spectrumDesktop}>
+              <div
+                id="artist-spectrum-map"
+                className={styles.spectrumDesktop}
+                data-style-rail={spectrumStyleRailExpanded ? "expanded" : "compact"}
+              >
                 <div className={styles.spectrumMobileRange} data-testid="spectrum-mobile-range">
                   <div className={styles.spectrumMobileRangeHeader}>
-                    <span>BPM range</span>
+                    <button
+                      type="button"
+                      className={styles.spectrumStyleRailToggle}
+                      aria-controls="artist-spectrum-map"
+                      aria-expanded={spectrumStyleRailExpanded}
+                      aria-label={
+                        spectrumStyleRailExpanded
+                          ? "Collapse Spectrum style labels"
+                          : "Expand Spectrum style labels"
+                      }
+                      onClick={() => setSpectrumStyleRailExpanded((expanded) => !expanded)}
+                    >
+                      <span>Styles</span>
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        {spectrumStyleRailExpanded ? (
+                          <path d="m12 6-6 6 6 6m6-12-6 6 6 6" />
+                        ) : (
+                          <path d="m6 6 6 6-6 6m6-12 6 6-6 6" />
+                        )}
+                      </svg>
+                    </button>
+                  </div>
+                  <div className={styles.spectrumMobileRangeReadout}>
+                    <span>BPM</span>
                     <output aria-live="polite">
                       <strong>
                         {bpmMin}–{bpmMax}
@@ -1472,8 +1526,28 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                     onMaximumChange={(value) => setBpmMax(Math.max(value, bpmMin + 1))}
                   />
                   <div className={styles.spectrumMobileRangeLimits} aria-hidden="true">
-                    <span>{BPM_DOMAIN.min}</span>
-                    <span>{BPM_DOMAIN.max}</span>
+                    {BPM_MAJOR_TICKS.map((bpm) => (
+                      <span
+                        key={bpm}
+                        data-bpm-mobile-label={bpm}
+                        data-edge={
+                          bpm === BPM_DOMAIN.min
+                            ? "start"
+                            : bpm === BPM_DOMAIN.max
+                              ? "end"
+                              : undefined
+                        }
+                        style={
+                          {
+                            "--tick-position": `${
+                              ((bpm - BPM_DOMAIN.min) / (BPM_DOMAIN.max - BPM_DOMAIN.min)) * 100
+                            }%`,
+                          } as DiscoveryStyle
+                        }
+                      >
+                        {bpm}
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <div className={styles.spectrumRuler} data-spectrum-ruler="true">
@@ -1539,18 +1613,26 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
                             style={rowStyle}
                             data-spectrum-style={sound.id}
                           >
-                            <h3>
-                              <span>{sound.label}</span>
-                              {coverage && (
-                                <small aria-hidden="true">
-                                  <span data-spectrum-style-count>
-                                    {profiles.length} {profiles.length === 1 ? "artist" : "artists"}
-                                  </span>
-                                  <span data-spectrum-style-bpm>
-                                    {coverage.min}–{coverage.max} BPM
-                                  </span>
-                                </small>
-                              )}
+                            <h3 aria-label={sound.label}>
+                              <span className={styles.spectrumStyleRailExpanded}>
+                                <span>{sound.label}</span>
+                                {coverage && (
+                                  <small aria-hidden="true">
+                                    <span data-spectrum-style-count>
+                                      {profiles.length}{" "}
+                                      {profiles.length === 1 ? "artist" : "artists"}
+                                    </span>
+                                    <span data-spectrum-style-bpm>
+                                      {coverage.min}–{coverage.max} BPM
+                                    </span>
+                                  </small>
+                                )}
+                              </span>
+                              <span className={styles.spectrumStyleRailCompact} aria-hidden="true">
+                                <span data-spectrum-compact-label>
+                                  {compactSpectrumStyleLabel(sound.label, group.label)}
+                                </span>
+                              </span>
                             </h3>
                             <div className={styles.spectrumLanes}>
                               {coverage && (
