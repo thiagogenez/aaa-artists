@@ -443,7 +443,7 @@ test("uses the restrained color treatment across themes", async ({ page }) => {
 
 test("shares name filters with a selectable BPM-ordered spectrum", async ({ page }) => {
   await openArtistDiscovery(page);
-  await page.getByRole("button", { name: "Spectrum" }).click();
+  await page.getByRole("button", { name: "Spectrum", exact: true }).click();
   const filterToggle = page.getByRole("button", { name: /Filters/ });
   if (await filterToggle.isVisible()) await filterToggle.click();
   const momentPicker = page.getByTestId("spectrum-moment-picker");
@@ -479,7 +479,11 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   const mobileSpectrum = (page.viewportSize()?.width ?? 0) <= 767;
   const bpmControls = mobileSpectrum ? page.getByTestId("spectrum-mobile-range") : spectrumRuler;
   await expect(bpmControls.getByText(/BPM(?: range)?/, { exact: true })).toBeVisible();
-  await expect(bpmControls.getByText("Full range", { exact: true })).toBeVisible();
+  if (mobileSpectrum) {
+    await expect(bpmControls.locator("output strong")).toHaveText("120–160");
+  } else {
+    await expect(bpmControls.getByText("Full range", { exact: true })).toBeVisible();
+  }
   const minimumBpmSlider = bpmControls.getByRole("slider", { name: "Minimum BPM" });
   const maximumBpmSlider = bpmControls.getByRole("slider", { name: "Maximum BPM" });
   const minimumBpmValue = bpmControls.locator('[data-handle="minimum"]');
@@ -547,13 +551,13 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
       const track = document
         .querySelector('[data-testid="spectrum-mobile-range"] [data-bpm-slider-selection="true"]')
         ?.parentElement?.getBoundingClientRect();
-      const rulerScale = document
-        .querySelector('[data-bpm-ruler-scale="true"]')
+      const chartScale = document
+        .querySelector("[data-spectrum-style] h3 + div")
         ?.getBoundingClientRect();
-      if (!track || !rulerScale) return null;
+      if (!track || !chartScale) return null;
       return {
-        left: Math.abs(track.left - rulerScale.left),
-        width: Math.abs(track.width - rulerScale.width),
+        left: Math.abs(track.left - chartScale.left),
+        width: Math.abs(track.width - chartScale.width),
       };
     });
     expect(mobileRangeAlignment).not.toBeNull();
@@ -562,7 +566,7 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
 
     const viewportShell = spectrum.locator('[data-scroll-hint="true"]');
     await expect(viewportShell).toBeVisible();
-    await expect(spectrum.getByText("Swipe for higher BPM", { exact: true })).toBeVisible();
+    await expect(spectrum.getByText("Swipe for higher BPM", { exact: true })).toHaveCount(0);
     await viewportShell
       .getByRole("region", { name: "Artist BPM spectrum" })
       .evaluate((element) => element.scrollTo({ left: 100 }));
@@ -682,16 +686,18 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
       ),
     };
   });
-  expect(axisAlignment.heightDifference).toBeLessThanOrEqual(1);
-  expect(axisAlignment.edgeDifference).toBeLessThan(1);
-  expect(axisAlignment.firstTickDifference).toBeLessThan(1);
-  expect(axisAlignment.lastTickDifference).toBeLessThan(1);
-  expect(axisAlignment.laneStartDifference).toBeLessThan(1);
-  expect(axisAlignment.laneEndDifference).toBeLessThan(1);
+  if (!mobileSpectrum) {
+    expect(axisAlignment.heightDifference).toBeLessThanOrEqual(1);
+    expect(axisAlignment.edgeDifference).toBeLessThan(1);
+    expect(axisAlignment.firstTickDifference).toBeLessThan(1);
+    expect(axisAlignment.lastTickDifference).toBeLessThan(1);
+    expect(axisAlignment.laneStartDifference).toBeLessThan(1);
+    expect(axisAlignment.laneEndDifference).toBeLessThan(1);
+    expect(axisAlignment.firstLabelCenterDifference).toBeLessThan(1);
+    expect(axisAlignment.lastLabelCenterDifference).toBeLessThan(1);
+  }
   expect(axisAlignment.windowStartDifference).toBeLessThan(1);
   expect(axisAlignment.windowEndDifference).toBeLessThan(1);
-  expect(axisAlignment.firstLabelCenterDifference).toBeLessThan(1);
-  expect(axisAlignment.lastLabelCenterDifference).toBeLessThan(1);
   const thiagoEntries = spectrum.locator('[data-artist="thiago"]');
   await expect(thiagoEntries).toHaveCount(5);
   await thiagoEntries.first().focus();
@@ -706,7 +712,7 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   );
   await expect(spectrum).toContainText("Thiago Genez · 5 visible styles · 122–155 BPM");
 
-  await page.getByRole("button", { name: "Spectrum" }).focus();
+  await page.getByRole("button", { name: "Spectrum", exact: true }).focus();
   const toggleThiago = async () => {
     if ((page.viewportSize()?.width ?? 0) <= 767) {
       await thiagoEntries.first().focus();
@@ -744,8 +750,8 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
       )
       .toEqual(["active", "active", "active", "active", "active"]);
   }
-  await page.getByRole("button", { name: "Spectrum" }).hover();
-  await page.getByRole("button", { name: "Spectrum" }).focus();
+  await page.getByRole("button", { name: "Spectrum", exact: true }).hover();
+  await page.getByRole("button", { name: "Spectrum", exact: true }).focus();
   await expect(spectrum.locator('[data-artist="frogr"]').first()).toHaveCSS("opacity", "0.08");
 
   if ((page.viewportSize()?.width ?? 0) <= 767) {
@@ -793,9 +799,11 @@ test("shares name filters with a selectable BPM-ordered spectrum", async ({ page
   await expect(maximumBpmValue).toHaveCSS("opacity", "1");
   await expect(minimumBpmSlider).not.toHaveAttribute("data-edge");
   await expect(maximumBpmSlider).not.toHaveAttribute("data-edge");
-  await expect(
-    bpmControls.getByText(mobileSpectrum ? "Selected" : "Selected range", { exact: true })
-  ).toBeVisible();
+  if (mobileSpectrum) {
+    await expect(bpmControls.locator("output strong")).toHaveText("132–140");
+  } else {
+    await expect(bpmControls.getByText("Selected range", { exact: true })).toBeVisible();
+  }
   if (!mobileSpectrum) {
     const selectedRangeFitsAxis = await spectrumRuler
       .getByText("Selected range", { exact: true })
@@ -920,7 +928,7 @@ test("preserves the BPM map as a horizontally scrollable spectrum on mobile", as
   test.skip((page.viewportSize()?.width ?? 0) > 767, "Mobile spectrum behavior");
 
   await openArtistDiscovery(page);
-  await page.getByRole("button", { name: "Spectrum" }).click();
+  await page.getByRole("button", { name: "Spectrum", exact: true }).click();
 
   const viewport = page.getByRole("region", { name: "Artist BPM spectrum" });
   const dimensions = await viewport.evaluate((element) => ({
@@ -932,12 +940,72 @@ test("preserves the BPM map as a horizontally scrollable spectrum on mobile", as
     "position",
     "sticky"
   );
+  await expect(viewport.locator('[data-spectrum-ruler="true"]')).toBeHidden();
 
   const mobileRange = page.getByTestId("spectrum-mobile-range");
-  const rangeHeader = mobileRange.getByText("BPM range", { exact: true }).locator("..");
+  const sliderTicks = mobileRange.locator("[data-bpm-slider-tick]");
+  await expect(sliderTicks).toHaveCount(3);
+  await expect(mobileRange.locator("[data-bpm-mobile-label]")).toHaveCount(5);
+  const tickAlignment = await sliderTicks.evaluateAll((ticks) => {
+    const track = ticks[0]?.parentElement?.getBoundingClientRect();
+    if (!track) return [];
+    return ticks.map((tick) => {
+      const bpm = Number(tick.getAttribute("data-bpm-slider-tick"));
+      const tickBounds = tick.getBoundingClientRect();
+      const label = document.querySelector(`[data-bpm-mobile-label="${bpm}"]`);
+      const labelBounds = label?.getBoundingClientRect();
+      return {
+        scaleOffset: Math.abs(
+          tickBounds.left + tickBounds.width / 2 - (track.left + ((bpm - 120) / 40) * track.width)
+        ),
+        labelOffset: labelBounds
+          ? Math.abs(
+              tickBounds.left + tickBounds.width / 2 - (labelBounds.left + labelBounds.width / 2)
+            )
+          : Number.POSITIVE_INFINITY,
+      };
+    });
+  });
+  for (const tick of tickAlignment) {
+    expect(tick.scaleOffset).toBeLessThan(1);
+    expect(tick.labelOffset).toBeLessThan(1);
+  }
+  const styleRailToggle = mobileRange.getByRole("button", {
+    name: "Collapse Spectrum style labels",
+  });
+  const progressiveStyle = viewport.getByRole("heading", { name: "Progressive Trance" });
+  const expandedRailWidth = await progressiveStyle.evaluate(
+    (element) => element.getBoundingClientRect().width
+  );
+  await expect(styleRailToggle).toHaveAttribute("aria-expanded", "true");
+  await expect(styleRailToggle).toBeVisible();
+  const toggleSize = await styleRailToggle.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return { width: bounds.width, height: bounds.height };
+  });
+  expect(toggleSize.width).toBeGreaterThanOrEqual(44);
+  expect(toggleSize.height).toBeGreaterThanOrEqual(44);
+  await expect(page.getByText("Swipe for higher BPM")).toHaveCount(0);
+  const scrollHint = page.getByTestId("spectrum-scroll-hint");
+  await expect(scrollHint).toHaveCSS("opacity", "1");
+  await expect(styleRailToggle.getByText("Styles")).toBeVisible();
+  await styleRailToggle.click();
+  const expandStyleRail = mobileRange.getByRole("button", {
+    name: "Expand Spectrum style labels",
+  });
+  await expect(expandStyleRail).toHaveAttribute("aria-expanded", "false");
+  await expect(progressiveStyle.locator("[data-spectrum-compact-label]")).toHaveText("Progressive");
+  await expect
+    .poll(() => progressiveStyle.evaluate((element) => element.getBoundingClientRect().width))
+    .toBeLessThan(expandedRailWidth - 60);
+  await expandStyleRail.click();
+  await expect(styleRailToggle).toHaveAttribute("aria-expanded", "true");
+
+  const rangeHeader = styleRailToggle.locator("..");
   await viewport.evaluate((element) => {
     element.scrollLeft = element.scrollWidth - element.clientWidth;
   });
+  await expect(scrollHint).toHaveCSS("opacity", "0");
   const sliderLayering = await rangeHeader.evaluate((header) => {
     const selection = document.querySelector<HTMLElement>(
       '[data-testid="spectrum-mobile-range"] [data-bpm-slider-selection="true"]'
