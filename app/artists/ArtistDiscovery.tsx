@@ -545,7 +545,7 @@ export default function ArtistDiscovery({ artists }: { artists: DiscoveryArtist[
   const [hoveredSpectrumArtistSlug, setHoveredSpectrumArtistSlug] = useState<string | null>(null);
   const [focusedSpectrumArtistSlug, setFocusedSpectrumArtistSlug] = useState<string | null>(null);
   const [spectrumScrolled, setSpectrumScrolled] = useState(false);
-  const [spectrumStyleRailExpanded, setSpectrumStyleRailExpanded] = useState(true);
+  const [spectrumStyleRailExpanded, setSpectrumStyleRailExpanded] = useState(false);
   const [spectrumStylesPickerOpen, setSpectrumStylesPickerOpen] = useState(false);
   const [spectrumMomentPickerOpen, setSpectrumMomentPickerOpen] = useState(false);
   const [spectrumStyleStatus, setSpectrumStyleStatus] = useState("");

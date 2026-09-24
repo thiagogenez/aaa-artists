@@ -971,13 +971,13 @@ test("preserves the BPM map as a horizontally scrollable spectrum on mobile", as
     expect(tick.labelOffset).toBeLessThan(1);
   }
   const styleRailToggle = mobileRange.getByRole("button", {
-    name: "Collapse Spectrum style labels",
+    name: "Expand Spectrum style labels",
   });
   const progressiveStyle = viewport.getByRole("heading", { name: "Progressive Trance" });
-  const expandedRailWidth = await progressiveStyle.evaluate(
+  const compactRailWidth = await progressiveStyle.evaluate(
     (element) => element.getBoundingClientRect().width
   );
-  await expect(styleRailToggle).toHaveAttribute("aria-expanded", "true");
+  await expect(styleRailToggle).toHaveAttribute("aria-expanded", "false");
   await expect(styleRailToggle).toBeVisible();
   const toggleSize = await styleRailToggle.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
@@ -988,18 +988,18 @@ test("preserves the BPM map as a horizontally scrollable spectrum on mobile", as
   await expect(page.getByText("Swipe for higher BPM")).toHaveCount(0);
   const scrollHint = page.getByTestId("spectrum-scroll-hint");
   await expect(scrollHint).toHaveCSS("opacity", "1");
-  await expect(styleRailToggle.getByText("Styles")).toBeVisible();
-  await styleRailToggle.click();
-  const expandStyleRail = mobileRange.getByRole("button", {
-    name: "Expand Spectrum style labels",
-  });
-  await expect(expandStyleRail).toHaveAttribute("aria-expanded", "false");
   await expect(progressiveStyle.locator("[data-spectrum-compact-label]")).toHaveText("Progressive");
+  await styleRailToggle.click();
+  const collapseStyleRail = mobileRange.getByRole("button", {
+    name: "Collapse Spectrum style labels",
+  });
+  await expect(collapseStyleRail).toHaveAttribute("aria-expanded", "true");
+  await expect(collapseStyleRail.getByText("Styles")).toBeVisible();
   await expect
     .poll(() => progressiveStyle.evaluate((element) => element.getBoundingClientRect().width))
-    .toBeLessThan(expandedRailWidth - 60);
-  await expandStyleRail.click();
-  await expect(styleRailToggle).toHaveAttribute("aria-expanded", "true");
+    .toBeGreaterThan(compactRailWidth + 60);
+  await collapseStyleRail.click();
+  await expect(styleRailToggle).toHaveAttribute("aria-expanded", "false");
 
   const rangeHeader = styleRailToggle.locator("..");
   await viewport.evaluate((element) => {
