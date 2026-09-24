@@ -63,6 +63,36 @@ test("emits event schema on artist pages and keeps TBC dates out of it", async (
   expect(xoyoLd[0]).not.toHaveProperty("offers");
 });
 
+for (const { slug, eventId, artist, venue, flyer } of [
+  {
+    slug: "c-systems",
+    eventId: "93-feet-east-2026-12-05",
+    artist: "C-Systems",
+    venue: "93 Feet East",
+    flyer: "/flyers/mondo-winter-2026.webp",
+  },
+  {
+    slug: "sago",
+    eventId: "bricks-bar-2026-11-06",
+    artist: "SAGO",
+    venue: "Bricks Bar",
+    flyer: "/flyers/echoes-of-tomorrow-2026.webp",
+  },
+]) {
+  test(`loads the promotional artwork for ${artist}'s new gig`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/artist/${slug}`);
+    const poster = page.locator(`#event-${eventId}`).getByRole("img", {
+      name: `${artist} at ${venue}`,
+    });
+    await expect(poster).toHaveAttribute("src", flyer);
+    await poster.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => poster.evaluate((img) => (img as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+  });
+}
+
 // Keep one navigation per test so a slow mobile WebKit load cannot consume the
 // next artist's timeout. JSON-LD is inline, so DOMContentLoaded is sufficient.
 for (const slug of ["c-systems", "krevix"]) {
