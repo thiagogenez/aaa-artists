@@ -112,3 +112,11 @@ gigs:
     country: Netherlands
     freeEntry: true
     flyer: /flyers/chasing-dreams-ade-2026.webp
+
+  # Mondo Winter Edition — lineup and date confirmed by the event listing.
+  - date: "2026-12-05"
+    eventId: 93-feet-east-2026-12-05
+    venue: 93 Feet East
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/whats-on/London/93-Feet-East/Mondo-Winter-Edition--Daytime-Trance-Event-London/42631991/

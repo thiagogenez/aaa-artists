@@ -226,11 +226,15 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
 
   // A longer list makes its continuation visible on the flyer area itself,
   // with both edge controls and page-position dots.
+  // Geometry assertions must not race the smooth-scroll animation.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/artist/c-systems");
   const eventControls = page.getByRole("group", { name: "Upcoming event controls" });
   await expect(eventControls.getByRole("button", { name: "Next upcoming events" })).toBeVisible();
   await expect(page.getByText(/More dates|Earlier dates/)).toHaveCount(0);
-  await expect(page.getByTestId("upcoming-pagination").locator("span")).toHaveCount(2);
+  // Added gigs can change the number of pages; the layout only requires
+  // multiple visible position marks, not a fixed count of two.
+  expect(await page.getByTestId("upcoming-pagination").locator("span").count()).toBeGreaterThan(1);
   const [rangeBox, playerLabelBox] = await Promise.all([
     page.getByTestId("upcoming-range").boundingBox(),
     page.getByTestId("player-label").boundingBox(),
@@ -260,8 +264,20 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   const desktopPeek = desktopSliderBox!.x + desktopSliderBox!.width - desktopNextFlyerBox!.x;
   expect(desktopPeek).toBeGreaterThan(20);
   expect(desktopPeek).toBeLessThan(desktopNextFlyerBox!.width);
-  await eventControls.getByRole("button", { name: "Next upcoming events" }).click();
-  await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 4");
+  const upcomingCards = page.getByTestId("upcoming-slider").locator(":scope > div");
+  const upcomingCount = await upcomingCards.count();
+  const pageCount = await page.getByTestId("upcoming-pagination").locator("span").count();
+  const nextUpcoming = eventControls.getByRole("button", { name: "Next upcoming events" });
+  for (let pageIndex = 1; pageIndex < pageCount; pageIndex++) {
+    await nextUpcoming.click();
+    await expect(page.getByTestId("upcoming-pagination")).toHaveAttribute(
+      "aria-label",
+      `Upcoming event page ${pageIndex + 1} of ${pageCount}`
+    );
+  }
+  await expect(page.getByTestId("upcoming-range")).toContainText(
+    `${upcomingCount - 1}–${upcomingCount} of ${upcomingCount}`
+  );
   await expect
     .poll(() =>
       page
@@ -271,7 +287,7 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     .toBeLessThan(2);
   const [desktopLaterSliderBox, desktopPreviousFlyerBox] = await Promise.all([
     page.getByTestId("upcoming-slider").boundingBox(),
-    page.locator("#event-aaa-fusion-xoyo-2026-08-22").boundingBox(),
+    upcomingCards.nth(upcomingCount - 3).boundingBox(),
   ]);
   const desktopPreviousPeek =
     desktopPreviousFlyerBox!.x + desktopPreviousFlyerBox!.width - desktopLaterSliderBox!.x;
@@ -309,6 +325,7 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(middleNextPeek).toBeLessThan(middleNextBox!.width);
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/artist/frogr");
   const [mobileUpcomingBox, mobileListenBox, mobilePastBox] = await Promise.all([
     upcoming.boundingBox(),
     listen.boundingBox(),
@@ -353,7 +370,13 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(tabletPeek).toBeGreaterThan(20);
   expect(tabletPeek).toBeLessThan(tabletNextFlyerBox!.width);
   const tabletControls = page.getByRole("group", { name: "Upcoming event controls" });
-  await tabletControls.getByRole("button", { name: "Next upcoming events" }).click();
+  for (let pageIndex = 1; pageIndex < pageCount; pageIndex++) {
+    await tabletControls.getByRole("button", { name: "Next upcoming events" }).click();
+    await expect(page.getByTestId("upcoming-pagination")).toHaveAttribute(
+      "aria-label",
+      `Upcoming event page ${pageIndex + 1} of ${pageCount}`
+    );
+  }
   await expect
     .poll(() =>
       page
@@ -363,7 +386,11 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     .toBeLessThan(2);
   const [tabletLaterSliderBox, tabletPreviousFlyerBox] = await Promise.all([
     page.getByTestId("upcoming-slider").boundingBox(),
-    page.locator("#event-aaa-fusion-xoyo-2026-08-22").boundingBox(),
+    page
+      .getByTestId("upcoming-slider")
+      .locator(":scope > div")
+      .nth(upcomingCount - 3)
+      .boundingBox(),
   ]);
   const tabletPreviousPeek =
     tabletPreviousFlyerBox!.x + tabletPreviousFlyerBox!.width - tabletLaterSliderBox!.x;
