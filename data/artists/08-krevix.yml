@@ -46,6 +46,20 @@ gigs:
     country: UK
     ticketLink: https://www.skiddle.com/e/42326656
     flyer: /flyers/fusion-daxson-xoyo.webp
+  # Experience Dance Events x High Voltage; lineup confirmed on Partyflock.
+  - date: '2026-10-03'
+    eventId: high-voltage-experience-rhenen-2026
+    venue: Bollee Events
+    city: Rhenen
+    country: Netherlands
+    ticketLink: https://partyflock.nl/party/490257:High-Voltage-meets-Experience-Dance-Events
+  # Oblivion Trance; venue and lineup confirmed by multiple event listings.
+  - date: '2026-10-17'
+    eventId: oblivion-trance-wernhout-2026
+    venue: Jaiselings Royal Palace
+    city: Wernhout
+    country: Netherlands
+    ticketLink: https://wannafest.com/festivals/oblivion-trance
   # ADE 2026 — AAA Events pres. High Voltage Recordings x Critical Sounds label
   # showcase. 14:00–22:00, free event, RSVP via AAA socials.
   - date: "2026-10-23"

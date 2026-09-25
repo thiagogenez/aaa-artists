@@ -68,6 +68,30 @@ gigs:
     country: Belgium
     ticketLink: https://www.tomorrowland.com/
     flyer: /flyers/tomorrowland-2026.webp # official Consciencia lineup poster (XiJaro & Pitch listed)
+  # FRISSON 02/03 — Indonesia debut, confirmed by organiser ticket page.
+  # No verified event poster was downloadable; use the site's generated poster.
+  - date: '2026-09-25'
+    eventId: frisson-xijaro-pitch-jakarta-2026
+    venue: Sector at Dragon House
+    city: Jakarta
+    country: Indonesia
+    ticketLink: https://megatix.co.id/events/xijaro-pitch-indonesia-debut
+  # LUNA Bang Kachao — organiser's event page and promotional artwork.
+  - date: '2026-09-26'
+    eventId: luna-bang-kachao-2026
+    venue: Arttra Villa
+    city: Bang Kachao
+    country: Thailand
+    ticketLink: https://arttravilla.com/xijaro/
+    flyer: /flyers/luna-bang-kachao-2026.webp
+  # Trance Signal — organiser's lineup and save-the-date artwork.
+  - date: '2026-10-03'
+    eventId: trance-signal-oberhausen-2026
+    venue: Schallwerk Oberhausen
+    city: Oberhausen
+    country: Germany
+    ticketLink: https://trance-signal.com/
+    flyer: /flyers/trance-signal-2026.webp
   # ADE 2026 — AAA Events pres. Chasing Dreams, fundraiser for the Norrie Disease
   # Foundation, w/ Ruben de Ronde. 14:00–21:00, free entry, donations on the door.
   - date: "2026-10-21"

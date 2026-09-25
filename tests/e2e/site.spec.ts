@@ -65,6 +65,41 @@ test("emits event schema on artist pages and keeps TBC dates out of it", async (
 
 for (const { slug, eventId, artist, venue, flyer } of [
   {
+    slug: "xijaro-pitch",
+    eventId: "luna-bang-kachao-2026",
+    artist: "Xijaro & Pitch",
+    venue: "Arttra Villa",
+    flyer: "/flyers/luna-bang-kachao-2026.webp",
+  },
+  {
+    slug: "xijaro-pitch",
+    eventId: "trance-signal-oberhausen-2026",
+    artist: "Xijaro & Pitch",
+    venue: "Schallwerk Oberhausen",
+    flyer: "/flyers/trance-signal-2026.webp",
+  },
+  {
+    slug: "steve-dekay",
+    eventId: "edc-colombia-2026-saturday",
+    artist: "Steve Dekay",
+    venue: "Complejo Deportivo Atanasio Girardot",
+    flyer: "/flyers/edc-colombia-2026.webp",
+  },
+  {
+    slug: "steve-dekay",
+    eventId: "dreamstate-socal-2026-steve-dekay",
+    artist: "Steve Dekay",
+    venue: "The Queen Mary Waterfront",
+    flyer: "/flyers/dreamstate-socal-2026.webp",
+  },
+  {
+    slug: "dim3nsion",
+    eventId: "aaa-high-voltage-critical-sounds-ade-2026",
+    artist: "DIM3NSION",
+    venue: "The Tequila Club",
+    flyer: "/flyers/high-voltage-critical-sounds-ade-2026.webp",
+  },
+  {
     slug: "c-systems",
     eventId: "93-feet-east-2026-12-05",
     artist: "C-Systems",
@@ -79,7 +114,7 @@ for (const { slug, eventId, artist, venue, flyer } of [
     flyer: "/flyers/echoes-of-tomorrow-2026.webp",
   },
 ]) {
-  test(`loads the promotional artwork for ${artist}'s new gig`, async ({ page }) => {
+  test(`loads the promotional artwork for ${artist} at ${venue}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/artist/${slug}`);
     const poster = page.locator(`#event-${eventId}`).getByRole("img", {
