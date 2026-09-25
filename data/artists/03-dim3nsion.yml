@@ -36,4 +36,12 @@ socials:
   beatport: https://www.beatport.com/artist/dim3nsion/99405
 sources:
   bandsintown: id_14206829   # bandsintown.com/a/14206829-dim3nsion
-gigs: []
+gigs:
+  # ADE 2026 — High Voltage x Critical Sounds Label Showcase.
+  - date: '2026-10-23'
+    eventId: aaa-high-voltage-critical-sounds-ade-2026
+    venue: The Tequila Club
+    city: Amsterdam
+    country: Netherlands
+    freeEntry: true
+    flyer: /flyers/high-voltage-critical-sounds-ade-2026.webp

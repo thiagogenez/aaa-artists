@@ -65,6 +65,41 @@ test("emits event schema on artist pages and keeps TBC dates out of it", async (
 
 for (const { slug, eventId, artist, venue, flyer } of [
   {
+    slug: "xijaro-pitch",
+    eventId: "luna-bang-kachao-2026",
+    artist: "Xijaro & Pitch",
+    venue: "Arttra Villa",
+    flyer: "/flyers/luna-bang-kachao-2026.webp",
+  },
+  {
+    slug: "xijaro-pitch",
+    eventId: "trance-signal-oberhausen-2026",
+    artist: "Xijaro & Pitch",
+    venue: "Schallwerk Oberhausen",
+    flyer: "/flyers/trance-signal-2026.webp",
+  },
+  {
+    slug: "steve-dekay",
+    eventId: "edc-colombia-2026-saturday",
+    artist: "Steve Dekay",
+    venue: "Complejo Deportivo Atanasio Girardot",
+    flyer: "/flyers/edc-colombia-2026.webp",
+  },
+  {
+    slug: "steve-dekay",
+    eventId: "dreamstate-socal-2026-steve-dekay",
+    artist: "Steve Dekay",
+    venue: "The Queen Mary Waterfront",
+    flyer: "/flyers/dreamstate-socal-2026.webp",
+  },
+  {
+    slug: "dim3nsion",
+    eventId: "aaa-high-voltage-critical-sounds-ade-2026",
+    artist: "DIM3NSION",
+    venue: "The Tequila Club",
+    flyer: "/flyers/high-voltage-critical-sounds-ade-2026.webp",
+  },
+  {
     slug: "c-systems",
     eventId: "93-feet-east-2026-12-05",
     artist: "C-Systems",
@@ -79,7 +114,7 @@ for (const { slug, eventId, artist, venue, flyer } of [
     flyer: "/flyers/echoes-of-tomorrow-2026.webp",
   },
 ]) {
-  test(`loads the promotional artwork for ${artist}'s new gig`, async ({ page }) => {
+  test(`loads the promotional artwork for ${artist} at ${venue}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/artist/${slug}`);
     const poster = page.locator(`#event-${eventId}`).getByRole("img", {
@@ -324,17 +359,17 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(desktopPreviousPeek).toBeGreaterThan(20);
   expect(desktopPreviousPeek).toBeLessThan(desktopPreviousFlyerBox!.width);
 
-  // XiJaro & Pitch has three pages. Its middle page must expose both adjacent
+  // XiJaro & Pitch has four pages. Its second page must expose both adjacent
   // flyers at once, not replace the right cue when the left one appears.
   await page.goto("/artist/xijaro-pitch");
   await page.getByRole("button", { name: "Next upcoming events" }).click();
-  await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 5");
+  await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 8");
   await expect
     .poll(async () => {
       const [slider, previous, next] = await Promise.all([
         page.getByTestId("upcoming-slider").boundingBox(),
+        page.locator("#event-luna-bang-kachao-2026").boundingBox(),
         page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
-        page.locator("#event-ablazing-sense-chasing-dreams-2026").boundingBox(),
       ]);
       return Math.min(
         previous!.x + previous!.width - slider!.x,
@@ -344,8 +379,8 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     .toBeGreaterThan(20);
   const [middleSliderBox, middlePreviousBox, middleNextBox] = await Promise.all([
     page.getByTestId("upcoming-slider").boundingBox(),
+    page.locator("#event-luna-bang-kachao-2026").boundingBox(),
     page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
-    page.locator("#event-ablazing-sense-chasing-dreams-2026").boundingBox(),
   ]);
   const middlePreviousPeek = middlePreviousBox!.x + middlePreviousBox!.width - middleSliderBox!.x;
   const middleNextPeek = middleSliderBox!.x + middleSliderBox!.width - middleNextBox!.x;

@@ -34,4 +34,36 @@ socials:
   beatport: https://www.beatport.com/artist/steve-dekay/305612
 sources:
   bandsintown: id_8244513   # bandsintown.com/a/8244513-steve-dekay
-gigs: []
+gigs:
+  # EDC Colombia — Steve appears on the organiser's Saturday lineup.
+  - date: '2026-10-10'
+    eventId: edc-colombia-2026-saturday
+    venue: Complejo Deportivo Atanasio Girardot
+    city: Medellín
+    country: Colombia
+    ticketLink: https://colombia.edc.com/lineup/
+    flyer: /flyers/edc-colombia-2026.webp
+  # ADE 2026 — Brewskies with Broskies. ADE supplies a venue photograph,
+  # not event artwork, so the site renders its own poster until a real one is found.
+  - date: '2026-10-21'
+    eventId: brewskies-with-broskies-ade-2026
+    venue: Bar Bacan
+    city: Amsterdam
+    country: Netherlands
+    ticketLink: https://www.amsterdam-dance-event.nl/en/program/2026/brewskies-with-broskies/2902026/
+  # ADE 2026 — High Voltage x Critical Sounds Label Showcase.
+  - date: '2026-10-23'
+    eventId: aaa-high-voltage-critical-sounds-ade-2026
+    venue: The Tequila Club
+    city: Amsterdam
+    country: Netherlands
+    freeEntry: true
+    flyer: /flyers/high-voltage-critical-sounds-ade-2026.webp
+  # Dreamstate SoCal — day from Steve's Bandsintown listing; organiser confirms lineup.
+  - date: '2026-11-20'
+    eventId: dreamstate-socal-2026-steve-dekay
+    venue: The Queen Mary Waterfront
+    city: Long Beach
+    country: USA
+    ticketLink: https://socal.dreamstateusa.com/lineup/
+    flyer: /flyers/dreamstate-socal-2026.webp
