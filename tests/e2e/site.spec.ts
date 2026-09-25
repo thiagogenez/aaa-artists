@@ -359,17 +359,17 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(desktopPreviousPeek).toBeGreaterThan(20);
   expect(desktopPreviousPeek).toBeLessThan(desktopPreviousFlyerBox!.width);
 
-  // XiJaro & Pitch has three pages. Its middle page must expose both adjacent
+  // XiJaro & Pitch has four pages. Its second page must expose both adjacent
   // flyers at once, not replace the right cue when the left one appears.
   await page.goto("/artist/xijaro-pitch");
   await page.getByRole("button", { name: "Next upcoming events" }).click();
-  await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 5");
+  await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 8");
   await expect
     .poll(async () => {
       const [slider, previous, next] = await Promise.all([
         page.getByTestId("upcoming-slider").boundingBox(),
+        page.locator("#event-luna-bang-kachao-2026").boundingBox(),
         page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
-        page.locator("#event-ablazing-sense-chasing-dreams-2026").boundingBox(),
       ]);
       return Math.min(
         previous!.x + previous!.width - slider!.x,
@@ -379,8 +379,8 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
     .toBeGreaterThan(20);
   const [middleSliderBox, middlePreviousBox, middleNextBox] = await Promise.all([
     page.getByTestId("upcoming-slider").boundingBox(),
+    page.locator("#event-luna-bang-kachao-2026").boundingBox(),
     page.locator("#event-in-trance-we-trust-ade-2026").boundingBox(),
-    page.locator("#event-ablazing-sense-chasing-dreams-2026").boundingBox(),
   ]);
   const middlePreviousPeek = middlePreviousBox!.x + middlePreviousBox!.width - middleSliderBox!.x;
   const middleNextPeek = middleSliderBox!.x + middleSliderBox!.width - middleNextBox!.x;
