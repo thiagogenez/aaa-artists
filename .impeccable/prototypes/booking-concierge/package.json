@@ -1,0 +1,7 @@
+{
+  "name": "aaa-booking-concierge-prototype",
+  "private": true,
+  "dependencies": {
+    "vis-timeline": "8.5.4"
+  }
+}

@@ -1,0 +1,11 @@
+Use case: ui-mockup
+Asset type: high-fidelity desktop web booking-flow composition, landscape 1536x1024.
+Primary request: Redesign the AAA Artists booking form as a guided “Booking Concierge”. This is composition option A: a split workspace with a persistent enquiry summary on the left and one active decision on the right.
+Input image: visual-identity reference only. Carry over the real AAA Artists logo treatment, pure monochrome dark theme, pragmatic system sans typography, square geometry, thin gray rules, restrained underground agency character, and precise spacing. Do not copy the reference page’s accordion layout, header composition, or field arrangement.
+Surface structure: minimal site header across the top; below it a compact five-step progress line reading “01 ARTISTS  02 EVENT  03 SCHEDULE  04 CONTACT  05 REVIEW”. The main region fills the remaining viewport. Left rail about 30% width titled “YOUR ENQUIRY”, with event summary placeholders, “TOTAL BUDGET  EUR —”, and a live lineup containing “01  C-SYSTEMS  60 MIN · TIME TBC” and “02  HELP ME CHOOSE  OPENING SLOT”. Right work area about 70% width with large heading “Build your artist lineup”, short helper copy, two clear square choices “I HAVE AN ARTIST IN MIND” and “HELP ME CHOOSE”, followed by two editable artist-slot rows matching the summary, a quiet “+ ADD ANOTHER ARTIST” action, BACK and a single dominant “CONTINUE TO EVENT” button.
+Focal moment: the mixed lineup—one named artist plus one recommendation slot—must be immediately understandable.
+Style/medium: realistic shippable product UI mockup, not concept art, not a poster.
+Color palette: AAA Artists black, off-white, steel gray only. No decorative color.
+Typography: strong large sans heading, compact uppercase tracked labels, readable body copy.
+Materials: flat tonal surfaces, one-pixel borders, no shadows, no gradients, no rounded cards.
+Constraints: preserve practical familiar form controls and clear keyboard-focus affordances; no invented commercial claims, testimonials, prices, photos, emojis, neon, glass, bento dashboard, or extra logos. Render all quoted UI text verbatim where possible. No watermark.

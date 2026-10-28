@@ -85,9 +85,55 @@ test.describe("booking form regression coverage", () => {
     }));
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.innerWidth);
 
+    await page.locator('button[aria-controls="section-event"]').click();
     const dateBox = await page.locator('input[name="date"]').boundingBox();
     expect(dateBox).not.toBeNull();
     expect(dateBox!.x + dateBox!.width).toBeLessThanOrEqual(dimensions.innerWidth);
+  });
+
+  test("presents the enquiry as five ordered decisions", async ({ page }) => {
+    await page.goto("/contact");
+
+    const sections = page.locator('button[aria-controls^="section-"]');
+    await expect(sections).toHaveText([
+      "01Your details",
+      "02Artist request",
+      "03Event details",
+      "04Budget (optional)",
+      "05Additional details (optional)",
+    ]);
+    await expect(sections.nth(0)).toHaveAttribute("aria-expanded", "true");
+    for (let index = 1; index < 5; index += 1) {
+      await expect(sections.nth(index)).toHaveAttribute("aria-expanded", "false");
+    }
+
+    await sections.nth(1).click();
+    await expect(page.getByRole("radio", { name: /Choose an artist/ })).toBeChecked();
+    await expect(page.getByRole("button", { name: "Add another artist" })).toHaveCount(0);
+    await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
+    await expect(page.getByRole("button", { name: "Add another artist" })).toBeVisible();
+  });
+
+  test("treats an unknown event date as a clear alternative path", async ({ page }) => {
+    await page.goto("/contact");
+    await page.locator('button[aria-controls="section-event"]').click();
+
+    const chooseDate = page.getByRole("radio", { name: /Choose a date/ });
+    const dateTbc = page.getByRole("radio", { name: /Date not confirmed yet/ });
+
+    await expect(chooseDate).toBeChecked();
+    await expect(page.locator('input[name="date"]')).toBeVisible();
+
+    await page.getByText("Date not confirmed yet", { exact: true }).click();
+    await expect(dateTbc).toBeChecked();
+    await expect(page.locator('input[name="date"]')).toHaveCount(0);
+    await expect(
+      page.getByText("confirm the exact date with our booking team later")
+    ).toBeVisible();
+
+    await page.getByText("Choose a date", { exact: true }).click();
+    await expect(chooseDate).toBeChecked();
+    await expect(page.locator('input[name="date"]')).toBeVisible();
   });
 
   test("offers regional email domains without assuming one after @", async ({ browser }) => {
@@ -296,6 +342,7 @@ test.describe("booking form regression coverage", () => {
 
   test("collapses completed artist cards and calculates exact timing", async ({ page }) => {
     await page.goto("/contact");
+    await page.locator('button[aria-controls="section-artist"]').click();
 
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
     await page.getByRole("button", { name: "Add another artist", exact: true }).click();
@@ -334,18 +381,22 @@ test.describe("booking form regression coverage", () => {
     );
     await expect(page.getByRole("option", { name: "Open to suggestions" })).toHaveCount(0);
 
+    await page.locator('button[aria-controls="section-artist"]').click();
     const firstArtist = page.locator('select[name="booking-0-artist"]');
     await firstArtist.selectOption({ index: 1 });
-    const discuss = page.getByRole("checkbox", { name: /Contact me to discuss/ });
-    await discuss.check();
-    await expect(page.locator('select[name^="booking-"][name$="-artist"]')).toBeHidden();
-    await expect(page.getByRole("button", { name: "Add another artist" })).toBeHidden();
+    const discuss = page.getByRole("radio", { name: /Contact me to discuss/ });
+    await page.getByText("Contact me to discuss", { exact: true }).click();
+    await expect(discuss).toBeChecked();
+    await expect(page.locator('select[name^="booking-"][name$="-artist"]')).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add another artist" })).toHaveCount(0);
+    await expect(page.getByRole("status")).toContainText("No artist will be selected");
 
-    await discuss.uncheck();
-    await expect(firstArtist).toHaveValue("");
-    await discuss.check();
+    await page.getByText("Choose an artist", { exact: true }).click();
+    await expect(page.locator('select[name="booking-0-artist"]')).toHaveValue("");
+    await page.getByText("Contact me to discuss", { exact: true }).click();
     await page.locator('input[name="name"]').fill("Jane Booker");
     await page.locator('input[name="email"]').fill("jane@example.com");
+    await page.locator('button[aria-controls="section-event"]').click();
     await page.locator('input[name="date"]').fill("2026-12-01");
     await waitForTurnstileToken(page);
     await page.getByRole("button", { name: "Send Enquiry", exact: true }).click();
@@ -394,8 +445,10 @@ test.describe("booking form regression coverage", () => {
 
     await page.locator('input[name="name"]').fill("Jane Booker");
     await page.locator('input[name="email"]').fill("jane@example.com");
-    await page.locator('input[name="date"]').fill("2026-12-01");
+    await page.locator('button[aria-controls="section-artist"]').click();
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
+    await page.locator('button[aria-controls="section-event"]').click();
+    await page.locator('input[name="date"]').fill("2026-12-01");
     // Submitting before the widget's token arrives is refused client-side, so
     // wait for the token like a real visitor effectively does.
     await waitForTurnstileToken(page);
@@ -442,6 +495,7 @@ test.describe("booking form regression coverage", () => {
     // A booking link with prefill parameters starts a fresh enquiry instead,
     // without destroying the stored draft.
     await page.goto("/contact?artist=Krevix");
+    await page.locator('button[aria-controls="section-artist"]').click();
     await expect(page.locator('select[name="booking-0-artist"]')).toHaveValue("Krevix");
     await expect(nameInput).toHaveValue("");
     await page.goto("/contact");
@@ -468,8 +522,10 @@ test.describe("booking form regression coverage", () => {
     await page.goto("/contact");
     await page.locator('input[name="name"]').fill("Jane Booker");
     await page.locator('input[name="email"]').fill("jane@example.com");
-    await page.locator('input[name="date"]').fill("2026-12-01");
+    await page.locator('button[aria-controls="section-artist"]').click();
     await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
+    await page.locator('button[aria-controls="section-event"]').click();
+    await page.locator('input[name="date"]').fill("2026-12-01");
     await expect
       .poll(() => page.evaluate(() => window.sessionStorage.getItem("aaa-booking-draft-v1")))
       .not.toBeNull();

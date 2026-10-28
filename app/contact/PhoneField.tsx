@@ -80,6 +80,10 @@ export default function PhoneField({
     if (!country) return;
     lockedCountryRef.current = country.iso2;
     setSelectedCountry(country.iso2);
+    // The selector can close before the wrapper's country-change callback is
+    // committed. Publish the final manual choice here as well so a WhatsApp
+    // field opened immediately afterwards inherits the same country.
+    onCountryChange?.(country.iso2);
   }
 
   return (

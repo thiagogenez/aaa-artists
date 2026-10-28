@@ -539,7 +539,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
-  const [open, setOpen] = useState<Record<string, boolean>>({ quick: true });
+  const [open, setOpen] = useState<Record<string, boolean>>({ details: true });
   const toggle = (id: string) => setOpen((o) => ({ ...o, [id]: !o[id] }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -678,9 +678,9 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
 
   // Only the essentials are required; the rest help us quote but stay optional.
   const REQUIRED_FIELDS: { key: keyof typeof form; label: string; section: string }[] = [
-    { key: "name", label: "Name", section: "quick" },
-    { key: "email", label: "Email", section: "quick" },
-    { key: "date", label: "Event date", section: "quick" },
+    { key: "name", label: "Name", section: "details" },
+    { key: "email", label: "Email", section: "details" },
+    { key: "date", label: "Event date", section: "event" },
   ];
   const EMAIL_RE = EMAIL_PATTERN;
 
@@ -947,7 +947,7 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     setSubmitted(false);
     setSending(false);
     setSendError("");
-    setOpen({ quick: true });
+    setOpen({ details: true });
     setErrors({});
     setSubmitAttempted(false);
     setDateTbc(false);
@@ -975,13 +975,34 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       // Open every collapsed section that contains an error so it is visible.
-      const sectionsWithErrors = REQUIRED_FIELDS.filter((f) => errs[f.key]).map((f) => f.section);
+      const sectionForError = (key: string) => {
+        if (key.startsWith("booking-")) return "artist";
+        if (["name", "company", "email", "phone", "whatsapp", "whatsappUsername"].includes(key))
+          return "details";
+        if (
+          [
+            "date",
+            "eventName",
+            "eventType",
+            "venue",
+            "city",
+            "country",
+            "capacity",
+            "ticketing",
+          ].includes(key)
+        )
+          return "event";
+        if (["currency", "budgetRange"].includes(key)) return "budget";
+        return "additional";
+      };
+      const sectionsWithErrors = Object.keys(errs)
+        .filter((key) => Boolean(errs[key]))
+        .map(sectionForError);
       const bookingIdsWithErrors = Object.keys(errs)
         .filter((key) => key.startsWith("booking-"))
         .map((key) => Number(key.split("-")[1]))
         .filter(Number.isFinite);
       if (bookingIdsWithErrors.length > 0) {
-        sectionsWithErrors.push("quick");
         setExpandedBookingIds((current) => new Set([...current, ...bookingIdsWithErrors]));
       }
       setOpen((o) => {
@@ -1208,19 +1229,18 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
       </div>
       <div className="space-y-3">
         <Collapsible
-          id="quick"
+          id="details"
           step="01"
-          title="Quick enquiry"
-          open={open.quick}
-          onToggle={() => toggle("quick")}
+          title="Your details"
+          open={open.details}
+          onToggle={() => toggle("details")}
           error={Boolean(
             errors.name ||
+              errors.company ||
               errors.email ||
               errors.phone ||
               errors.whatsapp ||
-              errors.whatsappUsername ||
-              errors.date ||
-              hasBookingErrors
+              errors.whatsappUsername
           )}
         >
           <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
@@ -1402,395 +1422,470 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
               )}
             </fieldset>
             <div className="sm:col-span-2">
-              <Field label="Event Date" required={!dateTbc} error={errors.date}>
+              <Field label="Company / Promoter">
                 <Input
-                  name="date"
-                  type="date"
-                  disabled={dateTbc}
-                  value={form.date}
+                  name="company"
+                  autoComplete="organization"
+                  maxLength={BOOKING_LIMITS.company}
+                  placeholder="Your venue, brand or agency"
+                  value={form.company}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  error={errors.date}
+                  error={errors.company}
                 />
               </Field>
-              <label
-                className="mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-3 text-sm"
-                style={{ color: "var(--text-60)" }}
-              >
-                <input
-                  type="checkbox"
-                  checked={dateTbc}
-                  onChange={(event) => handleDateTbcChange(event.target.checked)}
-                  className="h-5 w-5 accent-current"
-                />
-                Date not confirmed yet
-              </label>
-            </div>
-
-            <div className="space-y-4 sm:col-span-2">
-              <div>
-                <h3
-                  className="text-xs font-semibold uppercase tracking-widest"
-                  style={{ color: "var(--text-60)" }}
-                >
-                  Artist schedule <span aria-hidden="true">*</span>
-                </h3>
-                <p className="mt-1 text-xs" style={{ color: "var(--text-40)" }}>
-                  Add every AAA artist for this event. Give a set duration, exact times, or leave
-                  timing as TBC.
-                </p>
-              </div>
-
-              <label
-                className="flex min-h-[50px] cursor-pointer items-start gap-3 border px-4 py-3 text-sm transition-colors duration-200"
-                style={{
-                  borderColor: contactToDiscuss ? "var(--text)" : "var(--border)",
-                  backgroundColor: "var(--surface)",
-                  color: "var(--text)",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  name="contactToDiscuss"
-                  checked={contactToDiscuss}
-                  onChange={(event) => handleContactToDiscussChange(event.target.checked)}
-                  className="mt-0.5 h-5 w-5 shrink-0 accent-current"
-                />
-                <span>
-                  <span className="block font-medium">Contact me to discuss</span>
-                  <span className="mt-1 block text-xs" style={{ color: "var(--text-40)" }}>
-                    Choose this if you are unsure which artist would suit your event.
-                  </span>
-                </span>
-              </label>
-
-              {artistBookings.map((booking, index) => {
-                const exactDuration =
-                  booking.timingMode === "times"
-                    ? calculateSetDuration(booking.startTime, booking.finishTime)
-                    : "";
-                const overlaps = overlapArtists.get(booking.id) ?? [];
-                const expanded = expandedBookingIds.has(booking.id);
-                const timingSummary =
-                  booking.timingMode === "duration"
-                    ? selectedDurationLabel(booking) || "Duration TBC"
-                    : booking.startTime && booking.finishTime
-                      ? `${booking.startTime}–${booking.finishTime}`
-                      : "Exact times TBC";
-                return (
-                  <div
-                    key={booking.id}
-                    className={`${contactToDiscuss ? "hidden" : ""} min-w-0 border p-3 sm:p-4 md:p-5`}
-                    style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
-                  >
-                    <div
-                      className={`flex min-h-[44px] items-center justify-between gap-2 ${expanded ? "mb-4" : ""}`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => toggleArtistBooking(booking.id)}
-                        aria-expanded={expanded}
-                        aria-controls={`artist-booking-${booking.id}`}
-                        className="flex min-h-[44px] min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                      >
-                        <span className="min-w-0">
-                          <span
-                            className="block text-xs font-semibold uppercase tracking-widest"
-                            style={{ color: "var(--text-40)" }}
-                          >
-                            Artist {index + 1}
-                          </span>
-                          <span
-                            className="mt-1 block truncate text-sm"
-                            style={{ color: "var(--text)" }}
-                          >
-                            {booking.artist || "Choose an artist"} · {timingSummary}
-                          </span>
-                        </span>
-                        <svg
-                          aria-hidden="true"
-                          className="h-4 w-4 shrink-0 transition-transform duration-200"
-                          style={{
-                            color: "var(--text-40)",
-                            transform: expanded ? "rotate(180deg)" : "none",
-                          }}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="m6 9 6 6 6-6"
-                          />
-                        </svg>
-                      </button>
-                      {artistBookings.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeArtistBooking(booking.id)}
-                          className="link-quiet min-h-[44px] px-2 text-xs uppercase tracking-widest"
-                          aria-label={`Remove ${booking.artist || `artist ${index + 1}`} from booking`}
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-
-                    {expanded && (
-                      <div id={`artist-booking-${booking.id}`}>
-                        <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
-                          <div className="sm:col-start-1 sm:row-start-1">
-                            <Field
-                              label="Artist"
-                              required
-                              error={errors[`booking-${booking.id}-artist`]}
-                            >
-                              <Select
-                                name={`booking-${booking.id}-artist`}
-                                value={booking.artist}
-                                onChange={(event) =>
-                                  updateArtistBooking(booking.id, "artist", event.target.value)
-                                }
-                                error={errors[`booking-${booking.id}-artist`]}
-                              >
-                                <option value="">Select an artist…</option>
-                                {artistOptions.map((artist) => (
-                                  <option
-                                    key={artist.slug}
-                                    value={artist.name}
-                                    disabled={
-                                      artist.name !== booking.artist &&
-                                      selectedArtists.has(artist.name)
-                                    }
-                                  >
-                                    {artist.name}
-                                  </option>
-                                ))}
-                              </Select>
-                            </Field>
-                          </div>
-
-                          <div className="sm:col-start-2 sm:row-start-1">
-                            <fieldset aria-describedby={`booking-${booking.id}-timing-hint`}>
-                              <legend
-                                className="mb-1.5 text-xs font-semibold uppercase tracking-widest"
-                                style={{ color: "var(--text-60)" }}
-                              >
-                                Timing
-                              </legend>
-                              <div className="grid grid-cols-2 gap-2">
-                                {(
-                                  [
-                                    ["duration", "Duration only"],
-                                    ["times", "Exact times"],
-                                  ] as const
-                                ).map(([value, label]) => (
-                                  <label
-                                    key={value}
-                                    className="flex min-h-[44px] cursor-pointer items-center gap-2 border px-2 py-2 text-xs transition-colors duration-200 sm:px-3 sm:text-sm"
-                                    style={{
-                                      borderColor:
-                                        booking.timingMode === value
-                                          ? "var(--text)"
-                                          : "var(--border)",
-                                      backgroundColor:
-                                        booking.timingMode === value
-                                          ? "var(--surface)"
-                                          : "transparent",
-                                      color: "var(--text)",
-                                    }}
-                                  >
-                                    <input
-                                      type="radio"
-                                      name={`booking-${booking.id}-timing-mode`}
-                                      value={value}
-                                      checked={booking.timingMode === value}
-                                      onChange={(event) =>
-                                        updateArtistBooking(
-                                          booking.id,
-                                          "timingMode",
-                                          event.target.value
-                                        )
-                                      }
-                                      className="h-4 w-4 shrink-0 accent-current"
-                                    />
-                                    <span>{label}</span>
-                                  </label>
-                                ))}
-                              </div>
-                              <p
-                                id={`booking-${booking.id}-timing-hint`}
-                                className="mt-1.5 text-xs"
-                                style={{ color: "var(--text-40)" }}
-                              >
-                                Use whatever is known now. Timing can be confirmed later.
-                              </p>
-                            </fieldset>
-                          </div>
-
-                          {booking.timingMode === "duration" ? (
-                            <fieldset className="contents">
-                              <legend className="sr-only">Set duration</legend>
-                              <div className="sm:col-start-1 sm:row-start-2">
-                                <Field
-                                  label="Hours"
-                                  hint={`Total: ${selectedDurationLabel(booking)}`}
-                                  error={errors[`booking-${booking.id}-duration`]}
-                                >
-                                  <Select
-                                    name={`booking-${booking.id}-duration`}
-                                    value={String(
-                                      Math.floor(Number(booking.durationMinutes || "60") / 60)
-                                    )}
-                                    onChange={(event) =>
-                                      updateArtistDurationPart(
-                                        booking.id,
-                                        "hours",
-                                        event.target.value
-                                      )
-                                    }
-                                    error={errors[`booking-${booking.id}-duration`]}
-                                  >
-                                    {DURATION_HOURS.map((hours) => (
-                                      <option key={hours} value={hours}>
-                                        {hours}
-                                      </option>
-                                    ))}
-                                  </Select>
-                                </Field>
-                              </div>
-                              <div className="sm:col-start-2 sm:row-start-2">
-                                <Field label="Minutes">
-                                  <Select
-                                    name={`booking-${booking.id}-duration-minutes`}
-                                    value={String(Number(booking.durationMinutes || "60") % 60)}
-                                    onChange={(event) =>
-                                      updateArtistDurationPart(
-                                        booking.id,
-                                        "minutes",
-                                        event.target.value
-                                      )
-                                    }
-                                  >
-                                    {DURATION_MINUTES.map((minutes) => (
-                                      <option key={minutes} value={minutes}>
-                                        {String(minutes).padStart(2, "0")}
-                                      </option>
-                                    ))}
-                                  </Select>
-                                </Field>
-                              </div>
-                            </fieldset>
-                          ) : (
-                            <>
-                              <div className="sm:col-start-1 sm:row-start-2">
-                                <Field
-                                  label="Start Time"
-                                  error={errors[`booking-${booking.id}-start`]}
-                                >
-                                  <Input
-                                    name={`booking-${booking.id}-start`}
-                                    type="time"
-                                    step={300}
-                                    value={booking.startTime}
-                                    onChange={(event) =>
-                                      updateArtistBooking(
-                                        booking.id,
-                                        "startTime",
-                                        event.target.value
-                                      )
-                                    }
-                                    error={errors[`booking-${booking.id}-start`]}
-                                  />
-                                </Field>
-                              </div>
-                              <div className="sm:col-start-2 sm:row-start-2">
-                                <Field
-                                  label="Finish Time"
-                                  error={errors[`booking-${booking.id}-finish`]}
-                                >
-                                  <Input
-                                    name={`booking-${booking.id}-finish`}
-                                    type="time"
-                                    step={300}
-                                    value={booking.finishTime}
-                                    onChange={(event) =>
-                                      updateArtistBooking(
-                                        booking.id,
-                                        "finishTime",
-                                        event.target.value
-                                      )
-                                    }
-                                    error={errors[`booking-${booking.id}-finish`]}
-                                  />
-                                </Field>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        {exactDuration && (
-                          <div
-                            role="status"
-                            aria-live="polite"
-                            className="mt-4 flex items-center justify-between gap-4 border px-4 py-3"
-                            style={{
-                              borderColor: "var(--border)",
-                              backgroundColor: "var(--surface)",
-                            }}
-                          >
-                            <span
-                              className="text-xs font-semibold uppercase tracking-widest"
-                              style={{ color: "var(--text-40)" }}
-                            >
-                              Duration
-                            </span>
-                            <span
-                              className="text-sm font-semibold text-right"
-                              style={{ color: "var(--text)" }}
-                            >
-                              {exactDuration}
-                            </span>
-                          </div>
-                        )}
-                        {overlaps.length > 0 && (
-                          <p
-                            className="mt-3 text-xs"
-                            role="status"
-                            style={{ color: "var(--error)" }}
-                          >
-                            Time overlaps with {overlaps.join(", ")}. You can still submit if this
-                            is intentional.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={addArtistBooking}
-                disabled={!canAddArtist}
-                className={`btn-outline ${contactToDiscuss ? "hidden" : "inline-flex"} min-h-[44px] w-full items-center justify-center px-5 py-3 text-xs font-semibold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40`}
-              >
-                Add another artist
-              </button>
             </div>
           </div>
         </Collapsible>
 
         <Collapsible
-          id="event"
+          id="artist"
           step="02"
-          title="Event details (optional)"
+          title="Artist request"
+          open={open.artist}
+          onToggle={() => toggle("artist")}
+          error={hasBookingErrors}
+        >
+          <div className="space-y-6">
+            <fieldset aria-describedby="artist-request-hint">
+              <legend
+                className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: "var(--text-60)" }}
+              >
+                How would you like to continue?
+              </legend>
+              <p
+                id="artist-request-hint"
+                className="mt-1 text-xs"
+                style={{ color: "var(--text-40)" }}
+              >
+                Choose an artist now, or ask our booking team to help you find the right fit.
+              </p>
+              <div
+                className="mt-4 grid border sm:grid-cols-2"
+                style={{ borderColor: "var(--border)" }}
+              >
+                {(
+                  [
+                    {
+                      value: "choose",
+                      title: "Choose an artist",
+                      description: "Select one or more AAA artists and add any known timing.",
+                    },
+                    {
+                      value: "discuss",
+                      title: "Contact me to discuss",
+                      description: "We’ll help identify the right artist for your event.",
+                    },
+                  ] as const
+                ).map((option, index) => {
+                  const selected =
+                    option.value === "discuss" ? contactToDiscuss : !contactToDiscuss;
+                  return (
+                    <label
+                      key={option.value}
+                      className={`flex min-h-[88px] cursor-pointer items-start gap-3 px-4 py-4 transition-colors duration-200 has-[:focus-visible]:relative has-[:focus-visible]:z-10 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-inset sm:px-5 ${index > 0 ? "border-t sm:border-l sm:border-t-0" : ""}`}
+                      style={{
+                        borderColor: "var(--border)",
+                        backgroundColor: selected ? "var(--surface)" : "transparent",
+                        color: "var(--text)",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="artistRequestPath"
+                        value={option.value}
+                        checked={selected}
+                        onChange={() => handleContactToDiscussChange(option.value === "discuss")}
+                        className="sr-only"
+                      />
+                      <span
+                        aria-hidden="true"
+                        className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border"
+                        style={{ borderColor: selected ? "var(--text)" : "var(--text-40)" }}
+                      >
+                        {selected && (
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: "var(--text)" }}
+                          />
+                        )}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-semibold">{option.title}</span>
+                        <span
+                          className="mt-1 block text-xs leading-relaxed"
+                          style={{ color: "var(--text-40)" }}
+                        >
+                          {option.description}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+
+            {!contactToDiscuss ? (
+              <div className="space-y-4">
+                <div>
+                  <h3
+                    className="text-xs font-semibold uppercase tracking-widest"
+                    style={{ color: "var(--text-60)" }}
+                  >
+                    Artist schedule <span aria-hidden="true">*</span>
+                  </h3>
+                  <p className="mt-1 text-xs" style={{ color: "var(--text-40)" }}>
+                    Add every AAA artist for this event. Give a set duration, exact times, or leave
+                    timing as TBC.
+                  </p>
+                </div>
+
+                {artistBookings.map((booking, index) => {
+                  const exactDuration =
+                    booking.timingMode === "times"
+                      ? calculateSetDuration(booking.startTime, booking.finishTime)
+                      : "";
+                  const overlaps = overlapArtists.get(booking.id) ?? [];
+                  const expanded = expandedBookingIds.has(booking.id);
+                  const timingSummary =
+                    booking.timingMode === "duration"
+                      ? selectedDurationLabel(booking) || "Duration TBC"
+                      : booking.startTime && booking.finishTime
+                        ? `${booking.startTime}–${booking.finishTime}`
+                        : "Exact times TBC";
+                  return (
+                    <div
+                      key={booking.id}
+                      className="min-w-0 border p-3 sm:p-4 md:p-5"
+                      style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-subtle)" }}
+                    >
+                      <div
+                        className={`flex min-h-[44px] items-center justify-between gap-2 ${expanded ? "mb-4" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleArtistBooking(booking.id)}
+                          aria-expanded={expanded}
+                          aria-controls={`artist-booking-${booking.id}`}
+                          className="flex min-h-[44px] min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                        >
+                          <span className="min-w-0">
+                            <span
+                              className="block text-xs font-semibold uppercase tracking-widest"
+                              style={{ color: "var(--text-40)" }}
+                            >
+                              Artist {index + 1}
+                            </span>
+                            <span
+                              className="mt-1 block truncate text-sm"
+                              style={{ color: "var(--text)" }}
+                            >
+                              {booking.artist || "Choose an artist"} · {timingSummary}
+                            </span>
+                          </span>
+                          <svg
+                            aria-hidden="true"
+                            className="h-4 w-4 shrink-0 transition-transform duration-200"
+                            style={{
+                              color: "var(--text-40)",
+                              transform: expanded ? "rotate(180deg)" : "none",
+                            }}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="m6 9 6 6 6-6"
+                            />
+                          </svg>
+                        </button>
+                        {artistBookings.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeArtistBooking(booking.id)}
+                            className="link-quiet min-h-[44px] px-2 text-xs uppercase tracking-widest"
+                            aria-label={`Remove ${booking.artist || `artist ${index + 1}`} from booking`}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+
+                      {expanded && (
+                        <div id={`artist-booking-${booking.id}`}>
+                          <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+                            <div className="sm:col-start-1 sm:row-start-1">
+                              <Field
+                                label="Artist"
+                                required
+                                error={errors[`booking-${booking.id}-artist`]}
+                              >
+                                <Select
+                                  name={`booking-${booking.id}-artist`}
+                                  value={booking.artist}
+                                  onChange={(event) =>
+                                    updateArtistBooking(booking.id, "artist", event.target.value)
+                                  }
+                                  error={errors[`booking-${booking.id}-artist`]}
+                                >
+                                  <option value="">Select an artist…</option>
+                                  {artistOptions.map((artist) => (
+                                    <option
+                                      key={artist.slug}
+                                      value={artist.name}
+                                      disabled={
+                                        artist.name !== booking.artist &&
+                                        selectedArtists.has(artist.name)
+                                      }
+                                    >
+                                      {artist.name}
+                                    </option>
+                                  ))}
+                                </Select>
+                              </Field>
+                            </div>
+
+                            <div className="sm:col-start-2 sm:row-start-1">
+                              <fieldset aria-describedby={`booking-${booking.id}-timing-hint`}>
+                                <legend
+                                  className="mb-1.5 text-xs font-semibold uppercase tracking-widest"
+                                  style={{ color: "var(--text-60)" }}
+                                >
+                                  Timing
+                                </legend>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {(
+                                    [
+                                      ["duration", "Duration only"],
+                                      ["times", "Exact times"],
+                                    ] as const
+                                  ).map(([value, label]) => (
+                                    <label
+                                      key={value}
+                                      className="flex min-h-[44px] cursor-pointer items-center gap-2 border px-2 py-2 text-xs transition-colors duration-200 sm:px-3 sm:text-sm"
+                                      style={{
+                                        borderColor:
+                                          booking.timingMode === value
+                                            ? "var(--text)"
+                                            : "var(--border)",
+                                        backgroundColor:
+                                          booking.timingMode === value
+                                            ? "var(--surface)"
+                                            : "transparent",
+                                        color: "var(--text)",
+                                      }}
+                                    >
+                                      <input
+                                        type="radio"
+                                        name={`booking-${booking.id}-timing-mode`}
+                                        value={value}
+                                        checked={booking.timingMode === value}
+                                        onChange={(event) =>
+                                          updateArtistBooking(
+                                            booking.id,
+                                            "timingMode",
+                                            event.target.value
+                                          )
+                                        }
+                                        className="h-4 w-4 shrink-0 accent-current"
+                                      />
+                                      <span>{label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                                <p
+                                  id={`booking-${booking.id}-timing-hint`}
+                                  className="mt-1.5 text-xs"
+                                  style={{ color: "var(--text-40)" }}
+                                >
+                                  Use whatever is known now. Timing can be confirmed later.
+                                </p>
+                              </fieldset>
+                            </div>
+
+                            {booking.timingMode === "duration" ? (
+                              <fieldset className="contents">
+                                <legend className="sr-only">Set duration</legend>
+                                <div className="sm:col-start-1 sm:row-start-2">
+                                  <Field
+                                    label="Hours"
+                                    hint={`Total: ${selectedDurationLabel(booking)}`}
+                                    error={errors[`booking-${booking.id}-duration`]}
+                                  >
+                                    <Select
+                                      name={`booking-${booking.id}-duration`}
+                                      value={String(
+                                        Math.floor(Number(booking.durationMinutes || "60") / 60)
+                                      )}
+                                      onChange={(event) =>
+                                        updateArtistDurationPart(
+                                          booking.id,
+                                          "hours",
+                                          event.target.value
+                                        )
+                                      }
+                                      error={errors[`booking-${booking.id}-duration`]}
+                                    >
+                                      {DURATION_HOURS.map((hours) => (
+                                        <option key={hours} value={hours}>
+                                          {hours}
+                                        </option>
+                                      ))}
+                                    </Select>
+                                  </Field>
+                                </div>
+                                <div className="sm:col-start-2 sm:row-start-2">
+                                  <Field label="Minutes">
+                                    <Select
+                                      name={`booking-${booking.id}-duration-minutes`}
+                                      value={String(Number(booking.durationMinutes || "60") % 60)}
+                                      onChange={(event) =>
+                                        updateArtistDurationPart(
+                                          booking.id,
+                                          "minutes",
+                                          event.target.value
+                                        )
+                                      }
+                                    >
+                                      {DURATION_MINUTES.map((minutes) => (
+                                        <option key={minutes} value={minutes}>
+                                          {String(minutes).padStart(2, "0")}
+                                        </option>
+                                      ))}
+                                    </Select>
+                                  </Field>
+                                </div>
+                              </fieldset>
+                            ) : (
+                              <>
+                                <div className="sm:col-start-1 sm:row-start-2">
+                                  <Field
+                                    label="Start Time"
+                                    error={errors[`booking-${booking.id}-start`]}
+                                  >
+                                    <Input
+                                      name={`booking-${booking.id}-start`}
+                                      type="time"
+                                      step={300}
+                                      value={booking.startTime}
+                                      onChange={(event) =>
+                                        updateArtistBooking(
+                                          booking.id,
+                                          "startTime",
+                                          event.target.value
+                                        )
+                                      }
+                                      error={errors[`booking-${booking.id}-start`]}
+                                    />
+                                  </Field>
+                                </div>
+                                <div className="sm:col-start-2 sm:row-start-2">
+                                  <Field
+                                    label="Finish Time"
+                                    error={errors[`booking-${booking.id}-finish`]}
+                                  >
+                                    <Input
+                                      name={`booking-${booking.id}-finish`}
+                                      type="time"
+                                      step={300}
+                                      value={booking.finishTime}
+                                      onChange={(event) =>
+                                        updateArtistBooking(
+                                          booking.id,
+                                          "finishTime",
+                                          event.target.value
+                                        )
+                                      }
+                                      error={errors[`booking-${booking.id}-finish`]}
+                                    />
+                                  </Field>
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          {exactDuration && (
+                            <div
+                              role="status"
+                              aria-live="polite"
+                              className="mt-4 flex items-center justify-between gap-4 border px-4 py-3"
+                              style={{
+                                borderColor: "var(--border)",
+                                backgroundColor: "var(--surface)",
+                              }}
+                            >
+                              <span
+                                className="text-xs font-semibold uppercase tracking-widest"
+                                style={{ color: "var(--text-40)" }}
+                              >
+                                Duration
+                              </span>
+                              <span
+                                className="text-sm font-semibold text-right"
+                                style={{ color: "var(--text)" }}
+                              >
+                                {exactDuration}
+                              </span>
+                            </div>
+                          )}
+                          {overlaps.length > 0 && (
+                            <p
+                              className="mt-3 text-xs"
+                              role="status"
+                              style={{ color: "var(--error)" }}
+                            >
+                              Time overlaps with {overlaps.join(", ")}. You can still submit if this
+                              is intentional.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {canAddArtist && (
+                  <button
+                    type="button"
+                    onClick={addArtistBooking}
+                    className="link-quiet inline-flex min-h-[44px] items-center gap-2 px-1 text-xs font-semibold uppercase tracking-widest"
+                  >
+                    <span aria-hidden="true" className="text-base font-normal">
+                      +
+                    </span>
+                    Add another artist
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div role="status" className="border-t pt-5" style={{ borderColor: "var(--border)" }}>
+                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                  We’ll help you find the right artist.
+                </p>
+                <p
+                  className="mt-1 max-w-xl text-sm leading-relaxed"
+                  style={{ color: "var(--text-40)" }}
+                >
+                  No artist will be selected for this enquiry. Our booking team will use your event
+                  details and message to discuss the best fit with you.
+                </p>
+              </div>
+            )}
+          </div>
+        </Collapsible>
+
+        <Collapsible
+          id="event"
+          step="03"
+          title="Event details"
           open={open.event}
           onToggle={() => toggle("event")}
           error={Boolean(
-            errors.company ||
+            errors.date ||
               errors.eventName ||
               errors.eventType ||
               errors.venue ||
@@ -1801,18 +1896,104 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
           )}
         >
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <Field label="Company / Promoter">
-              <Input
-                name="company"
-                autoComplete="organization"
-                maxLength={BOOKING_LIMITS.company}
-                placeholder="Your venue, brand or agency"
-                value={form.company}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={errors.company}
-              />
-            </Field>
+            <div className="sm:col-span-2">
+              <fieldset aria-describedby="event-date-hint">
+                <legend
+                  className="text-xs font-semibold uppercase tracking-widest"
+                  style={{ color: "var(--text-60)" }}
+                >
+                  Event date
+                </legend>
+                <p
+                  id="event-date-hint"
+                  className="mt-1 text-xs"
+                  style={{ color: "var(--text-40)" }}
+                >
+                  Add the planned date now, or continue without an exact date.
+                </p>
+                <div
+                  className="mt-3 grid border sm:grid-cols-2"
+                  style={{ borderColor: "var(--border)" }}
+                >
+                  {(
+                    [
+                      {
+                        value: "confirmed",
+                        title: "Choose a date",
+                        description: "Select the planned date for your event.",
+                      },
+                      {
+                        value: "tbc",
+                        title: "Date not confirmed yet",
+                        description: "Continue now and confirm it with us later.",
+                      },
+                    ] as const
+                  ).map((option, index) => {
+                    const selected = option.value === "tbc" ? dateTbc : !dateTbc;
+                    return (
+                      <label
+                        key={option.value}
+                        className={`flex min-h-[76px] cursor-pointer items-start gap-3 px-4 py-3 transition-colors duration-200 has-[:focus-visible]:relative has-[:focus-visible]:z-10 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-inset ${index > 0 ? "border-t sm:border-l sm:border-t-0" : ""}`}
+                        style={{
+                          borderColor: "var(--border)",
+                          backgroundColor: selected ? "var(--surface)" : "transparent",
+                          color: "var(--text)",
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="eventDateStatus"
+                          value={option.value}
+                          checked={selected}
+                          onChange={() => handleDateTbcChange(option.value === "tbc")}
+                          className="sr-only"
+                        />
+                        <span
+                          aria-hidden="true"
+                          className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border"
+                          style={{ borderColor: selected ? "var(--text)" : "var(--text-40)" }}
+                        >
+                          {selected && (
+                            <span
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: "var(--text)" }}
+                            />
+                          )}
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold">{option.title}</span>
+                          <span
+                            className="mt-0.5 block text-xs leading-relaxed"
+                            style={{ color: "var(--text-40)" }}
+                          >
+                            {option.description}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              {!dateTbc ? (
+                <div className="mt-4">
+                  <Field label="Date" required error={errors.date}>
+                    <Input
+                      name="date"
+                      type="date"
+                      value={form.date}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={errors.date}
+                    />
+                  </Field>
+                </div>
+              ) : (
+                <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--text-40)" }}>
+                  You can confirm the exact date with our booking team later.
+                </p>
+              )}
+            </div>
             <Field label="Event Name">
               <Input
                 name="eventName"
@@ -1904,11 +2085,11 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
 
         <Collapsible
           id="budget"
-          step="03"
-          title="Budget & extras (optional)"
+          step="04"
+          title="Budget (optional)"
           open={open.budget}
           onToggle={() => toggle("budget")}
-          error={Boolean(errors.budgetRange || errors.lineup || errors.hearAbout)}
+          error={Boolean(errors.budgetRange)}
         >
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <Field label="Budget / Fee Offer" hint="A rough range helps us reply faster">
@@ -1942,58 +2123,63 @@ function ContactForm({ artistOptions }: { artistOptions: ArtistOption[] }) {
                 ))}
               </Select>
             </Field>
-            <Field label="How Did You Hear About Us?">
-              <Select
-                name="hearAbout"
-                value={form.hearAbout}
-                onChange={handleChange}
-                error={errors.hearAbout}
-              >
-                <option value="">Select…</option>
-                {HEAR_ABOUT_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Other / External Artists on the Bill">
-              <Input
-                name="lineup"
-                maxLength={BOOKING_LIMITS.lineup}
-                placeholder="Anyone else playing alongside?"
-                value={form.lineup}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={errors.lineup}
-              />
-            </Field>
           </div>
         </Collapsible>
 
         <Collapsible
-          id="message"
-          step="04"
-          title="Anything else (optional)"
-          open={open.message}
-          onToggle={() => toggle("message")}
+          id="additional"
+          step="05"
+          title="Additional details (optional)"
+          open={open.additional}
+          onToggle={() => toggle("additional")}
+          error={Boolean(errors.lineup || errors.hearAbout || errors.message)}
         >
-          <Field label="Message">
-            <textarea
-              name="message"
-              rows={5}
-              maxLength={BOOKING_LIMITS.message}
-              placeholder="Tell us about the event, the crowd, timings, and anything else that helps us quote accurately…"
-              value={form.message}
-              onChange={handleChange}
-              className="w-full min-w-0 max-w-full resize-none border px-4 py-3 text-base outline-none"
-              style={{
-                borderColor: "var(--border)",
-                backgroundColor: "var(--surface)",
-                color: "var(--text)",
-              }}
-            />
-          </Field>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <Field label="Other / External Artists on the Bill">
+                <Input
+                  name="lineup"
+                  maxLength={BOOKING_LIMITS.lineup}
+                  placeholder="Anyone else playing alongside?"
+                  value={form.lineup}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={errors.lineup}
+                />
+              </Field>
+              <Field label="How Did You Hear About Us?">
+                <Select
+                  name="hearAbout"
+                  value={form.hearAbout}
+                  onChange={handleChange}
+                  error={errors.hearAbout}
+                >
+                  <option value="">Select…</option>
+                  {HEAR_ABOUT_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+            <Field label="Message">
+              <textarea
+                name="message"
+                rows={5}
+                maxLength={BOOKING_LIMITS.message}
+                placeholder="Tell us about the event, the crowd, timings, and anything else that helps us quote accurately…"
+                value={form.message}
+                onChange={handleChange}
+                className="w-full min-w-0 max-w-full resize-none border px-4 py-3 text-base outline-none"
+                style={{
+                  borderColor: "var(--border)",
+                  backgroundColor: "var(--surface)",
+                  color: "var(--text)",
+                }}
+              />
+            </Field>
+          </div>
         </Collapsible>
       </div>
 
@@ -2420,12 +2606,6 @@ export default function ContactView({ artistOptions }: { artistOptions: ArtistOp
           <BackLink artistOptions={artistOptions} />
         </Suspense>
         <div className="mb-12">
-          <p
-            className="mb-3 text-sm font-semibold uppercase tracking-[0.4em]"
-            style={{ color: "var(--text-30)" }}
-          >
-            AAA Artists
-          </p>
           <h1
             className="mb-4 text-4xl font-bold tracking-tight md:text-5xl"
             style={{ color: "var(--text)" }}
@@ -2433,8 +2613,8 @@ export default function ContactView({ artistOptions }: { artistOptions: ArtistOp
             Book Artists
           </h1>
           <p className="max-w-xl text-base leading-relaxed" style={{ color: "var(--text-60)" }}>
-            Start with your name, email, one or more artists, and the event date—or mark the date as
-            not confirmed. Everything else is optional, but a fuller brief helps us reply faster.
+            Tell us who to contact, then choose an artist or ask our booking team to help. Add the
+            event details you know now; everything else can be discussed with us.
           </p>
         </div>
 

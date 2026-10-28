@@ -1,5 +1,26 @@
-import { expect, test } from "playwright/test";
+import { expect, test, type Page } from "playwright/test";
 import { seedMediaConsent } from "./helpers";
+
+async function openVisualPage(page: Page, path: string, theme: "light" | "dark") {
+  await seedMediaConsent(page, "denied");
+  await page.addInitScript((value) => {
+    window.localStorage.setItem("aaa-theme", value);
+  }, theme);
+  await page.goto(path);
+  await page.waitForLoadState("networkidle");
+}
+
+async function settleVisualPage(page: Page) {
+  await page.addStyleTag({
+    content: `*, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+      caret-color: transparent !important;
+    }
+    html { scroll-behavior: auto !important; }`,
+  });
+  await page.evaluate(() => document.fonts.ready);
+}
 
 /**
  * Visual regression baseline — "does the site still look like itself?"
@@ -40,30 +61,39 @@ for (const theme of ["light", "dark"] as const) {
     test(`${route.name} looks unchanged in ${theme}`, async ({ page }) => {
       // Consent denied keeps every third-party frame out of the screenshot; a
       // SoundCloud player would make the image depend on someone else's server.
-      await seedMediaConsent(page, "denied");
-      await page.addInitScript((value) => {
-        window.localStorage.setItem("aaa-theme", value);
-      }, theme);
-
-      await page.goto(route.path);
-      await page.waitForLoadState("networkidle");
+      await openVisualPage(page, route.path, theme);
 
       // Freeze everything that moves. Without this the screenshot races the
       // scroll reveal, the image fade and the skeleton sweep.
-      await page.addStyleTag({
-        content: `*, *::before, *::after {
-          animation: none !important;
-          transition: none !important;
-          caret-color: transparent !important;
-        }
-        html { scroll-behavior: auto !important; }`,
-      });
-      await page.evaluate(() => document.fonts.ready);
+      await settleVisualPage(page);
 
       await expect(page).toHaveScreenshot(`${route.name}-${theme}.png`, {
         fullPage: true,
         // Sub-pixel text rendering differs slightly between runs on the same
         // machine; this tolerates that without hiding a real layout change.
+        maxDiffPixelRatio: 0.01,
+        animations: "disabled",
+        scale: "css",
+      });
+    });
+  }
+}
+
+for (const theme of ["light", "dark"] as const) {
+  for (const artistPath of ["choose", "discuss"] as const) {
+    test(`contact ${artistPath} path stays intentional in ${theme}`, async ({ page }) => {
+      await openVisualPage(page, "/contact", theme);
+      await page.locator('button[aria-controls="section-artist"]').click();
+      if (artistPath === "choose") {
+        await page.locator('select[name="booking-0-artist"]').selectOption({ index: 1 });
+      } else {
+        await page.getByText("Contact me to discuss", { exact: true }).click();
+      }
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await settleVisualPage(page);
+
+      await expect(page).toHaveScreenshot(`contact-${artistPath}-${theme}.png`, {
+        fullPage: true,
         maxDiffPixelRatio: 0.01,
         animations: "disabled",
         scale: "css",

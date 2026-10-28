@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Booking Concierge Prototype — AAA Artists</title>
+    <link
+      rel="stylesheet"
+      href="node_modules/vis-timeline/styles/vis-timeline-graph2d.min.css"
+    />
+    <link rel="stylesheet" href="prototype.css" />
+  </head>
+  <body>
+    <!--
+      THESIS: The enquiry is a running order, not a stack of unrelated fields; mixed known and open artist slots stay visible while one decision is edited.
+      OWN-WORLD: AAA Artists monochrome, square controls, thin steel rules, system sans hierarchy, tabular lineup numbers, and equal dark/light themes.
+      STORY: Build the lineup, describe the event, shape role-based timings, set one total budget, add contact details, then review the shared enquiry.
+      FIRST VIEWPORT: Six-step progress above a 60/40 lineup-and-editor workspace; open slots use a cool steel surface, mobile editors attach inline, and Continue to event anchors the lower right.
+      FORM: Running-order lineup builder, approved composition B, seed 434cb76c; comp .impeccable/mocks/booking-concierge-b.png.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+    -->
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#artists" aria-label="AAA Artists prototype home">
+          <img src="logo.png" alt="AAA Artists" width="256" height="224" />
+        </a>
+        <p class="prototype-note">Interactive prototype · no enquiry will be sent</p>
+        <button class="icon-button" id="themeToggle" type="button" aria-label="Switch to light theme">
+          <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.5"></circle>
+            <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4"></path>
+          </svg>
+          <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 15.2A8.2 8.2 0 0 1 8.8 4a8.2 8.2 0 1 0 11.2 11.2Z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <nav class="step-navigation" aria-label="Booking enquiry progress">
+        <ol id="progress"></ol>
+      </nav>
+      <div id="workArea" class="work-area"></div>
+    </main>
+
+    <div id="liveRegion" class="sr-only" aria-live="polite"></div>
+    <script src="node_modules/vis-timeline/standalone/umd/vis-timeline-graph2d.min.js"></script>
+    <script src="prototype.js"></script>
+  </body>
+</html>
