@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk *)",
+      "Bash(/opt/homebrew/bin/rtk *)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npm install *)",
+      "Bash(mkdir -p /Users/thiagogenez/Documents/webpage/app/roster /Users/thiagogenez/Documents/webpage/app/artist/'[slug]' /Users/thiagogenez/Documents/webpage/components /Users/thiagogenez/Documents/webpage/data /Users/thiagogenez/Documents/webpage/public)",
+      "Bash(npx next *)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(chromium-cli --session aaa-events)",
+      "Bash(node -e \"require\\('playwright'\\)\")",
+      "Bash(node -e \"const p = require\\('/Users/thiagogenez/Documents/webpage/node_modules/playwright'\\); console.log\\('ok'\\)\")",
+      "Bash(npx playwright *)",
+      "Bash(node -e ' *)",
+      "WebSearch",
+      "WebFetch(domain:ra.co)",
+      "Bash(curl -L \"https://picsum.photos/seed/dj/600/600\" -o /Users/thiagogenez/Documents/webpage/public/artists/placeholder.jpg)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git -C /Users/thiagogenez/Documents/webpage status)",
+      "Bash(pkill -f \"webpage-main\")",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git branch *)",
+      "Bash(git worktree *)",
+      "Bash(git rm *)"
+    ],
+    "additionalDirectories": [
+      "/Users/thiagogenez/Documents/webpage/app/artist"
+    ]
+  }
+}
