@@ -121,3 +121,20 @@ gigs:
     country: UK
     ticketLink: https://www.skiddle.com/whats-on/London/93-Feet-East/Mondo-Winter-Edition--Daytime-Trance-Event-London/42631991/
     flyer: /flyers/mondo-winter-2026.webp
+
+  # proposed automatically from skiddle — verify before merging
+  - date: "2027-01-16"
+    eventId: egg-club-2027-01-16
+    venue: Egg Club
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/whats-on/London/Egg-Club/Fusion-360/43015898/
+    ticketStatus: available
+  # proposed automatically from skiddle — verify before merging
+  - date: "2027-08-13"
+    eventId: abbots-ripton-cambridgeshire-2027-08-13
+    venue: Abbots Ripton Cambridgeshire
+    city: Huntingdon
+    country: UK
+    ticketLink: https://www.skiddle.com/festivals/timescape-festival/
+    ticketStatus: available
