@@ -62,3 +62,12 @@ gigs:
     country: Netherlands
     freeEntry: true
     flyer: /flyers/high-voltage-critical-sounds-ade-2026.webp
+
+  # proposed automatically from skiddle — verify before merging
+  - date: "2027-01-16"
+    eventId: egg-club-2027-01-16
+    venue: Egg Club
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/whats-on/London/Egg-Club/Fusion-360/43015898/
+    ticketStatus: available
