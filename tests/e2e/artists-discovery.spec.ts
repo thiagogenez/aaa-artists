@@ -1002,6 +1002,9 @@ test("preserves the BPM map as a horizontally scrollable spectrum on mobile", as
   await expect(styleRailToggle).toHaveAttribute("aria-expanded", "false");
 
   const rangeHeader = styleRailToggle.locator("..");
+  // Click auto-scrolling can leave the slider behind the fixed site navigation.
+  // Center it before hit-testing the spectrum's own stacking order.
+  await rangeHeader.evaluate((header) => header.scrollIntoView({ block: "center" }));
   await viewport.evaluate((element) => {
     element.scrollLeft = element.scrollWidth - element.clientWidth;
   });
