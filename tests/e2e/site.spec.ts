@@ -214,7 +214,7 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  // FROGR is the sparse case the layout exists for: two dates, one player.
+  // FROGR exercises a short list of dates alongside one player.
   await page.goto("/artist/frogr");
 
   const activity = page.getByTestId("artist-activity");
@@ -359,11 +359,15 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   expect(desktopPreviousPeek).toBeGreaterThan(20);
   expect(desktopPreviousPeek).toBeLessThan(desktopPreviousFlyerBox!.width);
 
-  // XiJaro & Pitch has four pages. Its second page must expose both adjacent
+  // XiJaro & Pitch has multiple pages. Its second page must expose both adjacent
   // flyers at once, not replace the right cue when the left one appears.
   await page.goto("/artist/xijaro-pitch");
+  const xijaroUpcomingCount = await page
+    .getByTestId("upcoming-slider")
+    .locator(":scope > div")
+    .count();
   await page.getByRole("button", { name: "Next upcoming events" }).click();
-  await expect(page.getByTestId("upcoming-range")).toContainText("3–4 of 8");
+  await expect(page.getByTestId("upcoming-range")).toContainText(`3–4 of ${xijaroUpcomingCount}`);
   await expect
     .poll(async () => {
       const [slider, previous, next] = await Promise.all([
@@ -407,7 +411,7 @@ test("pairs upcoming dates with the player in one row and keeps past shows behin
   // On mobile every upcoming card stacks into the page: no paging controls, and
   // crucially no inner scroll area competing with the page's own scrolling.
   const mobileSlider = page.getByTestId("upcoming-slider");
-  await expect(mobileSlider.getByText("Timescape Festival", { exact: true })).toBeVisible();
+  await expect(mobileSlider.locator("#event-timescape-festival-2026")).toBeVisible();
   await expect(mobileSlider.getByText("XOYO", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next upcoming events" })).toHaveCount(0);
   const trapsScroll = await mobileSlider.evaluate(

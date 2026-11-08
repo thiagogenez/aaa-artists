@@ -121,3 +121,20 @@ gigs:
     country: UK
     ticketLink: https://www.skiddle.com/whats-on/London/93-Feet-East/Mondo-Winter-Edition--Daytime-Trance-Event-London/42631991/
     flyer: /flyers/mondo-winter-2026.webp
+
+  # Fusion 360 — date and lineup verified on the linked organiser listing.
+  - date: "2027-01-16"
+    eventId: aaa-fusion-360-2027
+    venue: Egg Club
+    city: London
+    country: UK
+    ticketLink: https://www.skiddle.com/whats-on/London/Egg-Club/Fusion-360/43015898/
+
+  # Timescape runs 13–15 August; the lineup is confirmed, daily sets are not.
+  # Keep the day TBC until the organiser publishes the day splits.
+  - date: "2027-08"
+    eventId: timescape-festival-2027
+    venue: Timescape Festival
+    city: Huntingdon
+    country: UK
+    ticketLink: https://www.skiddle.com/festivals/timescape-festival/
